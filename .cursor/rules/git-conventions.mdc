@@ -1,0 +1,82 @@
+---
+description: Git commit message format for gymBackend — conventional commits, 72-char subject limit, imperative mood.
+alwaysApply: true
+---
+
+# Git Commit Conventions
+
+## Format
+
+```
+<type>(<scope>): <subject>
+
+[optional body]
+```
+
+- **Subject line** (first line): `type(scope): subject` — total ≤ 72 characters
+- **Blank line** between subject and body (when body is present)
+- **Body lines**: each line wraps at 72 characters; explains *why*, not *what*
+
+## Types
+
+| Type | When to use |
+|---|---|
+| `feat` | New feature or user-facing behaviour |
+| `fix` | Bug fix |
+| `refactor` | Code change that neither adds a feature nor fixes a bug |
+| `test` | Adding or updating tests |
+| `docs` | Documentation or spec changes only |
+| `chore` | Tooling, deps, build scripts, config (no production code) |
+| `perf` | Performance improvement |
+| `db` | Schema migration or database-level change |
+
+## Scopes
+
+Use the feature module name or a cross-cutting label:
+
+**Feature modules:** `auth` · `gym-orgs` · `users` · `memberships` · `attendance` · `coaching` · `nutrition` · `leads` · `notifications` · `health-sync`
+
+**Cross-cutting:** `infra` · `arch` · `config` · `ci` · `shared`
+
+Omit scope only when the change is truly global (e.g. `chore: upgrade pnpm to 9.x`).
+
+## Subject Rules
+
+- Imperative mood — "add", "fix", "remove", not "added", "fixed", "removed"
+- No period at the end
+- No capitalisation of first word after the colon (unless a proper noun)
+- Describe the effect, not the mechanism: "add active membership guard" not "add if-check to use case"
+
+## Examples
+
+```
+# ✅ Good
+feat(memberships): add active membership overlap guard
+fix(attendance): prevent check-in when membership inactive
+refactor(gym-orgs): extract GymOrgName into value object
+test(memberships): add unit tests for ClaimMembershipUseCase
+docs(arch): add ADR-0006 for notification queue strategy
+db(memberships): add exclusion constraint for subscription overlap
+chore: upgrade pnpm to 9.5.0
+
+# ❌ Bad
+Fixed the bug                          ← no type/scope, past tense, vague
+feat: Added membership overlap check.  ← past tense, trailing period
+feat(memberships): updated the membership use case to handle the case where a client already has an active membership at another gym  ← over 72 chars
+WIP                                    ← not a valid commit to push
+```
+
+## Body Guidelines
+
+Write a body when the *why* is not obvious from the subject:
+
+```
+fix(memberships): guard against double-active membership on rejoin
+
+Clients who leave a gym and rejoin while their previous INACTIVE
+membership is still in the table were not blocked from having two
+rows. The policy now queries deleted_at IS NULL AND status = ACTIVE
+before accept, matching the invariant in ClientMembership.activate().
+```
+
+No body needed for mechanical changes (`chore`, `docs`, simple one-liner `fix`).

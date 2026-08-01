@@ -1,0 +1,145 @@
+---
+description: TypeScript naming conventions, Value Object / Entity patterns, SOLID compliance, and constructor injection rules for gymBackend source files.
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# Code Quality Standards
+
+## File Naming
+
+All source files use **kebab-case** with a mandatory layer suffix:
+
+| Suffix | Example |
+|---|---|
+| `.entity.ts` | `client-membership.entity.ts` |
+| `.value-object.ts` | `gym-org-name.value-object.ts` |
+| `.use-case.ts` | `claim-membership.use-case.ts` |
+| `.repository.ts` | `membership.repository.ts` (interface) |
+| `.queries.ts` | `membership.queries.ts` (query interface) |
+| `.controller.ts` | `membership.controller.ts` |
+| `.routes.ts` | `membership.routes.ts` |
+| `.schemas.ts` | `membership.schemas.ts` (Zod) |
+| `.dto.ts` | `membership.dto.ts` |
+| `.mapper.ts` | `membership.mapper.ts` |
+| `.policy.ts` | `claim-membership.policy.ts` |
+
+## Symbol Naming
+
+- **Classes, Interfaces, Types, Enums:** `PascalCase` — `ClientMembership`, `MembershipRepository`, `MembershipStatus`
+- **Variables, functions, methods, parameters:** `camelCase` — `findActiveByClient`, `gymOrgId`
+- **Constants (compile-time fixed):** `SCREAMING_SNAKE_CASE` — `MAX_ADMINS_PER_ORG`
+- **Enum members:** `SCREAMING_SNAKE_CASE` — `MembershipStatus.ACTIVE`
+- **Private class fields:** `camelCase` with no underscore prefix — `private readonly gymOrgId: GymOrgId`
+
+## Branded Domain ID Types
+
+Every domain ID is a branded string — prevents accidental `gymOrgId` / `userId` swaps at compile time:
+
+```ts
+// ✅ correct — define in the owning feature's domain/
+type GymOrgId = string & { readonly __brand: 'GymOrgId' };
+type UserId    = string & { readonly __brand: 'UserId' };
+
+function toGymOrgId(raw: string): GymOrgId {
+  return raw as GymOrgId;
+}
+```
+
+Never use plain `string` for domain identifiers in function signatures or entity fields.
+
+## Value Object Pattern
+
+Value Objects must be impossible to instantiate in an invalid state:
+
+```ts
+// ✅ correct
+class GymOrgName {
+  private constructor(readonly value: string) {}
+
+  static create(input: string): GymOrgName {
+    const trimmed = input.trim();
+    if (!trimmed) throw new Error('GymOrgName cannot be empty');
+    if (trimmed.length > 255) throw new Error('GymOrgName max 255 chars');
+    return new GymOrgName(trimmed);
+  }
+}
+
+// ❌ wrong — public constructor, mutable field, no validation
+class GymOrgName {
+  constructor(public value: string) {}
+}
+```
+
+Rules:
+- `private constructor` always
+- `static create()` as the only factory — throw `Error` on invalid input
+- All fields `readonly`
+- No mutator methods; produce a new instance for changes
+- Zod schemas must delegate to `create()` via `superRefine`, never re-implement the rule
+
+## Entity Pattern
+
+Entities carry identity and enforce lifecycle invariants:
+
+```ts
+class ClientMembership {
+  private constructor(
+    readonly id: MembershipId,
+    private status: MembershipStatus,
+    // ...
+  ) {}
+
+  static reconstitute(data: MembershipData): ClientMembership { /* from persistence */ }
+  static create(cmd: CreateMembershipCommand): ClientMembership { /* new instance */ }
+
+  activate(): void {
+    if (this.status === MembershipStatus.ACTIVE) throw new AlreadyActiveError();
+    this.status = MembershipStatus.ACTIVE;
+  }
+}
+```
+
+Rules:
+- Must enforce state transitions — never expose raw setters that bypass invariants
+- Must not be a pure data container (if there are no invariants, use a DTO instead)
+- Must not import Express, Supabase, Pino, or infrastructure packages
+
+## Constructor Injection
+
+```ts
+// ✅ correct — explicit dependencies, mockable in tests
+class ClaimMembershipUseCase {
+  constructor(
+    private readonly membershipRepo: MembershipRepository,
+    private readonly clock: Clock,
+    private readonly idGen: IdGenerator,
+  ) {}
+}
+
+// ❌ wrong — hidden dependency, impossible to unit test
+class ClaimMembershipUseCase {
+  private readonly membershipRepo = new SupabaseMembershipRepository();
+}
+```
+
+- All required collaborators in the constructor
+- No `new ConcreteImplementation()` inside use cases, services, or other use cases
+- `process.env` must not be read inside any class — pass `config: AppConfig` instead
+
+## TypeScript Strictness
+
+- **No `any`** — use `unknown` and narrow with type guards. If `any` is truly unavoidable, add `// eslint-disable-next-line @typescript-eslint/no-explicit-any` with a one-line comment explaining why.
+- **No non-null assertion (`!`)** without a guard comment explaining the guarantee.
+- **No implicit returns** from async functions — always `return` or `throw`.
+- `tsconfig.json` must have `"strict": true` and `"noUncheckedIndexedAccess": true`.
+
+## SOLID Quick-Reference
+
+| Principle | Rule for this project |
+|---|---|
+| **S** Single Responsibility | One use case = one business command or query. One controller action = one use-case call. |
+| **O** Open/Closed | New provider → new adapter implementing existing port. New plan type → new Value Object / strategy, not a growing `switch`. |
+| **L** Liskov Substitution | A repository implementation must honor every guarantee the interface declares — no `throw new NotImplemented()` for methods the interface promises. |
+| **I** Interface Segregation | Command repos and query interfaces are always separate. Never widen an interface to satisfy one new caller; add a second narrower interface instead. |
+| **D** Dependency Inversion | Use cases depend on `MembershipRepository` (interface), never on `SupabaseMembershipRepository` (class). Wire the concrete in `composition.ts`. |

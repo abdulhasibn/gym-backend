@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.pnpm-store/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+.env
+.env.local
+.env.*.local
+
+.DS_Store
+*.swp
+
+.vscode/*
+!.vscode/extensions.json

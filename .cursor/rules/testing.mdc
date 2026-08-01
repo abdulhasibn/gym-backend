@@ -1,0 +1,95 @@
+---
+description: Vitest testing conventions for gymBackend — domain/use-case isolation, fake implementations, injectable time and IDs, no infra in unit tests.
+globs: src/**/tests/**/*.ts,**/*.test.ts,**/*.spec.ts
+alwaysApply: false
+---
+
+# Testing Rules
+
+## Runner and File Location
+
+- Test runner: **Vitest**
+- Unit and integration test files live in `features/<name>/tests/` under `application/` or `presentation/` subdirs
+- Test file naming: `<subject>.test.ts` (e.g. `claim-membership.use-case.test.ts`)
+
+## Unit Tests Must Not Touch Infrastructure
+
+Domain and use-case tests must **not** import Express, `@supabase/supabase-js`, Pino, or any network/database client:
+
+```ts
+// ✅ correct — pure in-memory fake, no infrastructure
+class InMemoryMembershipRepository implements MembershipRepository {
+  private store = new Map<MembershipId, ClientMembership>();
+
+  async findById(id: MembershipId) { return this.store.get(id) ?? null; }
+  async findActiveByClient(clientId: UserId) {
+    return [...this.store.values()].find(
+      m => m.clientUserId === clientId && m.status === MembershipStatus.ACTIVE
+    ) ?? null;
+  }
+  async save(m: ClientMembership) { this.store.set(m.id, m); }
+}
+
+// ❌ wrong — real Supabase client in a unit test
+import { createClient } from '@supabase/supabase-js';
+```
+
+## Structure — one `describe` per use case, one `it` per scenario
+
+```ts
+describe('ClaimMembershipUseCase', () => {
+  let useCase: ClaimMembershipUseCase;
+  let membershipRepo: InMemoryMembershipRepository;
+  let clock: FakeClock;
+
+  beforeEach(() => {
+    membershipRepo = new InMemoryMembershipRepository();
+    clock = new FakeClock(new Date('2026-01-01T00:00:00Z'));
+    useCase = new ClaimMembershipUseCase(membershipRepo, clock);
+  });
+
+  it('creates an ACTIVE membership when none exists', async () => { /* ... */ });
+  it('throws AlreadyClaimedError when client already has ACTIVE membership', async () => { /* ... */ });
+  it('rejects when invite is EXPIRED', async () => { /* ... */ });
+});
+```
+
+## Injectable Time and IDs
+
+Never use `Date.now()`, `new Date()`, or `crypto.randomUUID()` inline in use cases, entities, or domain services:
+
+```ts
+// ✅ correct — injectable clock and id generator
+interface Clock { now(): Date; }
+interface IdGenerator { generate(): string; }
+
+class FakeClock implements Clock {
+  constructor(private current: Date) {}
+  now() { return this.current; }
+  advance(ms: number) { this.current = new Date(this.current.getTime() + ms); }
+}
+
+class FakeIdGenerator implements IdGenerator {
+  private counter = 0;
+  generate() { return `test-id-${++this.counter}`; }
+}
+
+// ❌ wrong — wall-clock directly in use case
+const now = new Date(); // not injectable, makes tests non-deterministic
+```
+
+## HTTP Tests
+
+- Use **Supertest** for controller/route integration tests
+- HTTP tests must validate transport concerns (status codes, response shape, error serialization)
+- HTTP tests must **not** be the only coverage for a business rule — that rule must have a use-case unit test too
+- HTTP tests may use an in-memory fake of the composition root, or a full test server with real use cases and fake repositories
+
+## Test Coverage Priorities
+
+1. **Domain / Value Object unit tests** — every invariant, every invalid-state rejection
+2. **Use-case unit tests** — every scenario (happy path, each error branch, authorization failure)
+3. **Repository integration tests** — against a real or Docker Supabase; test SQL predicates, pagination, soft-delete filters
+4. **HTTP integration tests** — happy path per endpoint, auth rejection, validation rejection
+
+Do not write tests that only assert `expect(result).toBeDefined()` — test the actual output shape or the thrown error type.

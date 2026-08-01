@@ -1,0 +1,63 @@
+import type { ErrorRequestHandler } from 'express';
+import { ZodError } from 'zod';
+
+import { ConflictError } from '../../../domain/errors/conflict.error';
+import { DatabaseUnavailableError } from '../../../domain/errors/database-unavailable.error';
+import { NotFoundError } from '../../../domain/errors/not-found.error';
+import { TransientDatabaseFailureError } from '../../../domain/errors/transient-database-failure.error';
+import { UniqueViolationError } from '../../../domain/errors/unique-violation.error';
+import type { Logger } from '../../../shared/logging/logger.port';
+
+interface ErrorResponseBody {
+  readonly error: { readonly code: string; readonly message: string };
+}
+
+/**
+ * The single place in the codebase that maps errors to HTTP responses
+ * (error-handling.mdc). Known error types are matched against a stable
+ * mapping table; anything else becomes a generic 500 with no leaked detail.
+ *
+ * Takes `logger: Logger` (the port, not Pino) — this file never imports
+ * `pino` directly (Dependency Inversion, architecture.md §2.2). At runtime,
+ * `req.log` (attached by the request-logger middleware) is preferred when
+ * present so log lines carry the request's correlation id; the injected
+ * `logger` is the fallback for errors raised outside a request (e.g. at
+ * startup before that middleware has run).
+ */
+export function createErrorHandlerMiddleware(logger: Logger): ErrorRequestHandler {
+  return (err, req, res, _next) => {
+    const log: Logger = req.log ?? logger;
+    const { status, body } = mapError(err);
+
+    if (status >= 500) {
+      log.error({ err, path: req.path, method: req.method }, 'Unhandled error');
+    } else {
+      log.warn({ err, path: req.path, method: req.method }, 'Request rejected');
+    }
+
+    res.status(status).json(body);
+  };
+}
+
+function mapError(err: unknown): { status: number; body: ErrorResponseBody } {
+  if (err instanceof ZodError) {
+    return {
+      status: 422,
+      body: { error: { code: 'VALIDATION_ERROR', message: 'Request validation failed' } },
+    };
+  }
+  if (err instanceof NotFoundError) {
+    return { status: 404, body: { error: { code: err.code, message: err.message } } };
+  }
+  if (err instanceof ConflictError || err instanceof UniqueViolationError) {
+    return { status: 409, body: { error: { code: err.code, message: err.message } } };
+  }
+  if (err instanceof DatabaseUnavailableError || err instanceof TransientDatabaseFailureError) {
+    return { status: 503, body: { error: { code: err.code, message: err.message } } };
+  }
+
+  return {
+    status: 500,
+    body: { error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
+  };
+}

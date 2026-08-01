@@ -1,0 +1,809 @@
+// Gym SaaS Backend — Database Schema (DBML)
+// Source of truth: docs/PRD.md v2.3 + CONTEXT.md + docs/adr/0002–0005
+// View interactively at https://dbdiagram.io (paste this file) or `npx @softwaretechnik/dbml-renderer`.
+//
+// Conventions:
+// - All primary keys are uuid (gen_random_uuid() / uuidv7() at app/DB layer).
+// - Every table has created_at; mutable tables also have updated_at where noted.
+// - Soft delete: mutable business entities have deleted_at timestamptz NULL (null = live).
+//   Repositories MUST exclude deleted_at IS NOT NULL by default. See ADR-0005.
+//   Excluded from soft-delete: audit_logs (append-only), roles / role_permissions (frozen seed).
+//   DPDP erasure is a separate privileged hard-delete/anonymize path (ADR-0003) — not soft-delete.
+// - GymOwnedRecord aggregates carry gym_org_id (tenancy). ClientOwnedRecord personal logs do NOT —
+//   staff reach them only via DataGrant / ProfileAttributeGrant (ADR-0002).
+// - Assigned DietPlan / WorkoutPlan instances are Client-owned but store assigning gym_org_id +
+//   trainer_id as provenance (not as data owner).
+// - Calendar day rules for gym ops use gym_orgs.timezone (default Asia/Kolkata); timestamptz = UTC.
+//   PlanCompletion.completed_on uses the assigning gym's timezone.
+// - Enums / seeded lookups back fixed-value fields.
+// - Foreign keys are indexed explicitly.
+// - Partial uniques / exclusion constraints that need WHERE deleted_at IS NULL are noted in
+//   migration comments (DBML cannot express partial indexes fully).
+// - RLS (Supabase) is defense-in-depth; it does not replace application authorization.
+//   Authz = affiliation ∧ role_permissions ∧ DataGrant (for Client-owned reads).
+//   See .cursor/skills/database-design/SKILL.md for RLS patterns.
+
+Project gym_saas {
+  database_type: 'PostgreSQL'
+  Note: 'Gym Management SaaS — MVP schema. Modular monolith, single Supabase Postgres. GymOwned tenancy via gym_org_id; ClientOwned personal data via User + DataGrants.'
+}
+
+//
+// ── Enums ──────────────────────────────────────────────────────────────────
+//
+
+Enum account_lane {
+  CLIENT
+  STAFF
+}
+
+Enum membership_status {
+  ACTIVE
+  INACTIVE
+}
+
+Enum invite_status {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+Enum staff_invite_target_role {
+  TRAINER
+  ADMIN
+}
+
+Enum payment_status {
+  paid
+  unpaid
+  partial
+}
+
+Enum subscription_start_source {
+  FIRST_ATTENDANCE
+  ADMIN_OVERRIDE
+  ADMIN_ATTACH
+}
+
+Enum plan_kind {
+  BASE
+  ADDON
+}
+
+Enum plan_capability {
+  TRAINER_COACHING
+}
+
+Enum coaching_plan_status {
+  ACTIVE
+  ARCHIVED
+}
+
+Enum profile_attribute {
+  DOB
+  HEIGHT
+  WEIGHT
+  GENDER
+  MEDICAL_NOTES
+}
+
+Enum data_grant_class {
+  PROGRESS
+  CALORIES
+  WEARABLES
+  DIET_PLANS
+  WORKOUT_PLANS
+}
+
+Enum attendance_recorder {
+  CLIENT
+  ADMIN
+}
+
+Enum lead_status {
+  NEW
+  CONTACTED
+  TRIAL
+  CONVERTED
+  LOST
+}
+
+Enum food_source {
+  seed
+  manual
+}
+
+Enum wearable_provider {
+  APPLE_HEALTH
+  HEALTH_CONNECT
+  SAMSUNG_HEALTH
+}
+
+Enum gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+Enum notification_type {
+  SUBSCRIPTION_EXPIRING
+  PAYMENT_PENDING_DIGEST
+  TRAINER_ASSIGNED
+  TRAINER_REASSIGNED
+  PLAN_ASSIGNED
+  INVITE_PENDING_CLAIM
+  STAFF_INVITE_PENDING
+  LEAD_FOLLOWUP_DUE
+  CHECKIN_BLOCKED
+  CHECKIN_UNBLOCKED
+}
+
+//
+// ── M1 Identity & Access — frozen roles ───────────────────────────────────
+//
+
+Table roles {
+  id          uuid         [pk, default: `gen_random_uuid()`]
+  code        varchar      [not null, unique, note: 'CLIENT | STAFF_UNASSIGNED | TRAINER | ADMIN. Seeded; immutable at runtime.']
+  name        varchar      [not null]
+  lane        account_lane [not null, note: 'CLIENT lane ↔ membership_invites only. STAFF lane ↔ staff_invites + staff_code. No cross-lane accounts.']
+  sort_order  int          [not null, default: 0]
+  created_at  timestamptz  [not null, default: `now()`]
+
+  Note: 'Frozen after migrate/seed. App DB role: SELECT only (no INSERT/UPDATE/DELETE). No gym-editable RBAC.'
+}
+
+Table role_permissions {
+  id               uuid    [pk, default: `gen_random_uuid()`]
+  role_id          uuid    [not null, ref: > roles.id]
+  permission_code  varchar [not null, note: 'App-owned codes, e.g. membership:read, coaching:write, billing:write.']
+  created_at       timestamptz [not null, default: `now()`]
+
+  indexes {
+    (role_id, permission_code) [unique]
+    role_id
+  }
+
+  Note: 'Frozen seed. Runtime authz still requires gym affiliation where the action is tenant-scoped.'
+}
+
+Table users {
+  id                 uuid      [pk, default: `gen_random_uuid()`, note: 'MUST equal auth.users.id (Supabase).']
+  role_id            uuid      [not null, ref: > roles.id]
+  name               varchar   [not null]
+  email              varchar   [not null, unique, note: 'Canonical identity. Verified via email OTP / Google.']
+  email_verified_at  timestamptz
+  phone              varchar   [note: 'Optional contact. Not auth; not unique.']
+  google_id          varchar   [unique]
+  staff_code         varchar   [unique, note: 'STAFF lane only. Opaque short code for owner invite / QR. Null for CLIENT.']
+  deleted_at         timestamptz
+  created_at         timestamptz [not null, default: `now()`]
+  updated_at         timestamptz [not null, default: `now()`]
+
+  indexes {
+    email [unique]
+    role_id
+    staff_code [unique]
+  }
+
+  Note: 'Signup sets role_id: CLIENT or STAFF_UNASSIGNED. Staff invite accept → TRAINER or ADMIN. At most one ACTIVE client_membership per user. Erasure deletes this row after ClientOwned purge (ADR-0003).'
+}
+
+Table client_profiles {
+  user_id        uuid    [pk, ref: - users.id, note: '1:1 ClientOwned. Staff reads attributes only via profile_attribute_grants.']
+  height_cm      decimal [note: 'numeric(5,2).']
+  weight_kg      decimal [note: 'numeric(5,2). Maintained current weight from latest ProgressLog; profile edit also writes today log.']
+  dob            date
+  gender         gender
+  medical_notes  text    [note: 'Sensitive. Never log. Visible to gym staff only when MEDICAL_NOTES grant exists for that gym.']
+  deleted_at     timestamptz
+  created_at     timestamptz [not null, default: `now()`]
+  updated_at     timestamptz [not null, default: `now()`]
+}
+
+Table profile_attribute_grants {
+  id              uuid              [pk, default: `gen_random_uuid()`]
+  client_user_id  uuid              [not null, ref: > users.id]
+  gym_org_id      uuid              [not null, ref: > gym_orgs.id]
+  attribute       profile_attribute [not null]
+  deleted_at      timestamptz
+  created_at      timestamptz       [not null, default: `now()`]
+
+  indexes {
+    (client_user_id, gym_org_id, attribute) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL.']
+    gym_org_id
+  }
+
+  Note: 'DataGrant shape for profile fields. No data copy. Accept REQUIRES DOB, HEIGHT, WEIGHT. Leave/revoke soft-deletes all grants for (client, gym).'
+}
+
+Table data_grants {
+  id              uuid             [pk, default: `gen_random_uuid()`]
+  client_user_id  uuid             [not null, ref: > users.id]
+  gym_org_id      uuid             [not null, ref: > gym_orgs.id]
+  class           data_grant_class [not null]
+  deleted_at      timestamptz
+  created_at      timestamptz      [not null, default: `now()`]
+
+  indexes {
+    (client_user_id, gym_org_id, class) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL.']
+    gym_org_id
+  }
+
+  Note: 'Class-level DataGrants. Optional on accept (default off). Leave/revoke clears all for (client, gym). New gym = fresh checklist. DIET_PLANS/WORKOUT_PLANS gate adherence reads, not assign/definition edit by assigning Trainer.'
+}
+
+//
+// ── M2 Gym Organization ───────────────────────────────────────────────────
+//
+
+Table gym_orgs {
+  id             uuid      [pk, default: `gen_random_uuid()`]
+  name           varchar   [not null]
+  address        text
+  contact_phone  varchar
+  contact_email  varchar
+  logo_url       text
+  timezone       varchar   [not null, default: 'Asia/Kolkata', note: 'IANA TZ. Calendar-day gym rules + PlanCompletion day bucketing for plans assigned here.']
+  owner_user_id  uuid      [not null, ref: > users.id]
+  deleted_at     timestamptz
+  created_at     timestamptz [not null, default: `now()`]
+  updated_at     timestamptz [not null, default: `now()`]
+
+  indexes {
+    owner_user_id
+  }
+
+  Note: 'Tenancy root for GymOwnedRecord. No open join codes in MVP — membership is invite-only.'
+}
+
+Table gym_admins {
+  id           uuid      [pk, default: `gen_random_uuid()`]
+  user_id      uuid      [not null, ref: > users.id]
+  gym_org_id   uuid      [not null, ref: > gym_orgs.id]
+  is_owner     boolean   [not null, default: false]
+  deleted_at   timestamptz
+  created_at   timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, gym_org_id) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL.']
+    gym_org_id
+  }
+
+  Note: 'App-layer Admin cap (e.g. max 3). Owner retained via gym_orgs.owner_user_id + is_owner.'
+}
+
+Table trainer_profiles {
+  id           uuid      [pk, default: `gen_random_uuid()`]
+  user_id      uuid      [not null, ref: > users.id]
+  gym_org_id   uuid      [not null, ref: > gym_orgs.id]
+  bio          text
+  deleted_at   timestamptz
+  created_at   timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, gym_org_id) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL.']
+    gym_org_id
+  }
+
+  Note: 'Admin-as-Trainer: ADMIN user also gets a trainer_profiles row in their org.'
+}
+
+Table staff_invites {
+  id                 uuid                     [pk, default: `gen_random_uuid()`]
+  gym_org_id         uuid                     [not null, ref: > gym_orgs.id]
+  invited_user_id    uuid                     [not null, ref: > users.id, note: 'Must already exist; STAFF lane. Resolved via staff_code / QR.']
+  target_role        staff_invite_target_role [not null]
+  status             invite_status            [not null, default: 'PENDING']
+  expires_at         timestamptz              [note: 'Default created_at + 14 days; Admin may override.']
+  created_by         uuid                     [not null, ref: > users.id]
+  accepted_at        timestamptz
+  deleted_at         timestamptz
+  created_at         timestamptz              [not null, default: `now()`]
+  updated_at         timestamptz              [not null, default: `now()`]
+
+  indexes {
+    (gym_org_id, invited_user_id, status)
+    invited_user_id
+    expires_at
+    created_by
+  }
+
+  Note: 'In-app invitation list for STAFF users. Accept → trainer_profiles and/or gym_admins + set users.role_id. At most one PENDING per (gym, user) via partial unique in SQL.'
+}
+
+//
+// ── M4 Plans catalog (before invites — FK target) ─────────────────────────
+//
+
+Table membership_plans {
+  id             uuid             [pk, default: `gen_random_uuid()`]
+  gym_org_id     uuid             [not null, ref: > gym_orgs.id]
+  name           varchar          [not null, note: 'Admin-chosen display name. Not used for entitlement logic.']
+  kind           plan_kind        [not null]
+  capability     plan_capability  [note: 'Required when kind=ADDON. Null when BASE. MVP: TRAINER_COACHING.']
+  duration_days  int              [not null]
+  price          decimal          [not null, note: 'numeric(12,2); INR implied for MVP.']
+  active         boolean          [not null, default: true, note: 'false = hide from new invites; keep row for history FKs.']
+  deleted_at     timestamptz
+  created_at     timestamptz      [not null, default: `now()`]
+  updated_at     timestamptz      [not null, default: `now()`]
+
+  indexes {
+    (gym_org_id, kind)
+    gym_org_id
+  }
+
+  Note: 'CHECK (kind = ADDON) = (capability IS NOT NULL). Catalog price is not the denominator for existing subscription lines — those snapshot at creation.'
+}
+
+//
+// ── M3 Members & Memberships ──────────────────────────────────────────────
+//
+
+Table membership_invites {
+  id                      uuid           [pk, default: `gen_random_uuid()`]
+  gym_org_id              uuid           [not null, ref: > gym_orgs.id]
+  invited_email           varchar        [not null]
+  invited_user_id         uuid           [ref: > users.id, note: 'Set when Admin picks an existing CLIENT-lane user; else null until accept matches email.']
+  invitee_name            varchar        [not null]
+  invitee_phone           varchar
+  base_plan_id            uuid           [not null, ref: > membership_plans.id]
+  base_payment_status     payment_status [not null, default: 'unpaid']
+  addon_plan_id           uuid           [ref: > membership_plans.id, note: 'Optional TRAINER_COACHING addon SKU.']
+  addon_payment_status    payment_status
+  status                  invite_status  [not null, default: 'PENDING']
+  expires_at              timestamptz    [note: 'Default +14 days.']
+  created_by              uuid           [not null, ref: > users.id]
+  accepted_at             timestamptz
+  accepted_membership_id  uuid           [ref: > client_memberships.id]
+  deleted_at              timestamptz
+  created_at              timestamptz    [not null, default: `now()`]
+  updated_at              timestamptz    [not null, default: `now()`]
+
+  indexes {
+    (gym_org_id, invited_email, status)
+    invited_user_id
+    invited_email
+    expires_at
+    created_by
+    base_plan_id
+    addon_plan_id
+    accepted_membership_id
+  }
+
+  Note: 'Only client join path. No price snapshot on invite — catalog price copied onto Subscription at accept. Partial unique: one PENDING per (gym_org_id, lower(invited_email)). CHECK (addon_plan_id IS NULL) = (addon_payment_status IS NULL).'
+}
+
+Table client_memberships {
+  id                    uuid              [pk, default: `gen_random_uuid()`]
+  client_user_id        uuid              [not null, ref: > users.id]
+  gym_org_id            uuid              [not null, ref: > gym_orgs.id]
+  status                membership_status [not null, default: 'ACTIVE']
+  check_in_blocked      boolean           [not null, default: false]
+  assigned_trainer_id   uuid              [ref: > trainer_profiles.id]
+  source_invite_id      uuid              [ref: > membership_invites.id]
+  joined_at             timestamptz       [not null, note: 'Set on invite accept.']
+  left_at               timestamptz
+  deleted_at            timestamptz
+  created_at            timestamptz       [not null, default: `now()`]
+  updated_at            timestamptz       [not null, default: `now()`]
+
+  indexes {
+    client_user_id
+    (gym_org_id, status)
+    assigned_trainer_id
+    source_invite_id
+    // Partial unique in migration SQL:
+    //   CREATE UNIQUE INDEX client_memberships_one_active
+    //     ON client_memberships (client_user_id)
+    //     WHERE status = 'ACTIVE' AND deleted_at IS NULL;
+  }
+
+  Note: 'GymOwned. Created only on invite accept. Offboard → INACTIVE + clear all DataGrants for (client, gym). Check-in: ACTIVE + in-date base + !check_in_blocked.'
+}
+
+//
+// ── M4 Subscriptions (billing lines) ──────────────────────────────────────
+//
+
+Table subscriptions {
+  id                     uuid             [pk, default: `gen_random_uuid()`]
+  client_membership_id   uuid             [not null, ref: > client_memberships.id]
+  gym_org_id             uuid             [not null, ref: > gym_orgs.id, note: 'Denormalized tenancy; must match membership.gym_org_id (composite FK in SQL).']
+  plan_id                uuid             [not null, ref: > membership_plans.id]
+  kind                   plan_kind        [not null, note: 'Denormalized from plan at creation for exclusion constraint.']
+  capability             plan_capability  [note: 'Denormalized; null for BASE. Required for ADDON overlap key.']
+  price_amount           decimal          [not null, note: 'numeric(12,2). Snapshot at creation.']
+  duration_days          int              [not null, note: 'Snapshot at creation.']
+  start_date             date             [note: 'Calendar date in gym TZ. BASE: null until first attendance or Admin override. ADDON: set on Admin attach.']
+  end_date               date
+  start_source           subscription_start_source
+  payment_status         payment_status   [not null, default: 'unpaid']
+  amount_paid            decimal          [not null, default: 0, note: 'numeric(12,2). Constrained against price_amount.']
+  deleted_at             timestamptz
+  created_at             timestamptz      [not null, default: `now()`]
+  updated_at             timestamptz      [not null, default: `now()`]
+
+  indexes {
+    client_membership_id
+    gym_org_id
+    plan_id
+    end_date
+    (client_membership_id, end_date)
+  }
+
+  Note: 'GymOwned. Renew = new row. Snapshot price/duration (ADR-0004). Non-overlap via EXCLUDE USING gist on (client_membership_id, kind, coalesce(capability), daterange) WHERE deleted_at IS NULL AND start_date IS NOT NULL; plus partial unique one unstarted BASE. CHECK amount_paid vs payment_status vs price_amount. CHECK end_date >= start_date when both set.'
+}
+
+//
+// ── M5 Attendance ──────────────────────────────────────────────────────────
+//
+
+Table attendances {
+  id                uuid                [pk, default: `gen_random_uuid()`]
+  client_user_id    uuid                [not null, ref: > users.id]
+  gym_org_id        uuid                [not null, ref: > gym_orgs.id]
+  occurred_at       timestamptz         [not null, default: `now()`, note: 'UTC instant. Query local days via UTC bounds for gym TZ — do not wrap column in AT TIME ZONE in WHERE.']
+  recorded_by       attendance_recorder [not null]
+  recorder_user_id  uuid                [not null, ref: > users.id]
+  deleted_at        timestamptz
+  created_at        timestamptz         [not null, default: `now()`]
+
+  indexes {
+    (gym_org_id, occurred_at)
+    (client_user_id, occurred_at)
+    recorder_user_id
+  }
+
+  Note: 'GymOwned. Retained after leave; anonymize client_user_id on Erasure. No per-day uniqueness in MVP. CHECK (recorded_by = CLIENT) ⇒ recorder_user_id = client_user_id. First check-in may set base subscription start when start_date is null.'
+}
+
+//
+// ── M6/M7 Coaching — Diet & Workout (Client-owned instances) ───────────────
+//
+
+Table diet_plans {
+  id               uuid                  [pk, default: `gen_random_uuid()`]
+  client_user_id   uuid                  [not null, ref: > users.id]
+  trainer_id       uuid                  [not null, ref: > trainer_profiles.id]
+  gym_org_id       uuid                  [not null, ref: > gym_orgs.id, note: 'Assigning-gym provenance, not data owner.']
+  title            varchar               [not null]
+  notes            text
+  status           coaching_plan_status  [not null, default: 'ACTIVE']
+  cloned_from_id   uuid                  [ref: > diet_plans.id]
+  deleted_at       timestamptz
+  created_at       timestamptz           [not null, default: `now()`]
+  updated_at       timestamptz           [not null, default: `now()`]
+
+  indexes {
+    (client_user_id, gym_org_id, status)
+    gym_org_id
+    trainer_id
+    cloned_from_id
+  }
+
+  Note: 'ClientOwned instance. Assign with in-date TRAINER_COACHING; assign/edit definition by assigning Trainer does not require DIET_PLANS grant. Adherence (PlanCompletion) requires DIET_PLANS. At most one ACTIVE per (client, assigning gym).'
+}
+
+Table diet_plan_meals {
+  id                  uuid    [pk, default: `gen_random_uuid()`]
+  diet_plan_id        uuid    [not null, ref: > diet_plans.id]
+  slot_name           varchar [not null]
+  target_calories     decimal
+  target_protein_g    decimal
+  target_carbs_g      decimal
+  target_fat_g        decimal
+  sort_order          int     [not null, default: 0]
+  deleted_at          timestamptz
+  created_at          timestamptz [not null, default: `now()`]
+  updated_at          timestamptz [not null, default: `now()`]
+
+  indexes {
+    diet_plan_id
+  }
+}
+
+Table diet_plan_meal_items {
+  id                   uuid    [pk, default: `gen_random_uuid()`]
+  diet_plan_meal_id    uuid    [not null, ref: > diet_plan_meals.id]
+  food_item_id         uuid    [ref: > food_items.id]
+  custom_name          varchar
+  quantity             decimal [not null]
+  unit                 varchar [not null]
+  deleted_at           timestamptz
+
+  indexes {
+    diet_plan_meal_id
+    food_item_id
+  }
+
+  Note: 'Template item only — completions live in diet_plan_item_completions.'
+}
+
+Table diet_plan_item_completions {
+  id                     uuid [pk, default: `gen_random_uuid()`]
+  diet_plan_meal_item_id uuid [not null, ref: > diet_plan_meal_items.id]
+  client_user_id         uuid [not null, ref: > users.id]
+  completed_on           date [not null, note: 'Calendar day in assigning gym timezone.']
+  created_at             timestamptz [not null, default: `now()`]
+
+  indexes {
+    (diet_plan_meal_item_id, completed_on) [unique]
+    client_user_id
+  }
+
+  Note: 'ClientOwned PlanCompletion. Staff read requires DIET_PLANS grant. No soft-delete — append/upsert; erase with ClientOwned purge.'
+}
+
+Table workout_plans {
+  id               uuid                  [pk, default: `gen_random_uuid()`]
+  client_user_id   uuid                  [not null, ref: > users.id]
+  trainer_id       uuid                  [not null, ref: > trainer_profiles.id]
+  gym_org_id       uuid                  [not null, ref: > gym_orgs.id, note: 'Assigning-gym provenance, not data owner.']
+  title            varchar               [not null]
+  notes            text
+  status           coaching_plan_status  [not null, default: 'ACTIVE']
+  cloned_from_id   uuid                  [ref: > workout_plans.id]
+  deleted_at       timestamptz
+  created_at       timestamptz           [not null, default: `now()`]
+  updated_at       timestamptz           [not null, default: `now()`]
+
+  indexes {
+    (client_user_id, gym_org_id, status)
+    gym_org_id
+    trainer_id
+    cloned_from_id
+  }
+
+  Note: 'Same ownership and grant rules as diet_plans (WORKOUT_PLANS for adherence).'
+}
+
+Table workout_plan_days {
+  id                uuid    [pk, default: `gen_random_uuid()`]
+  workout_plan_id   uuid    [not null, ref: > workout_plans.id]
+  day_label         varchar [not null]
+  sort_order        int     [not null, default: 0]
+  deleted_at        timestamptz
+  created_at        timestamptz [not null, default: `now()`]
+  updated_at        timestamptz [not null, default: `now()`]
+
+  indexes {
+    workout_plan_id
+  }
+}
+
+Table workout_plan_exercises {
+  id                    uuid    [pk, default: `gen_random_uuid()`]
+  workout_plan_day_id   uuid    [not null, ref: > workout_plan_days.id]
+  name                  varchar [not null]
+  sets                  int
+  reps                  varchar
+  notes                 text
+  sort_order            int     [not null, default: 0]
+  deleted_at            timestamptz
+
+  indexes {
+    workout_plan_day_id
+  }
+
+  Note: 'Template exercise only — completions live in workout_plan_exercise_completions.'
+}
+
+Table workout_plan_exercise_completions {
+  id                       uuid [pk, default: `gen_random_uuid()`]
+  workout_plan_exercise_id uuid [not null, ref: > workout_plan_exercises.id]
+  client_user_id           uuid [not null, ref: > users.id]
+  completed_on             date [not null, note: 'Calendar day in assigning gym timezone.']
+  created_at               timestamptz [not null, default: `now()`]
+
+  indexes {
+    (workout_plan_exercise_id, completed_on) [unique]
+    client_user_id
+  }
+
+  Note: 'ClientOwned PlanCompletion. Staff read requires WORKOUT_PLANS grant.'
+}
+
+//
+// ── M8 Progress & Body Metrics (Client-owned) ──────────────────────────────
+//
+
+Table progress_logs {
+  id              uuid    [pk, default: `gen_random_uuid()`]
+  client_user_id  uuid    [not null, ref: > users.id]
+  log_date        date    [not null, note: 'Calendar date supplied/confirmed by client (or sync). Not gym-scoped.']
+  weight_kg       decimal [note: 'numeric(5,2). Canonical weight history.']
+  bmi             decimal [note: 'Derived from weight + profile height at write time; document denorm.']
+  notes           text
+  deleted_at      timestamptz
+  created_at      timestamptz [not null, default: `now()`]
+
+  indexes {
+    (client_user_id, log_date) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL.']
+  }
+
+  Note: 'ClientOwned. No gym_org_id. Staff read requires PROGRESS grant. Updates client_profiles.weight_kg as current.'
+}
+
+//
+// ── M9 Nutrition (Client-owned) ────────────────────────────────────────────
+//
+
+Table food_items {
+  id               uuid        [pk, default: `gen_random_uuid()`]
+  name             varchar     [not null]
+  aliases          varchar[]
+  default_portion  varchar
+  calories         decimal     [not null]
+  protein_g        decimal
+  carbs_g          decimal
+  fat_g            decimal
+  source           food_source [not null, default: 'seed']
+  active           boolean     [not null, default: true]
+  deleted_at       timestamptz
+  created_at       timestamptz [not null, default: `now()`]
+  updated_at       timestamptz [not null, default: `now()`]
+
+  indexes {
+    name
+  }
+
+  Note: 'Platform-owned Indian catalog (not per-gym).'
+}
+
+Table calorie_log_entries {
+  id                  uuid    [pk, default: `gen_random_uuid()`]
+  client_user_id      uuid    [not null, ref: > users.id]
+  log_date            date    [not null]
+  raw_input           text
+  total_calories      decimal [not null, default: 0]
+  total_protein_g     decimal [not null, default: 0]
+  total_carbs_g       decimal [not null, default: 0]
+  total_fat_g         decimal [not null, default: 0]
+  deleted_at          timestamptz
+  created_at          timestamptz [not null, default: `now()`]
+
+  indexes {
+    (client_user_id, log_date) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL.']
+  }
+
+  Note: 'ClientOwned. No gym_org_id. Staff read requires CALORIES grant. totals_* are denormalized aggregates of items.'
+}
+
+Table calorie_log_items {
+  id                      uuid    [pk, default: `gen_random_uuid()`]
+  calorie_log_entry_id    uuid    [not null, ref: > calorie_log_entries.id]
+  food_item_id            uuid    [ref: > food_items.id]
+  manual_description      varchar
+  quantity                decimal [not null]
+  unit                    varchar
+  calories                decimal [not null]
+  protein_g               decimal
+  carbs_g                 decimal
+  fat_g                   decimal
+  deleted_at              timestamptz
+
+  indexes {
+    calorie_log_entry_id
+    food_item_id
+  }
+}
+
+//
+// ── M10 Health Sync (Client-owned) ─────────────────────────────────────────
+//
+
+Table wearable_connections {
+  id               uuid              [pk, default: `gen_random_uuid()`]
+  client_user_id   uuid              [not null, ref: > users.id]
+  provider         wearable_provider [not null]
+  auth_ref         jsonb             [note: 'Prefer empty for HealthKit/Health Connect (device push). If a provider needs a server token, store via Vault/pgcrypto — never plaintext long-term.']
+  last_synced_at   timestamptz
+  active           boolean           [not null, default: true]
+  deleted_at       timestamptz
+  created_at       timestamptz       [not null, default: `now()`]
+  updated_at       timestamptz       [not null, default: `now()`]
+
+  indexes {
+    (client_user_id, provider) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL.']
+  }
+
+  Note: 'ClientOwned. No gym_org_id. Staff read of metrics requires WEARABLES grant.'
+}
+
+Table wearable_daily_metrics {
+  id               uuid              [pk, default: `gen_random_uuid()`]
+  client_user_id   uuid              [not null, ref: > users.id]
+  provider         wearable_provider [not null]
+  metric_on        date              [not null]
+  steps            int
+  active_kcal      decimal
+  weight_kg        decimal           [note: 'Also upserts ProgressLog + profile current weight when present.']
+  workout_minutes  int
+  ingested_at      timestamptz       [not null, default: `now()`]
+
+  indexes {
+    (client_user_id, provider, metric_on) [unique]
+    client_user_id
+  }
+
+  Note: 'ClientOwned daily metrics store. Staff read requires WEARABLES grant. Erase with ClientOwned purge.'
+}
+
+//
+// ── M11 Mini-CRM (Admin) ───────────────────────────────────────────────────
+//
+
+Table leads {
+  id                              uuid        [pk, default: `gen_random_uuid()`]
+  gym_org_id                      uuid        [not null, ref: > gym_orgs.id]
+  name                            varchar     [not null]
+  phone                           varchar     [not null]
+  source                          varchar
+  status                          lead_status [not null, default: 'NEW']
+  interest                        text
+  notes                           text
+  follow_up_date                  date
+  converted_membership_invite_id  uuid        [ref: > membership_invites.id, note: 'Set on convert (A14, P1).']
+  created_by                      uuid        [not null, ref: > users.id]
+  deleted_at                      timestamptz
+  created_at                      timestamptz [not null, default: `now()`]
+  updated_at                      timestamptz [not null, default: `now()`]
+
+  indexes {
+    (gym_org_id, status)
+    (gym_org_id, phone)
+    follow_up_date
+    created_by
+    converted_membership_invite_id
+  }
+
+  Note: 'GymOwned. Phone not unique — app soft-warns on duplicate open leads. Re-inquiry after LOST = new row.'
+}
+
+//
+// ── M12 Notifications & Inbox ───────────────────────────────────────────────
+//
+
+Table notifications {
+  id                 uuid              [pk, default: `gen_random_uuid()`]
+  recipient_user_id  uuid              [not null, ref: > users.id]
+  gym_org_id         uuid              [ref: > gym_orgs.id]
+  type               notification_type [not null]
+  title              varchar           [not null]
+  body               text              [not null]
+  data               jsonb
+  read_at            timestamptz
+  deleted_at         timestamptz
+  created_at         timestamptz       [not null, default: `now()`]
+
+  indexes {
+    (recipient_user_id, created_at)
+    (gym_org_id, created_at)
+  }
+}
+
+//
+// ── M13 Platform / Shared — Audit Trail ─────────────────────────────────────
+//
+
+Table audit_logs {
+  id              uuid        [pk, default: `gen_random_uuid()`]
+  gym_org_id      uuid        [ref: > gym_orgs.id]
+  actor_user_id   uuid        [not null, ref: > users.id]
+  action          varchar     [not null]
+  target_type     varchar     [not null]
+  target_id       uuid        [not null]
+  metadata        jsonb       [note: 'Non-sensitive only — never medical notes, tokens, OTPs.']
+  created_at      timestamptz [not null, default: `now()`]
+
+  indexes {
+    (gym_org_id, created_at)
+    (target_type, target_id)
+    actor_user_id
+  }
+
+  Note: 'Append-only. No deleted_at. On Erasure, scrub actor/subject to tombstone; retain rows. Required for payment-status, plan assign, Admin attendance, check-in blocks, membership status, invite accept/revoke, grant changes.'
+}

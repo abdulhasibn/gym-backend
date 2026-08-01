@@ -1,0 +1,114 @@
+---
+description: Supabase database access rules for gymBackend — infra-only client, RLS as defense-in-depth, soft-delete predicates, tenant isolation. Replaces the old Prisma-centric rule.
+globs: src/**/*.ts,supabase/**/*
+alwaysApply: false
+---
+
+# Supabase Access Rules
+
+This project uses `@supabase/supabase-js` directly — there is no Prisma or ORM. All database access goes through Supabase repository and query implementations in `src/infrastructure/`.
+
+## Client Placement
+
+- The Supabase client is constructed **once** in `src/infrastructure/supabase/` and injected into repositories.
+- No code outside `src/infrastructure/` may import `createClient` or hold a `SupabaseClient` instance.
+- `service_role` key: server-side only, never reachable from presentation or domain code.
+- `anon` key: used only for auth flows, never for data access that requires authorization.
+
+```ts
+// ✅ correct — client constructed in infrastructure, injected into repos
+export function createSupabaseInfraClient(config: SupabaseConfig) {
+  return createClient(config.url, config.serviceRoleKey, { auth: { persistSession: false } });
+}
+
+// ❌ wrong — Supabase client inside a use case
+import { createClient } from '@supabase/supabase-js';
+class ClaimMembershipUseCase {
+  private db = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!);
+}
+```
+
+## RLS — Defense-in-Depth, Not Primary Authorization
+
+Row Level Security is a safety net, not a substitute for application-layer authorization:
+
+- Application use cases and policies are the **authoritative** authorization boundary.
+- RLS provides defense-in-depth against service-role mistakes or direct Supabase access outside the API.
+- Enable RLS on every table in the public schema — tables created via SQL migrations do not get RLS automatically.
+- Wrap `auth.uid()` / `auth.jwt()` in `(select ...)` inside policies to evaluate once per query, not once per row.
+- Index every column referenced in an RLS policy (`user_id`, `gym_org_id`, etc.).
+
+## Soft Delete Predicates
+
+All mutable business entities use `deleted_at timestamptz NULL` (null = live). See ADR-0005.
+
+```ts
+// ✅ correct — repository always excludes soft-deleted rows by default
+const { data } = await this.db
+  .from('client_memberships')
+  .select('*')
+  .eq('gym_org_id', gymOrgId)
+  .is('deleted_at', null);
+
+// ✅ correct — partial unique index on the DB side
+// CREATE UNIQUE INDEX ON subscriptions (membership_id, kind)
+//   WHERE deleted_at IS NULL;
+
+// ❌ wrong — boolean soft-delete flag
+.eq('is_deleted', false)
+```
+
+Recovery queries (admin-only) must explicitly opt in to `deleted_at IS NOT NULL`.
+
+## Tenant Isolation
+
+Repositories for GymOwnedRecords must always apply a `gym_org_id` predicate — it is a required argument, never inferred from context:
+
+```ts
+// ✅ correct — gym_org_id is an explicit param, not grabbed from "somewhere"
+async listRoster(gymOrgId: GymOrgId, page: Pagination) {
+  return this.db
+    .from('client_memberships')
+    .select('...')
+    .eq('gym_org_id', gymOrgId)
+    .is('deleted_at', null)
+    .range(page.offset, page.offset + page.limit - 1);
+}
+
+// ❌ wrong — missing tenant predicate, returns all gyms' data
+async listRoster(page: Pagination) {
+  return this.db.from('client_memberships').select('*');
+}
+```
+
+## Row Mapping
+
+Repositories must never return raw Supabase rows to the application layer:
+
+- Command-side repositories: map rows → domain entities via `*.mapper.ts` before returning
+- Query-side interfaces: map rows → read-model DTOs shaped for the specific screen/report
+- API responses must be serialized from DTOs — no raw database row shapes in HTTP responses
+
+## Transactions
+
+Multi-record writes that require atomicity must use a transaction port. The Supabase implementation uses a PostgreSQL RPC function or Supabase's `rpc` for server-side transactions — a sequence of separate `.from()` calls is NOT a transaction.
+
+```ts
+// ✅ correct — atomic via DB function
+await this.db.rpc('claim_membership_txn', { invite_id, client_user_id });
+
+// ❌ wrong — two separate calls described as a "transaction"
+await this.db.from('membership_invites').update({ status: 'ACCEPTED' })...;
+await this.db.from('client_memberships').insert(...)...;
+```
+
+## Error Translation
+
+Every Supabase/PostgreSQL error must be caught and re-thrown as a typed infrastructure error before leaving the repository. Raw `PostgrestError` objects must not propagate to the application layer. See `error-handling.mdc`.
+
+## Migrations
+
+- Schema changes are forward-only SQL migration files — never hand-edit applied migrations.
+- Every migration must add indexes for: tenant keys (`gym_org_id`), foreign keys, status/date filters, grant lookups, and pagination access paths.
+- Destructive changes (column drops, type changes) require a compatibility plan in the migration file header comment.
+- Partial unique indexes for soft-deletable tables use `WHERE deleted_at IS NULL`.

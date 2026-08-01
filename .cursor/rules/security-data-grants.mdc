@@ -1,0 +1,121 @@
+---
+description: DataGrant / ClientOwned / GymOwned ownership model enforcement, tenant isolation, and sensitive-data handling for gymBackend. Violations here create data-privacy bugs that are expensive to retrofit.
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# Security & Data Grant Rules
+
+Full context: `CONTEXT.md` · `docs/architecture.md §2.7` · `docs/adr/0002-client-owned-records-and-data-grants.md` · `docs/adr/0003-dpdp-erasure-procedure.md`
+
+## Two Ownership Classes
+
+| Class | Owned by | `gym_org_id` on row? | Staff access |
+|---|---|---|---|
+| **GymOwnedRecord** | GymOrg | Yes | Unrestricted within that org |
+| **ClientOwnedRecord** | User (client) | **No** | Only via live DataGrant |
+
+ClientOwnedRecords: `ClientProfile`, `ProgressLog`, `CalorieLog`, `WearableConnection` (+ metrics), assigned `DietPlan` / `WorkoutPlan` instances (+ completions).
+
+GymOwnedRecords: `ClientMembership`, `Subscription`, `MembershipInvite`, `Attendance`, `Lead`, plan catalog, staff ops.
+
+## Gym-Owned Operations
+
+Every command or query over a GymOwnedRecord must:
+
+1. **Derive** `gym_org_id` from the authenticated actor's affiliation — never accept it from the request body or query string as the sole source of truth.
+2. **Verify** the actor has the required `RolePermission` for that org before mutating or reading.
+3. Pass `gym_org_id` as an explicit argument to the repository — the repository must apply it as a predicate, not infer it from context.
+
+```ts
+// ✅ correct — gym_org_id comes from auth context, verified by policy
+async execute(actor: AuthenticatedActor, cmd: ListRosterCommand) {
+  const gymOrgId = actor.affiliations.requireAdminAt(cmd.gymOrgId);
+  return this.membershipQueries.listRoster({ gymOrgId }, cmd.page);
+}
+
+// ❌ wrong — trusting gymOrgId from client input without auth check
+async execute(cmd: ListRosterCommand) {
+  return this.membershipQueries.listRoster({ gymOrgId: cmd.gymOrgId }, cmd.page);
+}
+```
+
+## Client-Owned Data — Staff Access
+
+Staff may read a client's personal data only when **all three** hold:
+
+1. The staff member has an active affiliation (`GymAdmin` or `TrainerProfile`) at the gym.
+2. A live `DataGrant` / `ProfileAttributeGrant` exists for `(client_user_id, gym_org_id)` covering the requested class or attribute.
+3. The grant has not been cleared by an `INACTIVE` offboard or explicit revoke.
+
+```ts
+// ✅ correct — policy checks affiliation AND grant before proceeding
+await this.dataGrantPolicy.requireGrantOrThrow({
+  staffUserId: actor.userId,
+  clientUserId: cmd.clientUserId,
+  gymOrgId: actor.gymOrgId,
+  grantClass: DataGrantClass.PROGRESS,
+});
+const logs = await this.progressRepo.findByClient(cmd.clientUserId);
+
+// ❌ wrong — reading client data based on role alone, no grant check
+if (actor.role === Role.TRAINER) {
+  return this.progressRepo.findByClient(cmd.clientUserId);
+}
+```
+
+Absent grant = deny. There is no default-allow for any ClientOwnedRecord class.
+
+## Plan Assignment vs. Plan Adherence
+
+- A trainer **may assign** a diet/workout plan instance without the client's `DIET_PLANS` / `WORKOUT_PLANS` class grant.
+- The assigning trainer **may view/edit the plan definition** (template) without the class grant.
+- The class grant gates reading what the client **did** with the plan — completions / adherence.
+- Other staff at the gym need the class grant for both definition and adherence.
+- After leave/revoke, no staff may read definition or adherence.
+
+## Client-Owned Rows Must Not Carry `gym_org_id` as Owner
+
+```ts
+// ✅ correct — ProgressLog keyed only by client
+interface ProgressLog {
+  id: ProgressLogId;
+  clientUserId: UserId;
+  // no gym_org_id
+}
+
+// ❌ wrong — personal log scoped to membership stint
+interface ProgressLog {
+  id: ProgressLogId;
+  clientUserId: UserId;
+  gymOrgId: GymOrgId;  // violates ClientOwned contract
+}
+```
+
+Assigned plan instances MAY store assigning gym / trainer as **provenance** (`assigningGymOrgId`, `assigningTrainerProfileId`) — not as an owner that gates client access to their own data.
+
+## Offboard vs. Erasure
+
+| Event | Effect on DataGrants | Effect on ClientOwnedRecords | Effect on GymOwnedRecords |
+|---|---|---|---|
+| `INACTIVE` (leave gym) | All grants for `(client, gym)` are cleared | None — data stays with client | None — Attendance is retained by gym |
+| DPDP Erasure (ADR-0003) | All grants hard-deleted | Hard-deleted or irreversibly anonymized | Anonymize personal pointers; retain ops/billing rows |
+
+Normal application code must NOT hard-delete mutable business entities — that path is reserved for the privileged DPDP erasure procedure.
+
+## Sensitive Fields — Log Prohibition
+
+These must **never** appear in structured logs, error messages, or HTTP responses:
+
+- OTPs / magic-link tokens
+- `medical_notes` / health data
+- Password hashes or raw credentials
+- `service_role` Supabase key
+- Full card / payment identifiers
+
+Use Pino's `redact` option for field-level suppression. When in doubt, log IDs and timestamps — never payloads.
+
+## `service_role` Key
+
+- Stays in `infrastructure/supabase/` only.
+- Must never be referenced in application, domain, presentation, or any code reachable from a client request without an explicit server-side actor/tenant check first.
