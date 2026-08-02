@@ -13,7 +13,9 @@ export function createAuthenticateIdentityMiddleware(authProvider: AuthProvider)
   return async (req, _res, next) => {
     try {
       const authenticatedRequest = req as AuthenticatedIdentityRequest;
-      authenticatedRequest.authIdentity = await authProvider.getUserFromAccessToken(getBearerToken(req));
+      authenticatedRequest.authIdentity = await authProvider.getUserFromAccessToken(
+        getBearerToken(req),
+      );
       next();
     } catch (error) {
       next(error);
@@ -21,7 +23,9 @@ export function createAuthenticateIdentityMiddleware(authProvider: AuthProvider)
   };
 }
 
-export function createAuthenticateMiddleware(authenticateActor: AuthenticateActorUseCase): RequestHandler {
+export function createAuthenticateMiddleware(
+  authenticateActor: AuthenticateActorUseCase,
+): RequestHandler {
   return async (req, _res, next) => {
     try {
       setAuthenticatedActor(req, await authenticateActor.execute(getBearerToken(req)));

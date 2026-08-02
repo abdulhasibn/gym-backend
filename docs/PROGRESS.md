@@ -48,6 +48,17 @@
 
 ## Log
 
+### 2026-08-02 — CI workflow unblocked
+
+- Root cause: `pnpm/action-setup@v4` failed with no pnpm version
+  (`package.json` lacked `packageManager`).
+- Pinned `"packageManager": "pnpm@11.10.0"`; bumped checkout/setup-node to
+  `@v5` (Node 24 action runtime).
+- Prettier: ignored `.agents/`, `.cursor/`, `.scratch/`; formatted drifted
+  app sources so `format:check` passes.
+- ESLint: ignore `.scratch/**` (local Vercel scratch bundles).
+- Local validation: typecheck, lint, format:check, 39 tests, build all pass.
+
 ### 2026-08-02 — Backend hosted on Vercel
 
 - Project `gym-backend` (`prj_IwA7MLzpRjFUprHkMdl9sR85hNfy`) on team

@@ -88,7 +88,9 @@ export class AuthUser {
 
   withGoogleId(googleId: string): AuthUser {
     if (this.data.googleId !== null && this.data.googleId !== googleId) {
-      throw new AuthUserInvariantError('A different Google identity is already linked to this account');
+      throw new AuthUserInvariantError(
+        'A different Google identity is already linked to this account',
+      );
     }
 
     return new AuthUser({ ...this.data, googleId });

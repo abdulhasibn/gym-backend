@@ -4,6 +4,7 @@
   "description": "Gym SaaS backend — Node.js, Express, TypeScript, Supabase (Auth + PostgreSQL)",
   "private": true,
   "license": "UNLICENSED",
+  "packageManager": "pnpm@11.10.0",
   "engines": {
     "node": ">=22"
   },

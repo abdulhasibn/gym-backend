@@ -56,7 +56,9 @@ describe('email OTP use cases', () => {
   });
 
   it('requests an OTP for the supplied email', async () => {
-    await new RequestEmailOtpUseCase(authProvider).execute(EmailAddress.create('member@example.com'));
+    await new RequestEmailOtpUseCase(authProvider).execute(
+      EmailAddress.create('member@example.com'),
+    );
 
     expect(authProvider.requestEmail?.value).toBe('member@example.com');
   });

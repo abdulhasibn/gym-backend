@@ -89,9 +89,7 @@ console.log('');
 console.log('Google Cloud Console checklist:');
 console.log('  1. Create a Web application OAuth client');
 console.log(`  2. Authorized JavaScript origins: ${siteUrl.replace(/\/$/, '')}`);
-console.log(
-  `  3. Authorized redirect URI: https://${projectRef}.supabase.co/auth/v1/callback`,
-);
+console.log(`  3. Authorized redirect URI: https://${projectRef}.supabase.co/auth/v1/callback`);
 console.log('  4. Re-run this script if you rotate the client secret');
 console.log('');
 console.log('Verify flow:');

@@ -5,14 +5,8 @@ import type { GetCurrentUserUseCase } from '../application/get-current-user.use-
 import type { RequestEmailOtpUseCase } from '../application/request-email-otp.use-case';
 import type { VerifyEmailOtpUseCase } from '../application/verify-email-otp.use-case';
 import { requireAuthenticatedActor } from '../../../presentation/http/context/request-actor';
-import {
-  requireAuthenticatedIdentity,
-} from './authenticate.middleware';
-import {
-  completeGoogleSchema,
-  requestEmailOtpSchema,
-  verifyEmailOtpSchema,
-} from './auth.schemas';
+import { requireAuthenticatedIdentity } from './authenticate.middleware';
+import { completeGoogleSchema, requestEmailOtpSchema, verifyEmailOtpSchema } from './auth.schemas';
 
 export class AuthController {
   constructor(

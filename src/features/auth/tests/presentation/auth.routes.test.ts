@@ -2,10 +2,7 @@ import express from 'express';
 import supertest from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import {
-  AuthRateLimitedError,
-  OtpExpiredError,
-} from '../../domain/auth-provider.error';
+import { AuthRateLimitedError, OtpExpiredError } from '../../domain/auth-provider.error';
 import { EmailAddressInvalidError } from '../../domain/email-address.error';
 import { EmailAddress } from '../../domain/email-address.value-object';
 import { CompleteGoogleAuthUseCase } from '../../application/complete-google-auth.use-case';

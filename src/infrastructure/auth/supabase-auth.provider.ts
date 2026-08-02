@@ -1,6 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { AuthProvider, AuthSession, AuthenticatedIdentity } from '../../features/auth/domain/auth-provider.port';
+import type {
+  AuthProvider,
+  AuthSession,
+  AuthenticatedIdentity,
+} from '../../features/auth/domain/auth-provider.port';
 import { AuthenticationFailedError } from '../../features/auth/domain/authentication-failed.error';
 import { EmailAddressInvalidError } from '../../features/auth/domain/email-address.error';
 import { EmailAddress } from '../../features/auth/domain/email-address.value-object';
@@ -22,7 +26,11 @@ export class SupabaseAuthProvider implements AuthProvider {
   }
 
   async verifyEmailOtp(email: EmailAddress, token: string): Promise<AuthSession> {
-    const { data, error } = await this.client.auth.verifyOtp({ email: email.value, token, type: 'email' });
+    const { data, error } = await this.client.auth.verifyOtp({
+      email: email.value,
+      token,
+      type: 'email',
+    });
     if (error !== null) {
       throw mapSupabaseCredentialError(error);
     }
@@ -77,7 +85,8 @@ function toIdentity(user: {
   return {
     userId: toAuthUserId(user.id),
     email,
-    emailVerifiedAt: user.email_confirmed_at === undefined ? null : new Date(user.email_confirmed_at),
+    emailVerifiedAt:
+      user.email_confirmed_at === undefined ? null : new Date(user.email_confirmed_at),
     displayName: typeof displayName === 'string' && displayName.trim() !== '' ? displayName : null,
     googleId: typeof googleSubject === 'string' ? googleSubject : null,
   };
