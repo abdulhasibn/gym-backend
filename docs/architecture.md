@@ -420,7 +420,9 @@ features/workouts/
 │   └── workout.mapper.ts
 ├── composition.ts
 └── tests/
+    ├── domain/
     ├── application/
+    ├── infrastructure/
     └── presentation/
 ```
 

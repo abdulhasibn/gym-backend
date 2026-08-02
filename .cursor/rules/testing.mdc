@@ -9,7 +9,8 @@ alwaysApply: false
 ## Runner and File Location
 
 - Test runner: **Vitest**
-- Unit and integration test files live in `features/<name>/tests/` under `application/` or `presentation/` subdirs
+- Test files live in `features/<name>/tests/` under `domain/`, `application/`,
+  `infrastructure/`, or `presentation/` subdirs.
 - Test file naming: `<subject>.test.ts` (e.g. `claim-membership.use-case.test.ts`)
 
 ## Unit Tests Must Not Touch Infrastructure

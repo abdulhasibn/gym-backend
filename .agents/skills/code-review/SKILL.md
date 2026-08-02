@@ -1,9 +1,9 @@
 ---
 name: code-review
-description: Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/PRD asked for?). Runs both reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X".
+description: Review committed or work-in-progress changes against a fixed point along two axes — Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match what the originating issue/PRD asked for?). Runs both reviews in parallel sub-agents and reports them side by side. Use when the user wants to review a branch, a PR, work-in-progress changes, or asks to "review since X".
 ---
 
-Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
+Two-axis review of committed changes or the working tree against a fixed point:
 
 - **Standards** — does the code conform to this repo's documented coding standards?
 - **Spec** — does the code faithfully implement the originating issue / PRD / spec?
@@ -18,29 +18,45 @@ The issue tracker should have been provided to you — run `/setup-matt-pocock-s
 
 Whatever the user said is the fixed point — a commit SHA, branch name, tag, `main`, `HEAD~5`, etc. If they didn't specify one, ask for it.
 
-Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
+When the user says "latest remote", fetch `origin`, resolve `refs/remotes/origin/HEAD`, and use that ref. If it is unavailable, resolve the current branch's upstream; only then ask which remote branch to use.
 
-Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here — not inside two parallel sub-agents.
+Confirm the resolved ref with `git rev-parse <fixed-point>`. Then determine the review mode:
+
+1. **Committed range** — default: `git diff <fixed-point>...HEAD` and `git log <fixed-point>..HEAD --oneline`.
+2. **Working tree** — use when the user explicitly asks to review WIP/uncommitted changes, or when the committed range is empty but tracked/untracked changes exist and the user confirms reviewing them.
+
+If the committed range is empty, report that `HEAD` matches the baseline and state that the remaining changes are uncommitted. Do **not** silently switch scope: ask whether to review the working tree. If both committed and working-tree changes are empty, stop and report that there is nothing to review.
+
+For working-tree mode, baseline tracked files with `git diff <fixed-point>` and include every non-ignored untracked file as a `/dev/null` diff. Record the comparison clearly as:
+
+```text
+Working tree (modified + untracked) vs <fixed-point>
+No commits ahead of <fixed-point> (if applicable)
+```
+
+Write the complete review diff to a scratch file and give its path to both sub-agents. Include untracked files; do not mistake `git diff`'s omission of them for an empty review. Exclude generated/temp artifacts only when they are not authored source (for example, `supabase/.temp/**`); name every exclusion in the final scope note.
 
 ### 2. Identify the spec source
 
 Look for the originating spec, in this order:
 
-1. Issue references in the commit messages (`#123`, `Closes #45`, GitLab `!67`, etc.) — fetch via the workflow in `docs/agents/issue-tracker.md`.
+1. Issue references in the commit messages (`#123`, `Closes #45`, GitLab `!67`, etc.) — fetch via the workflow in `docs/agents/issue-tracker.md` when that file exists.
 2. A path the user passed as an argument.
 3. A PRD/spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
 4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
 
+When the change is an obvious feature slice but no issue is linked, extract a focused excerpt from the matching PRD and product-flow sections. Also read the progress log's Current stage and scope statements to avoid flagging intentionally deferred work as missing.
+
 ### 3. Identify the standards sources
 
-Anything in the repo that documents how code should be written, such as `CODING_STANDARDS.md` or `CONTRIBUTING.md`.
+Read the applicable workspace rules first, then find repo documentation that describes code conventions, such as `CODING_STANDARDS.md`, `CONTRIBUTING.md`, architecture docs, testing rules, error-handling rules, and security rules. Pass the actual paths and applicable rules to the Standards sub-agent.
 
 On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below — a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
 
 - **The repo overrides.** A documented repo standard always wins; where it endorses something the baseline would flag, suppress the smell.
 - **Always a judgement call.** Each smell is a labelled heuristic ("possible Feature Envy"), never a hard violation — and, like any standard here, skip anything tooling already enforces.
 
-Each smell reads *what it is* → *how to fix*; match it against the diff:
+Each smell reads _what it is_ → _how to fix_; match it against the diff:
 
 - **Mysterious Name** — a function, variable, or type whose name doesn't reveal what it does or holds. → rename it; if no honest name comes, the design's murky.
 - **Duplicated Code** — the same logic shape appears in more than one hunk or file in the change. → extract the shared shape, call it from both.
@@ -61,21 +77,22 @@ Send a single message with two `Agent` tool calls. Use the `general-purpose` sub
 
 **Standards sub-agent prompt** — include:
 
-- The full diff command and commit list.
+- The review mode, resolved baseline, full diff command, commit list, and the path to the complete diff file.
+- The change scope (including exclusions and generated files that must not be reviewed as handwritten code).
 - The list of standards-source files you found in step 3, **plus the smell baseline from step 3** pasted in full — the sub-agent has no other access to it.
-- The brief: "Report — per file/hunk where relevant — (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls — documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard overrides the baseline. Skip anything tooling enforces. Under 400 words."
+- The brief: "Read the complete diff file and the relevant changed source before reporting. Report — per file/hunk where relevant — (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls — documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard overrides the baseline. Skip anything tooling enforces. Under 400 words."
 
 **Spec sub-agent prompt** — include:
 
-- The diff command and commit list.
-- The path or fetched contents of the spec.
-- The brief: "Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Under 400 words."
+- The review mode, resolved baseline, full diff command, commit list, and the path to the complete diff file.
+- The path or fetched contents of the spec, plus any focused PRD/product-flow excerpt and current-stage scope statement.
+- The brief: "Read the complete diff file and the relevant changed source before reporting. Treat documented deferrals as out of scope, not missing. Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Under 400 words."
 
 If the spec is missing, skip the Spec sub-agent and note this in the final report.
 
 ### 5. Aggregate
 
-Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the two axes are deliberately separate (see _Why two axes_).
+Start with a one-line scope statement: baseline, review mode, commit count, and excluded generated/temp paths. Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the two axes are deliberately separate (see _Why two axes_).
 
 End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
 

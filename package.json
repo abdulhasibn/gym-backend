@@ -17,7 +17,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "auth:configure-google": "node --env-file=.env scripts/configure-google-oauth.mjs",
+    "auth:configure-email-otp": "node --env-file=.env scripts/configure-email-otp-template.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

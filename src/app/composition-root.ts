@@ -1,13 +1,17 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 
 import { JSON_BODY_LIMIT } from '../config/constants';
 import type { AppConfig } from '../config/environment';
+import { composeAuthFeature } from '../features/auth/composition';
 import { createLogger } from '../infrastructure/logging/logger';
 import { createRequestLoggerMiddleware } from '../infrastructure/logging/request-logger.middleware';
-import { createSupabaseInfraClient } from '../infrastructure/supabase/supabase-client';
+import type { Database } from '../infrastructure/supabase/database.types';
+import {
+  createSupabaseAuthClient,
+  createSupabaseInfraClient,
+} from '../infrastructure/supabase/supabase-client';
 import { createErrorHandlerMiddleware } from '../presentation/http/errors/error-handler.middleware';
 import { notFoundMiddleware } from '../presentation/http/middleware/not-found.middleware';
 import type { Logger } from '../shared/logging/logger.port';
@@ -16,7 +20,7 @@ import { createRouter } from './routes';
 export interface AppDependencies {
   readonly config: AppConfig;
   readonly logger: Logger;
-  readonly supabaseClient: SupabaseClient;
+  readonly supabaseClient: import('@supabase/supabase-js').SupabaseClient<Database>;
   readonly app: Express;
 }
 
@@ -34,6 +38,11 @@ export interface AppDependencies {
 export function composeApp(config: AppConfig): AppDependencies {
   const logger = createLogger(config);
   const supabaseClient = createSupabaseInfraClient(config);
+  const authClient = createSupabaseAuthClient(config);
+  const authFeature = composeAuthFeature(authClient, supabaseClient, {
+    supabaseUrl: config.supabase.url,
+    enableGoogleCallbackHelper: config.nodeEnv !== 'production',
+  });
 
   const app = express();
 
@@ -42,10 +51,10 @@ export function composeApp(config: AppConfig): AppDependencies {
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(createRequestLoggerMiddleware(logger));
 
-  app.use(createRouter());
+  app.use(createRouter(authFeature.router));
 
   app.use(notFoundMiddleware);
-  app.use(createErrorHandlerMiddleware(logger));
+  app.use(createErrorHandlerMiddleware(logger, [authFeature.errorMapper]));
 
   return { config, logger, supabaseClient, app };
 }

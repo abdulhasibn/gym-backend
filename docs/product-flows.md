@@ -118,7 +118,7 @@ Authenticate users, choose account lane, establish frozen system roles. No gym p
 | Welcome / lane chooser | New user | Mobile + Web |
 | Email OTP request + enter code | All | Mobile + Web |
 | Google sign-in | All | Mobile + Web |
-| Email link / verify (post-Google if needed) | All | Mobile + Web |
+| Email link / verify (post-Google if needed) | All | Follow-up |
 | Staff home (unassigned) showing **staff code + QR** | Staff before invite | Mobile (+ Web) |
 | Account / security settings | All | Mobile + Web |
 
@@ -127,7 +127,8 @@ Authenticate users, choose account lane, establish frozen system roles. No gym p
 **F1.1 Client signup / login**
 
 1. Choose **I’m a member** (CLIENT lane) or land on Client auth.
-2. Enter email → receive OTP → enter OTP → session.
+2. Enter email → receive OTP → select lane and enter OTP → session. A first-time
+   signup may provide a display name; returning users do not need to resend it.
 3. Or Google → must end with verified email as canonical identity.
 4. Land on Client shell: Invitation list if no ACTIVE membership; home if ACTIVE.
 
@@ -135,7 +136,7 @@ Authenticate users, choose account lane, establish frozen system roles. No gym p
 
 1. Choose **I work at a gym** (STAFF lane) → role `STAFF_UNASSIGNED`.
 2. Auth same as Client (email OTP primary).
-3. Show **staff_code** and QR prominently (needed for owner invite).
+3. Show **staff_code** prominently and render it as a QR client-side (needed for owner invite).
 4. Empty state: “Waiting for a gym invite” + how to share code with owner.
 
 **F1.3 Lane rules in UI**
@@ -146,7 +147,7 @@ Authenticate users, choose account lane, establish frozen system roles. No gym p
 ### States & copy cues
 
 - OTP sent / invalid / expired / rate-limited.
-- Google without usable email → force email link step.
+- Google without usable email → return `EMAIL_NOT_VERIFIED`; email link/verify is a post-MVP follow-up.
 - Facebook and phone-OTP login: **not offered**.
 
 ### Requirements coverage

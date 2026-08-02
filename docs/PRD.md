@@ -422,7 +422,7 @@ Illustrative entities (see `docs/schema.dbml` for full shape; soft-delete `delet
 
 ### 7.1 Authentication (Supabase Auth)
 
-- **Primary:** email + OTP via a free transactional-email provider configured with Supabase Auth (e.g. built-in Supabase SMTP, Resend, or Brevo free tier — no per-message SMS cost, unlike phone OTP).
+- **Primary:** email + OTP via Supabase Auth with **Resend** as custom SMTP (MVP). Sandbox sender `onboarding@resend.dev` until a production domain is verified; no per-message SMS cost.
 - **Secondary:** Google OAuth, which already supplies a verified email; that email becomes/matches the canonical identity.
 - **Out:** Facebook.
 
@@ -514,7 +514,7 @@ Read-only: steps, workouts, active calories, weight.
 
 ## 12. Open Questions
 
-1. **Transactional-email provider** for OTP delivery (Supabase built-in SMTP vs Resend vs Brevo free tier) and deliverability/spam-folder risk at expected volume.
+1. ~~**Transactional-email provider**~~ **Decided (MVP):** Resend custom SMTP on Supabase Auth. Remaining: verify a sending domain (leave sandbox), watch deliverability/spam at expected volume.
 2. **Admin cap** exact number (recommend 3) and whether owner can demote/remove other Admins.
 3. **Food catalog ownership** — who vets AI-seeded items ongoing (internal only vs Admin-suggest)?
 4. **Samsung Health** vs Health Connect-only on Android if overlap is redundant for MVP devices.
@@ -541,7 +541,7 @@ Read-only: steps, workouts, active calories, weight.
 | Sub start | First attendance **or** Admin-set date |
 | Attendance loggers | Client + Admin; no per-day unique (MVP); gym-owned / retained on leave |
 | Unpaid access | Entitlement by dates; badge + daily Admin nudge; block check-in manual |
-| Auth | Email OTP primary; Google + email; `public.users.id` = `auth.users.id` |
+| Auth | Email OTP primary via Resend SMTP on Supabase Auth; Google + email; `public.users.id` = `auth.users.id` |
 | Roles | Frozen `roles` + `role_permissions`; lane CLIENT\|STAFF; no mixing |
 | Staff onboarding | Existing STAFF account + `staff_code`/QR → `staff_invites` |
 | Data share | Grants only (no copy); required DOB/HEIGHT/WEIGHT; class grants optional |
