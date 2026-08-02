@@ -15,3 +15,12 @@ pnpm-debug.log*
 
 .vscode/*
 !.vscode/extensions.json
+
+# Local agent / deploy scratch (may contain secrets)
+.scratch/
+
+# Vercel CLI project link
+.vercel/
+
+# Supabase CLI local cache
+supabase/.temp/

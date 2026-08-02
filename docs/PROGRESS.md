@@ -24,6 +24,7 @@
 | Email OTP E2E smoke | Done — request → inbox code → verify for Resend account email (`abdulhasibn@gmail.com`) |
 | Other feature modules under `src/features/*` | Not started — only `auth` exists |
 | Postman collection shared via git | Done — separate repo `../gym-backend-postman` (not in this tree) |
+| Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
 
@@ -46,6 +47,18 @@
 5. Expand Auth provider integration and remaining failure-path coverage.
 
 ## Log
+
+### 2026-08-02 — Backend hosted on Vercel
+
+- Project `gym-backend` (`prj_IwA7MLzpRjFUprHkMdl9sR85hNfy`) on team
+  `abdul-hasib-ns-projects`.
+- Production URL: `https://gym-backend-lovat-mu.vercel.app` — `GET /health`
+  returns `200 {"status":"ok",...}`.
+- Wired Express via `src/server.ts` (Vercel Express entry, lazy compose for
+  cold start); production secrets set (`NODE_ENV`, `LOG_LEVEL`, Supabase
+  URL/keys).
+- **Deferred:** git-connected continuous deploy; Google OAuth / OTP redirect
+  URLs still point at local unless updated in Supabase.
 
 ### 2026-08-02 — Auth standards remediation
 
