@@ -28,7 +28,11 @@ export const requestEmailOtpSchema = z.object({
 
 export const verifyEmailOtpSchema = z.object({
   email: emailSchema,
-  token: z.string().trim().min(6).max(12),
+  // Supabase OTP length is project-configured (6–10). Strip paste noise.
+  token: z
+    .string()
+    .transform((value) => value.replace(/\D/g, ''))
+    .pipe(z.string().min(6).max(10)),
   lane: accountLaneSchema,
   name: nameSchema.optional(),
 });

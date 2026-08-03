@@ -47,6 +47,9 @@ const configureSmtp =
   smtpAdminEmail.trim() !== '';
 
 const body = {
+  // Keep length aligned with client UX / docs (project was emitting 8 digits).
+  mailer_otp_length: 6,
+  mailer_otp_exp: 3600,
   mailer_subjects_magic_link: 'Your sign-in code is {{ .Token }}',
   mailer_templates_magic_link_content: otpBody,
   mailer_subjects_confirmation: 'Your verification code is {{ .Token }}',
@@ -94,4 +97,5 @@ console.log(`project_ref=${projectRef}`);
 console.log(`smtp_configured=${configureSmtp}`);
 console.log(`magic_link_subject=${parsed.mailer_subjects_magic_link ?? '(set)'}`);
 console.log(`confirmation_subject=${parsed.mailer_subjects_confirmation ?? '(set)'}`);
+console.log(`mailer_otp_length=${parsed.mailer_otp_length ?? '(unknown)'}`);
 console.log('Inbox emails will show the 6-digit {{ .Token }} for /auth/otp/verify.');

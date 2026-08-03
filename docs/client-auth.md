@@ -58,7 +58,8 @@ Store after login: `accessToken`, `refreshToken` (OTP only), `userId`, `lane`, `
 }
 ```
 
-- `token`: 6–12 chars · `lane`: required · `name`: optional (1–120)
+- `token`: digits only, length matches project OTP setting (currently **6**) · `lane`: required · `name`: optional (1–120)
+- Paste the **full** code from the email (subject + body show `{{ .Token }}`). Partial codes fail as `OTP_EXPIRED`.
 - **200**
   ```json
   {
@@ -75,8 +76,10 @@ Store after login: `accessToken`, `refreshToken` (OTP only), `userId`, `lane`, `
   }
   ```
 - STAFF first login: `roleCode` = `STAFF_UNASSIGNED`, `staffCode` = non-null string
-- **422** `OTP_EXPIRED` / `VALIDATION_ERROR` / `EMAIL_NOT_VERIFIED`
+- **422** `OTP_EXPIRED` (wrong **or** expired — GoTrue uses one code for both) / `VALIDATION_ERROR` / `EMAIL_NOT_VERIFIED`
 - **409** `LANE_MISMATCH` (same email already provisioned on the other lane)
+
+**Postman tip:** set env `email` to the inbox you read, run Request OTP once, paste the full code into `otpToken`, then Verify. Re-requesting invalidates the previous code. Wait ~60s between requests if you hit `AUTH_RATE_LIMITED`.
 
 ---
 
