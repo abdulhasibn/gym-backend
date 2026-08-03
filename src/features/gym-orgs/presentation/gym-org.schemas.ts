@@ -3,13 +3,24 @@ import { z } from 'zod';
 import { GymOrgName } from '../domain/gym-org-name.value-object';
 import { IanaTimezone } from '../domain/iana-timezone.value-object';
 
+const emptyToNull = (value: string | null | undefined): string | null =>
+  value === undefined || value === null || value === '' ? null : value;
+
 const optionalText = (maxLength: number) =>
   z
-    .string()
-    .trim()
-    .max(maxLength)
+    .union([z.string().trim().max(maxLength), z.null()])
     .optional()
-    .transform((value) => (value === undefined || value === '' ? null : value));
+    .transform(emptyToNull);
+
+const optionalEmail = z
+  .union([z.string().trim().email().max(255), z.null()])
+  .optional()
+  .transform(emptyToNull);
+
+const optionalUrl = z
+  .union([z.string().trim().url().max(2048), z.null()])
+  .optional()
+  .transform(emptyToNull);
 
 const gymOrgNameSchema = z.string().transform((value, context) => {
   try {
@@ -42,19 +53,7 @@ export const createGymOrgSchema = z.object({
   name: gymOrgNameSchema,
   address: optionalText(2000),
   contactPhone: optionalText(50),
-  contactEmail: z
-    .string()
-    .trim()
-    .email()
-    .max(255)
-    .optional()
-    .transform((value) => (value === undefined || value === '' ? null : value)),
-  logoUrl: z
-    .string()
-    .trim()
-    .url()
-    .max(2048)
-    .optional()
-    .transform((value) => (value === undefined || value === '' ? null : value)),
+  contactEmail: optionalEmail,
+  logoUrl: optionalUrl,
   timezone: timezoneSchema,
 });

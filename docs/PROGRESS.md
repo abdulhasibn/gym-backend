@@ -24,7 +24,7 @@ organization onboarding implemented with deploy-ready tests. Ship via push to
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
-| Gym organization feature (`src/features/gym-orgs`) | Initial slice done — authenticated STAFF/ADMIN create and list their orgs; owner Admin + trainer affiliation created atomically; ships via git push → Vercel |
+| Gym organization feature (`src/features/gym-orgs`) | Initial slice done — authenticated STAFF/ADMIN create and list their orgs; owner Admin + trainer affiliation created atomically; create schema accepts explicit `null` optionals (Postman body); ships via git push → Vercel |
 | Other feature modules under `src/features/*` | Not started |
 | Postman collection shared via git | Done — `../gym-backend-postman`; cloud + git now include response Examples + gym-orgs |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
@@ -54,6 +54,20 @@ organization onboarding implemented with deploy-ready tests. Ship via push to
 Gmail; App Password rotation (OTP working; rotation skipped for now).
 
 ## Log
+
+### 2026-08-03 — Fix POST /gym-orgs rejecting JSON null optionals
+
+- Symptom: documented create body with `"address": null` (etc.) returned
+  `422 VALIDATION_ERROR` — Zod `.optional()` rejects `null`.
+- Fix: `createGymOrgSchema` optional fields accept string | null | omitted;
+  route test + local smoke (`staff OTP → POST /gym-orgs`) both green (201).
+
+### 2026-08-03 — OTP_EXPIRED usually means wrong/partial code
+
+- Supabase project was emitting **8-digit** OTPs while clients/docs often
+  assumed 6; partial entry returns GoTrue `otp_expired` (invalid ≡ expired).
+- Set `mailer_otp_length=6` via `auth:configure-email-otp`; normalize verify
+  token to digits-only; clarify `OtpExpiredError` message and client-auth.md.
 
 ### 2026-08-03 — Fix empty Vercel Express build (prod 404)
 

@@ -68,6 +68,29 @@ describe('gym-org routes', () => {
     ]);
   });
 
+  it('accepts explicit nulls for optional create fields', async () => {
+    const create = await supertest(createTestApp())
+      .post('/gym-orgs')
+      .send({
+        name: 'North Star Fitness',
+        address: null,
+        contactPhone: null,
+        contactEmail: null,
+        logoUrl: null,
+        timezone: 'Asia/Kolkata',
+      })
+      .expect(201);
+
+    expect(create.body.gymOrg).toMatchObject({
+      name: 'North Star Fitness',
+      address: null,
+      contactPhone: null,
+      contactEmail: null,
+      logoUrl: null,
+      timezone: 'Asia/Kolkata',
+    });
+  });
+
   it('rejects organization creation by clients', async () => {
     const response = await supertest(createTestApp('CLIENT'))
       .post('/gym-orgs')
