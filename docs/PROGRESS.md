@@ -4,9 +4,9 @@
 
 ## Current stage
 
-**Stage:** Auth MVP live and smoke-tested; initial gym organization onboarding
-is implemented and verified locally (STAFF creates and lists owned orgs).
-Custom SMTP switched to Gmail App Password for multi-recipient OTP delivery.
+**Stage:** Auth MVP live and smoke-tested (OTP verified working); initial gym
+organization onboarding implemented with deploy-ready tests. Ship via push to
+`main` (Vercel auto-deploy). Next: gym-org profile updates / staff invites.
 
 | Area | Status |
 |------|--------|
@@ -23,8 +23,8 @@ Custom SMTP switched to Gmail App Password for multi-recipient OTP delivery.
 | Auth automated tests | Partial — 39 domain/unit/route tests; provider integration and remaining failure-path coverage still deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
-| Email OTP E2E smoke | Partial — `POST /auth/otp/request` 202 for `abraralhasan111@gmail.com` + owner email (Auth `/otp` 200); full verify pending inbox code |
-| Gym organization feature (`src/features/gym-orgs`) | Initial slice done — authenticated STAFF/ADMIN create and list their orgs; owner Admin + trainer affiliation created atomically; API deployment pending |
+| Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
+| Gym organization feature (`src/features/gym-orgs`) | Initial slice done — authenticated STAFF/ADMIN create and list their orgs; owner Admin + trainer affiliation created atomically; ships via git push → Vercel |
 | Other feature modules under `src/features/*` | Not started |
 | Postman collection shared via git | Done — separate repo `../gym-backend-postman` (not in this tree) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
@@ -43,14 +43,37 @@ Custom SMTP switched to Gmail App Password for multi-recipient OTP delivery.
 
 ## Next up
 
-1. Complete OTP verify smoke with the inbox code for `abraralhasan111@gmail.com`, then rotate the Gmail App Password (it was shared in chat).
-2. Before production scale: buy/verify a domain and move SMTP off personal Gmail (Resend or similar).
-3. Seed the food catalog for the nutrition feature.
-4. Extend `gym-orgs` with profile updates and staff invitation workflows.
-5. Add feature-scoped RLS policies when PostgREST/`authenticated` access is needed; until then service-role backend + deny-all RLS is intentional.
-6. Expand Auth provider integration and remaining failure-path coverage.
+1. Extend `gym-orgs` with profile updates and staff invitation workflows.
+2. Seed the food catalog for nutrition — deferred until needed.
+3. Feature-scoped RLS — not needed while the API uses service-role only;
+   revisit if clients ever hit PostgREST/`authenticated` directly.
+4. Extra Auth provider/failure-path tests — only when a concrete gap blocks
+   shipping or a regression is found (avoid coverage spam).
+
+**Deferred longer-term:** verified domain + transactional SMTP off personal
+Gmail; App Password rotation (OTP working; rotation skipped for now).
 
 ## Log
+
+### 2026-08-03 — Gym-orgs ready to ship via git push
+
+- Added blank-name HTTP validation test (absolute gap only); gym-orgs suite
+  is 10 tests. Unauthenticated 401 already covered by auth middleware tests.
+- Deploy path: push to `main` → Vercel auto-deploy (no manual MCP/CLI
+  publish). Manual file-bundle deploy abandoned.
+- Priorities: OTP confirmed; App Password rotation skipped; domain SMTP and
+  food seed deferred; RLS stays deny-all + service-role until direct client
+  DB access appears; Auth test expansion only for absolute gaps.
+
+### 2026-08-03 — Priorities clarified after OTP confirmation
+
+- OTP confirmed working; App Password rotation skipped for now.
+- Domain/transactional SMTP and food catalog seed deferred (not soon).
+- Immediate focus: gym-orgs deploy after confirming test sufficiency;
+  profile updates / staff invites after that.
+- RLS stays intentional deny-all + service-role backend until explained need
+  (direct client DB access) appears.
+- Auth test expansion: only absolute gaps — no speculative coverage.
 
 ### 2026-08-03 — Gmail SMTP wired for Auth OTP delivery
 

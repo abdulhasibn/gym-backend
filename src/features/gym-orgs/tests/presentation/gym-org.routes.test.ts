@@ -85,4 +85,13 @@ describe('gym-org routes', () => {
 
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it('returns validation errors for a blank organization name', async () => {
+    const response = await supertest(createTestApp())
+      .post('/gym-orgs')
+      .send({ name: '   ' })
+      .expect(422);
+
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
 });
