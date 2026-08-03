@@ -26,7 +26,7 @@ organization onboarding implemented with deploy-ready tests. Ship via push to
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Initial slice done — authenticated STAFF/ADMIN create and list their orgs; owner Admin + trainer affiliation created atomically; ships via git push → Vercel |
 | Other feature modules under `src/features/*` | Not started |
-| Postman collection shared via git | Done — separate repo `../gym-backend-postman` (not in this tree) |
+| Postman collection shared via git | Done — `../gym-backend-postman`; cloud + git now include response Examples + gym-orgs |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -54,6 +54,29 @@ organization onboarding implemented with deploy-ready tests. Ship via push to
 Gmail; App Password rotation (OTP working; rotation skipped for now).
 
 ## Log
+
+### 2026-08-03 — Fix empty Vercel Express build (prod 404)
+
+- Prod `gym-backend-lovat-mu.vercel.app` returned Vercel `NOT_FOUND` for
+  `/health` and `/auth/otp/request` — not an Auth bug.
+- Root cause: `vercel.json` `buildCommand: ""` made Git deploys finish in
+  ~325ms with no serverless output / no Express entry bundled.
+- Fix: keep only `"framework": "express"` so Vercel zero-config builds
+  `src/server.ts`.
+
+### 2026-08-03 — Client auth integration guide
+
+- Added `docs/client-auth.md` — brief OTP/Google/session/gym-orgs guide for
+  mobile/web and AI agents (no separate signup; provision on first verify).
+
+### 2026-08-03 — Postman examples for AI client integration
+
+- Updated live Postman collection (`Gym Backend API` in My Workspace) via
+  Postman MCP: each request now has response-type docs + saved Examples
+  (success and key error bodies).
+- Fixed OTP request body to `{ email }` only (lane belongs on verify).
+- Added Create / List gym-org requests with 201/403 and 200 examples.
+- Synced export into `../gym-backend-postman` (collection JSON + README).
 
 ### 2026-08-03 — Gym-orgs ready to ship via git push
 
