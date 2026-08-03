@@ -30,6 +30,9 @@ export function composeAuthFeature(
   const authProvider = new SupabaseAuthProvider(authClient);
   const users = new SupabaseAuthUserRepository(dataClient);
   const userQueries = new SupabaseAuthUserQueries(dataClient);
+  const authenticate = createAuthenticateMiddleware(
+    new AuthenticateActorUseCase(authProvider, userQueries),
+  );
   const provisionUser = new ProvisionAuthUserUseCase(users, {
     generate: () => `STF-${randomUUID().replaceAll('-', '').slice(0, 12).toUpperCase()}`,
   });
@@ -44,12 +47,13 @@ export function composeAuthFeature(
     router: createAuthRouter(
       controller,
       createAuthenticateIdentityMiddleware(authProvider),
-      createAuthenticateMiddleware(new AuthenticateActorUseCase(authProvider, userQueries)),
+      authenticate,
       {
         supabaseUrl: options.supabaseUrl,
         enableCallbackHelper: options.enableGoogleCallbackHelper,
       },
     ),
+    authenticate,
     errorMapper: mapAuthError,
   };
 }

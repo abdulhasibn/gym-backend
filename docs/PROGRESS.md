@@ -4,14 +4,16 @@
 
 ## Current stage
 
-**Stage:** Auth MVP live and smoke-tested (email OTP + Google). Resend custom SMTP + OTP templates on Supabase Auth (sandbox sender).
+**Stage:** Auth MVP live and smoke-tested; initial gym organization onboarding
+is implemented and verified locally (STAFF creates and lists owned orgs).
+Custom SMTP switched to Gmail App Password for multi-recipient OTP delivery.
 
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
 | Domain glossary / PRD / architecture docs | Done |
 | DBML source of truth (`docs/schema.dbml`) | Done |
-| Supabase project + SQL migrations applied | Done — 14 local/remote versions aligned |
+| Supabase project + SQL migrations applied | Done — 15 local/remote versions aligned |
 | Generated `database.types.ts` | Done |
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
@@ -20,9 +22,10 @@
 | Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; standards remediation applied |
 | Auth automated tests | Partial — 39 domain/unit/route tests; provider integration and remaining failure-path coverage still deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
-| Custom SMTP (Resend) + OTP email templates | Done — `onboarding@resend.dev` sandbox; `rate_limit_email_sent=100` |
-| Email OTP E2E smoke | Done — request → inbox code → verify for Resend account email (`abdulhasibn@gmail.com`) |
-| Other feature modules under `src/features/*` | Not started — only `auth` exists |
+| Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
+| Email OTP E2E smoke | Partial — `POST /auth/otp/request` 202 for `abraralhasan111@gmail.com` + owner email (Auth `/otp` 200); full verify pending inbox code |
+| Gym organization feature (`src/features/gym-orgs`) | Initial slice done — authenticated STAFF/ADMIN create and list their orgs; owner Admin + trainer affiliation created atomically; API deployment pending |
+| Other feature modules under `src/features/*` | Not started |
 | Postman collection shared via git | Done — separate repo `../gym-backend-postman` (not in this tree) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
@@ -35,18 +38,48 @@
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | 32 in `public`, RLS enabled (no policies yet) |
-| Migrations applied | 14; local files aligned to remote timestamp versions |
+| Migrations applied | 15; local files aligned to remote timestamp versions |
 | Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `users` 1 · `client_profiles` 1 |
 
 ## Next up
 
-1. Add + verify a Resend domain and switch `SMTP_ADMIN_EMAIL` off the sandbox sender (sandbox can only deliver to the Resend account email).
-2. Seed the food catalog for the nutrition feature.
-3. Start the `gym-orgs` module so a STAFF account can create its initial organisation.
-4. Add feature-scoped RLS policies when PostgREST/`authenticated` access is needed; until then service-role backend + deny-all RLS is intentional.
-5. Expand Auth provider integration and remaining failure-path coverage.
+1. Complete OTP verify smoke with the inbox code for `abraralhasan111@gmail.com`, then rotate the Gmail App Password (it was shared in chat).
+2. Before production scale: buy/verify a domain and move SMTP off personal Gmail (Resend or similar).
+3. Seed the food catalog for the nutrition feature.
+4. Extend `gym-orgs` with profile updates and staff invitation workflows.
+5. Add feature-scoped RLS policies when PostgREST/`authenticated` access is needed; until then service-role backend + deny-all RLS is intentional.
+6. Expand Auth provider integration and remaining failure-path coverage.
 
 ## Log
+
+### 2026-08-03 — Gmail SMTP wired for Auth OTP delivery
+
+- Supabase Auth SMTP switched from Resend sandbox to Gmail
+  (`smtp.gmail.com:587`, sender `abdulhasibn@gmail.com`) via Management API
+  (`npm run auth:configure-email-otp`). Supabase MCP has no SMTP config tool.
+- Local `.env` SMTP_* updated (gitignored). App Password stored only there.
+- Verified: `POST /auth/otp/request` → 202 `OTP_SENT` for
+  `abraralhasan111@gmail.com` and `abdulhasibn@gmail.com`; Auth logs show
+  `/otp` 200 (`user_confirmation_requested` / `user_recovery_requested`).
+- `POST /auth/otp/verify` with dummy token correctly returns `OTP_EXPIRED`
+  (422); full happy-path verify deferred until inbox code is available.
+- Deferred: domain + transactional provider for production; App Password
+  rotation after chat exposure.
+
+### 2026-08-02 — Gym organization initial onboarding implemented
+
+- Added `src/features/gym-orgs/` with domain value objects, CQRS ports,
+  create/list use cases, Supabase adapters, HTTP routes, and focused tests.
+- `POST /gym-orgs` allows `STAFF_UNASSIGNED` or `ADMIN`; `GET /gym-orgs`
+  lists the authenticated user's live Admin affiliations.
+- Applied `20260802133634_create_owned_gym_org.sql` to
+  `igcmptpjmagzwoccxcnw`. The service-role-only RPC atomically creates the
+  org, owner `gym_admins` row, owner `trainer_profiles` row, and promotes
+  `STAFF_UNASSIGNED` to `ADMIN`.
+- Regenerated `src/infrastructure/supabase/database.types.ts`. Validation:
+  Node 22 typecheck, 48 Vitest tests, lint, format check, and build pass.
+- **Deferred:** Resend verified domain; organization profile updates, logo
+  storage, staff invites, and feature-scoped RLS policies.
 
 ### 2026-08-02 — CI workflow unblocked
 

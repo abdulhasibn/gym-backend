@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { JSON_BODY_LIMIT } from '../config/constants';
 import type { AppConfig } from '../config/environment';
 import { composeAuthFeature } from '../features/auth/composition';
+import { composeGymOrgFeature } from '../features/gym-orgs/composition';
 import { createLogger } from '../infrastructure/logging/logger';
 import { createRequestLoggerMiddleware } from '../infrastructure/logging/request-logger.middleware';
 import type { Database } from '../infrastructure/supabase/database.types';
@@ -43,6 +44,7 @@ export function composeApp(config: AppConfig): AppDependencies {
     supabaseUrl: config.supabase.url,
     enableGoogleCallbackHelper: config.nodeEnv !== 'production',
   });
+  const gymOrgFeature = composeGymOrgFeature(supabaseClient, authFeature.authenticate);
 
   const app = express();
 
@@ -51,10 +53,12 @@ export function composeApp(config: AppConfig): AppDependencies {
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(createRequestLoggerMiddleware(logger));
 
-  app.use(createRouter(authFeature.router));
+  app.use(createRouter(authFeature.router, gymOrgFeature.router));
 
   app.use(notFoundMiddleware);
-  app.use(createErrorHandlerMiddleware(logger, [authFeature.errorMapper]));
+  app.use(
+    createErrorHandlerMiddleware(logger, [authFeature.errorMapper, gymOrgFeature.errorMapper]),
+  );
 
   return { config, logger, supabaseClient, app };
 }

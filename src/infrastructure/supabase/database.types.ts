@@ -1,6 +1,3 @@
-// Generated from Supabase project igcmptpjmagzwoccxcnw — do not edit by hand.
-// Regenerate via: supabase gen types typescript --project-id igcmptpjmagzwoccxcnw
-
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -1665,7 +1662,36 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      create_owned_gym_org: {
+        Args: {
+          p_address?: string;
+          p_contact_email?: string;
+          p_contact_phone?: string;
+          p_logo_url?: string;
+          p_name: string;
+          p_owner_user_id: string;
+          p_timezone?: string;
+        };
+        Returns: {
+          address: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          logo_url: string | null;
+          name: string;
+          owner_user_id: string;
+          timezone: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'gym_orgs';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
     };
     Enums: {
       account_lane: 'CLIENT' | 'STAFF';
