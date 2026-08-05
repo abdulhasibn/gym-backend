@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0e16" />
+  <title>Gym Backend — MVP Capability Orbit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero" id="top">
+    <div class="hero-atmosphere" aria-hidden="true"></div>
+    <div class="hero-inner wrap">
+      <p class="eyebrow">Gym Backend · API MVP</p>
+      <h1>Gym Backend</h1>
+      <p class="lede">Three orbits from invite to retention. Foundation is lit — walk the circuit one node at a time.</p>
+      <div class="cta-row">
+        <a class="cta" href="#orbit">
+          Enter orbit 1
+          <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
+        </a>
+        <a class="cta cta-ghost" href="3d.html">View in 3D</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="orbit-section" id="orbit" aria-labelledby="orbit-heading">
+    <div class="wrap orbit-layout">
+      <div class="orbit-stage">
+        <p class="sec-label" id="orbit-heading">Capability Orbit</p>
+        <div class="legend" aria-label="Ownership legend">
+          <span class="legend-item gym"><i></i> Gym-owned</span>
+          <span class="legend-item client"><i></i> Client-owned</span>
+          <span class="legend-item platform"><i></i> Platform</span>
+          <span class="legend-item done"><i></i> Shipped</span>
+        </div>
+        <div class="orbit-frame" id="orbit-frame">
+          <svg id="orbit-svg" viewBox="0 0 640 640" role="img" aria-label="Three concentric orbits of MVP work items around a shipped foundation core">
+            <defs>
+              <filter id="soft-glow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="2.5" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <g id="orbit-rings"></g>
+            <g id="orbit-progress"></g>
+            <g id="orbit-spokes"></g>
+            <g id="orbit-core"></g>
+            <g id="orbit-nodes"></g>
+          </svg>
+        </div>
+        <p class="orbit-hint">Click a node · ring dash crawls when idle</p>
+      </div>
+
+      <aside class="dock" id="dock" aria-live="polite">
+        <p class="dock-kicker" id="dock-kicker">Foundation</p>
+        <h2 class="dock-title" id="dock-title">Core is lit</h2>
+        <p class="dock-body" id="dock-body">Auth and gym-orgs are shipped. Select a node on an orbit to see the next build step, PRD anchors, and ownership.</p>
+        <dl class="dock-meta" id="dock-meta" hidden></dl>
+        <p class="dock-exit" id="dock-exit" hidden></p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="runsheet-section" id="runsheet" aria-labelledby="runsheet-heading">
+    <div class="wrap">
+      <p class="sec-label" id="runsheet-heading">One by one</p>
+      <h2 class="sec-title">Run sheet</h2>
+      <p class="sec-lead">Same sequence as the orbit — linear for agents and checklists.</p>
+      <div id="runsheet-root"></div>
+    </div>
+  </section>
+
+  <section class="deferred-section" id="deferred" aria-labelledby="deferred-heading">
+    <div class="wrap">
+      <p class="sec-label" id="deferred-heading">Out of orbit</p>
+      <h2 class="sec-title">Deferred</h2>
+      <ul class="deferred-list" id="deferred-list"></ul>
+    </div>
+  </section>
+
+  <footer class="site-footer wrap">
+    <p>Companion to <a href="../MVP_ROADMAP.md">docs/MVP_ROADMAP.md</a> · Product behavior in <a href="../PRD.md">PRD.md</a> · Stage in <a href="../PROGRESS.md">PROGRESS.md</a></p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

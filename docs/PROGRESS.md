@@ -4,29 +4,31 @@
 
 ## Current stage
 
-**Stage:** Auth MVP live and smoke-tested (OTP verified working); initial gym
-organization onboarding implemented with deploy-ready tests. Ship via push to
-`main` (Vercel auto-deploy). Next: gym-org profile updates / staff invites.
+**Stage:** Auth MVP + gym-orgs profile update and staff invites. Ship via push
+to `main` (Vercel auto-deploy). Next: Stint 1 of the MVP roadmap — memberships /
+plan catalog. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md) and the Capability
+Orbit at [`docs/mvp-roadmap/`](mvp-roadmap/).
 
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
 | Domain glossary / PRD / architecture docs | Done |
 | DBML source of truth (`docs/schema.dbml`) | Done |
-| Supabase project + SQL migrations applied | Done — 15 local/remote versions aligned |
-| Generated `database.types.ts` | Done |
+| Supabase project + SQL migrations applied | Done — 16 local; remote includes `accept_staff_invite` |
+| Generated `database.types.ts` | Done — includes `accept_staff_invite` RPC |
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
 | Food catalog seed | Not started (`food_items` empty) |
 | Feature RLS policies (beyond deny-all) | Not started — 32 public tables RLS on, no policies |
-| Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; standards remediation applied |
-| Auth automated tests | Partial — 39 domain/unit/route tests; provider integration and remaining failure-path coverage still deferred |
+| Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me` |
+| Auth automated tests | Partial — refresh use-case + route coverage added; provider integration and remaining failure-path coverage still deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
-| Gym organization feature (`src/features/gym-orgs`) | Initial slice done — authenticated STAFF/ADMIN create and list their orgs; owner Admin + trainer affiliation created atomically; create schema accepts explicit `null` optionals (Postman body); ships via git push → Vercel |
-| Other feature modules under `src/features/*` | Not started |
-| Postman collection shared via git | Done — `../gym-backend-postman`; cloud + git now include response Examples + gym-orgs |
+| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); list unions trainer affiliations; `accept_staff_invite` RPC applied |
+| Other feature modules under `src/features/*` | Not started — sequenced in MVP_ROADMAP Stints 1–3 |
+| MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md` + `docs/mvp-roadmap/` |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; gym-orgs get/patch + staff-invite requests/Examples/tests synced |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -38,22 +40,98 @@ organization onboarding implemented with deploy-ready tests. Ship via push to
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | 32 in `public`, RLS enabled (no policies yet) |
-| Migrations applied | 15; local files aligned to remote timestamp versions |
+| Migrations applied | 16 (local file `20260804070000_accept_staff_invite.sql`; remote applied) |
 | Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `users` 1 · `client_profiles` 1 |
 
 ## Next up
 
-1. Extend `gym-orgs` with profile updates and staff invitation workflows.
-2. Seed the food catalog for nutrition — deferred until needed.
+1. **Stint 1 — Open the Floor** per [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md):
+   plan catalog → membership invites → accept + DataGrants → subscriptions →
+   roster/offboard/block. Visual: [`docs/mvp-roadmap/`](mvp-roadmap/).
+2. Then Stint 2 (attendance, profile/progress, renewals read model), then
+   Stint 3 (coaching, nutrition/food seed, health-sync, leads, notifications).
 3. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
 4. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
+5. Manual Postman STAFF OTP smoke for get/patch + invite create
+   (`422 INVALID_STAFF_INVITEE`) and accept/revoke with a second STAFF
+   `inviteeStaffCode` (no committed tokens).
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
-Gmail; App Password rotation (OTP working; rotation skipped for now).
+Gmail; App Password rotation (OTP working; rotation skipped for now); push
+notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
+“Out of orbit.”
 
 ## Log
+
+### 2026-08-05 — Docs + Postman for OTP isNewUser / optional lane
+
+- Updated `docs/client-auth.md`, `docs/product-flows.md` for request
+  `isNewUser` and optional verify `lane`.
+- Postman cloud + `../gym-backend-postman`: Request/Verify OTP docs,
+  tests, 202 example, README smoke flow.
+
+### 2026-08-05 — OTP request returns isNewUser
+
+- `POST /auth/otp/request` now responds
+  `{ status: "OTP_SENT", isNewUser }` so clients know when to collect lane.
+- `isNewUser` is true when no live `users` row exists for that email
+  (`AuthUserRepository.existsByEmail`). Docs: `docs/client-auth.md`.
+
+### 2026-08-05 — Optional lane on OTP verify (returning sign-in)
+
+- `POST /auth/otp/verify`: `lane` is optional. Required only on first
+  provision (`422 LANE_REQUIRED` if missing for a new account); returning
+  sign-ins may omit it. Sending a different lane still yields `409 LANE_MISMATCH`.
+- Docs: `docs/client-auth.md`. Tests: provision + email OTP use cases.
+
+### 2026-08-05 — Postman gym-orgs profile + staff invites
+
+- Cloud collection `Gym Backend API`: added Get/Update Gym Org + Create/List
+  Staff Invites, Inbox, Accept, Revoke (root-level; MCP has no folder tool).
+- Git export `../gym-backend-postman`: **Gym Orgs** folder groups Create/List
+  + seven new requests; vars `gymOrgId` / `staffInviteId` / `inviteeStaffCode`
+  on collection + Local/Dev env files; README smoke flow updated.
+- Validation: structural OK (desc + Examples + test scripts); local unauth
+  probes → `401` on all new paths; gym-orgs route/use-case tests green (16).
+- Deferred: authenticated Postman smoke (no `accessToken` in env — needs OTP);
+  accept/revoke happy path with second STAFF; push of postman repo.
+
+### 2026-08-05 — MVP execution roadmap + Capability Orbit site
+
+- Added agent-facing [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md): foundation
+  (shipped) + three stints (Open the Floor → Run the Desk → Keep Them Coming)
+  with one-by-one build order and exit criteria.
+- Added visual site [`docs/mvp-roadmap/`](mvp-roadmap/) — 2D SVG orbit +
+  Three.js 3D page (`3d.html`); shared `roadmap-data.js`.
+- Next execution item remains Stint 1.1 plan catalog under `memberships`.
+
+### 2026-08-04 — Gym-org profile updates + staff invites
+
+- Extended `src/features/gym-orgs`: `GET`/`PATCH /gym-orgs/:id`; staff invite
+  create/list/inbox/revoke/accept via `staff_code` (no email tokens).
+- Authz: Admin + live `gym_admins` for write/invite; trainers see orgs via
+  affiliation union; inbox is invitee-scoped.
+- Domain: `StaffInvite` transitions; admin cap 3; default 14-day expiry;
+  CQRS ports + `Clock`/`IdGenerator`; accept via `accept_staff_invite` RPC
+  (applied on `igcmptpjmagzwoccxcnw`).
+- Inbox computes effective `EXPIRED` without write; persist on accept attempt.
+- Tests: 26 gym-orgs unit/route tests green; `docs/client-auth.md` updated.
+- Deferred: push notifications, logo upload.
+
+### 2026-08-04 — Revert custom auth session TTLs
+
+- Removed `auth:configure-session-ttl` script; restored project `jwt_exp` to
+  Supabase default `3600`. Keep using provider defaults for access/refresh
+  lifetime (no app-enforced 2d/1w).
+- `POST /auth/refresh` remains; docs/tests no longer claim custom TTLs.
+
+### 2026-08-04 — Auth refresh endpoint
+
+- Added `POST /auth/refresh` (`RefreshSessionUseCase` → Supabase
+  `refreshSession`); clients must replace rotated `refreshToken`.
+- Tests: refresh use-case + route happy/validation/401 paths.
 
 ### 2026-08-03 — Fix POST /gym-orgs rejecting JSON null optionals
 
