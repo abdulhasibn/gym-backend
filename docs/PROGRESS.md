@@ -28,7 +28,7 @@ Orbit at [`docs/mvp-roadmap/`](mvp-roadmap/).
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); list unions trainer affiliations; `accept_staff_invite` RPC applied |
 | Other feature modules under `src/features/*` | Not started — sequenced in MVP_ROADMAP Stints 1–3 |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md` + `docs/mvp-roadmap/` |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; gym-orgs get/patch + staff-invite requests/Examples/tests synced |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** (was flat under collection root) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -64,6 +64,13 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-05 — Postman: categorize gym-orgs vs staff invites
+
+- Cloud `Gym Backend API`: moved root-level create/list/get/patch + staff
+  invite requests into folders **Gym Orgs** and **Staff Invites** (were
+  siblings of Auth, looking like Auth noise).
+- Synced folder split into `../gym-backend-postman` collection JSON.
 
 ### 2026-08-05 — Fix Vercel npm install + Prettier CI
 
