@@ -33,11 +33,16 @@ export const verifyEmailOtpSchema = z.object({
     .string()
     .transform((value) => value.replace(/\D/g, ''))
     .pipe(z.string().min(6).max(10)),
-  lane: accountLaneSchema,
+  // Required only on first provision; omit for returning sign-ins.
+  lane: accountLaneSchema.optional(),
   name: nameSchema.optional(),
 });
 
 export const completeGoogleSchema = z.object({
   lane: accountLaneSchema,
   name: nameSchema.optional(),
+});
+
+export const refreshSessionSchema = z.object({
+  refreshToken: z.string().min(1),
 });

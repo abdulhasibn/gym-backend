@@ -18,5 +18,6 @@ export interface AuthSession extends AuthenticatedIdentity {
 export interface AuthProvider {
   requestEmailOtp(email: EmailAddress): Promise<void>;
   verifyEmailOtp(email: EmailAddress, token: string): Promise<AuthSession>;
+  refreshSession(refreshToken: string): Promise<AuthSession>;
   getUserFromAccessToken(accessToken: string): Promise<AuthenticatedIdentity>;
 }

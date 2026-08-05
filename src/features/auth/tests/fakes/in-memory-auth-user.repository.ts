@@ -2,12 +2,22 @@ import { AuthUser } from '../../domain/user.entity';
 import type { AuthUserRepository, CreateAuthUser } from '../../domain/user.repository';
 import type { AuthUserQueries, AuthUserView } from '../../domain/auth-user.queries';
 import { roleCodeForLane } from '../../domain/account-lane.value-object';
+import type { EmailAddress } from '../../domain/email-address.value-object';
 
 export class InMemoryAuthUserRepository implements AuthUserRepository, AuthUserQueries {
   private readonly users = new Map<string, AuthUser>();
 
   async findById(id: AuthUser['id']): Promise<AuthUser | null> {
     return this.users.get(id) ?? null;
+  }
+
+  async existsByEmail(email: EmailAddress): Promise<boolean> {
+    for (const user of this.users.values()) {
+      if (user.email === email.value) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async create(command: CreateAuthUser): Promise<AuthUser> {

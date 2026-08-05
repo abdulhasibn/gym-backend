@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { AuthenticateActorUseCase } from '../../application/authenticate-actor.use-case';
-import type { AuthenticatedIdentity, AuthProvider } from '../../domain/auth-provider.port';
+import type {
+  AuthenticatedIdentity,
+  AuthProvider,
+  AuthSession,
+} from '../../domain/auth-provider.port';
 import { AccountLane } from '../../domain/account-lane.value-object';
 import { EmailAddress } from '../../domain/email-address.value-object';
 import { toAuthUserId } from '../../domain/user.entity';
@@ -14,6 +18,10 @@ class FakeAuthProvider implements AuthProvider {
   async requestEmailOtp(): Promise<void> {}
 
   async verifyEmailOtp(): Promise<never> {
+    throw new Error('Not used by AuthenticateActorUseCase');
+  }
+
+  async refreshSession(): Promise<AuthSession> {
     throw new Error('Not used by AuthenticateActorUseCase');
   }
 

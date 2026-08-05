@@ -46,6 +46,25 @@ export class SupabaseAuthProvider implements AuthProvider {
     };
   }
 
+  async refreshSession(refreshToken: string): Promise<AuthSession> {
+    const { data, error } = await this.client.auth.refreshSession({
+      refresh_token: refreshToken,
+    });
+    if (error !== null) {
+      throw mapSupabaseCredentialError(error);
+    }
+    if (data.session === null || data.user === null) {
+      throw new AuthenticationFailedError();
+    }
+
+    return {
+      ...toIdentity(data.user),
+      accessToken: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+      expiresIn: data.session.expires_in,
+    };
+  }
+
   async getUserFromAccessToken(accessToken: string): Promise<AuthenticatedIdentity> {
     const { data, error } = await this.client.auth.getUser(accessToken);
     if (error !== null) {

@@ -7,7 +7,8 @@ import type { ProvisionAuthUserUseCase } from './provision-auth-user.use-case';
 export interface VerifyEmailOtpCommand {
   readonly email: EmailAddress;
   readonly token: string;
-  readonly lane: AccountLane;
+  /** Required on first provision; omit on returning sign-ins. */
+  readonly lane?: AccountLane;
   readonly name?: string;
 }
 

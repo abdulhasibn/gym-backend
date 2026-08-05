@@ -5,6 +5,7 @@ import { CompleteGoogleAuthUseCase } from './application/complete-google-auth.us
 import { AuthenticateActorUseCase } from './application/authenticate-actor.use-case';
 import { GetCurrentUserUseCase } from './application/get-current-user.use-case';
 import { ProvisionAuthUserUseCase } from './application/provision-auth-user.use-case';
+import { RefreshSessionUseCase } from './application/refresh-session.use-case';
 import { RequestEmailOtpUseCase } from './application/request-email-otp.use-case';
 import { VerifyEmailOtpUseCase } from './application/verify-email-otp.use-case';
 import { SupabaseAuthProvider } from '../../infrastructure/auth/supabase-auth.provider';
@@ -37,8 +38,9 @@ export function composeAuthFeature(
     generate: () => `STF-${randomUUID().replaceAll('-', '').slice(0, 12).toUpperCase()}`,
   });
   const controller = new AuthController(
-    new RequestEmailOtpUseCase(authProvider),
+    new RequestEmailOtpUseCase(authProvider, users),
     new VerifyEmailOtpUseCase(authProvider, provisionUser),
+    new RefreshSessionUseCase(authProvider),
     new CompleteGoogleAuthUseCase(provisionUser),
     new GetCurrentUserUseCase(userQueries),
   );

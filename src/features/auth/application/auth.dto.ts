@@ -10,6 +10,12 @@ export interface AuthSessionDto {
   readonly expiresIn: number;
 }
 
+export interface RequestEmailOtpResultDto {
+  readonly status: 'OTP_SENT';
+  /** False when a live app user already exists for this email — client can skip lane. */
+  readonly isNewUser: boolean;
+}
+
 export interface VerifyOtpResultDto {
   readonly session: AuthSessionDto;
   readonly user: AuthUserDto;

@@ -126,16 +126,16 @@ Authenticate users, choose account lane, establish frozen system roles. No gym p
 
 **F1.1 Client signup / login**
 
-1. Choose **I’m a member** (CLIENT lane) or land on Client auth.
-2. Enter email → receive OTP → select lane and enter OTP → session. A first-time
-   signup may provide a display name; returning users do not need to resend it.
-3. Or Google → must end with verified email as canonical identity.
-4. Land on Client shell: Invitation list if no ACTIVE membership; home if ACTIVE.
+1. Enter email → `POST /auth/otp/request` returns `isNewUser`.
+2. If `isNewUser`, collect **lane** (`CLIENT`) and optional display name; otherwise skip lane.
+3. Enter OTP → verify (`lane` only on first provision) → session.
+4. Or Google → must end with verified email as canonical identity; lane on first complete.
+5. Land on Client shell: Invitation list if no ACTIVE membership; home if ACTIVE.
 
 **F1.2 Staff signup / login**
 
-1. Choose **I work at a gym** (STAFF lane) → role `STAFF_UNASSIGNED`.
-2. Auth same as Client (email OTP primary).
+1. Enter email → if `isNewUser`, choose **STAFF** lane → role `STAFF_UNASSIGNED` on first verify.
+2. Auth same as Client (email OTP primary); returning staff omit lane.
 3. Show **staff_code** prominently and render it as a QR client-side (needed for owner invite).
 4. Empty state: “Waiting for a gym invite” + how to share code with owner.
 

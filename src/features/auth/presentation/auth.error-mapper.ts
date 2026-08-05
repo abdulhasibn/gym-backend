@@ -3,6 +3,7 @@ import {
   EmailNotVerifiedError,
   GoogleIdentityRequiredError,
   LaneMismatchError,
+  LaneRequiredError,
   OAuthConfigurationError,
 } from '../application/auth.errors';
 import {
@@ -27,6 +28,7 @@ export const mapAuthError: ErrorMapper = (error) => {
     error instanceof EmailNotVerifiedError ||
     error instanceof GoogleIdentityRequiredError ||
     error instanceof InvalidAccountLaneError ||
+    error instanceof LaneRequiredError ||
     error instanceof OtpExpiredError ||
     error instanceof AuthUserInvariantError
   ) {

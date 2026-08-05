@@ -43,6 +43,10 @@ class FakeAuthProvider implements AuthProvider {
     };
   }
 
+  async refreshSession(): Promise<AuthSession> {
+    throw new Error('Not used by email OTP use cases');
+  }
+
   async getUserFromAccessToken(): Promise<AuthenticatedIdentity> {
     throw new Error('Not used by email OTP use cases');
   }
@@ -50,29 +54,57 @@ class FakeAuthProvider implements AuthProvider {
 
 describe('email OTP use cases', () => {
   let authProvider: FakeAuthProvider;
+  let users: InMemoryAuthUserRepository;
 
   beforeEach(() => {
     authProvider = new FakeAuthProvider();
+    users = new InMemoryAuthUserRepository();
   });
 
-  it('requests an OTP for the supplied email', async () => {
-    await new RequestEmailOtpUseCase(authProvider).execute(
+  it('requests an OTP and reports a new user when no account exists', async () => {
+    const result = await new RequestEmailOtpUseCase(authProvider, users).execute(
       EmailAddress.create('member@example.com'),
     );
 
     expect(authProvider.requestEmail?.value).toBe('member@example.com');
+    expect(result).toEqual({ status: 'OTP_SENT', isNewUser: true });
+  });
+
+  it('reports a returning user when an account already exists for the email', async () => {
+    const provisionUser = new ProvisionAuthUserUseCase(users, {
+      generate: () => 'STF-TESTCODE01',
+    });
+    await provisionUser.execute({
+      identity: {
+        userId: toAuthUserId('11111111-1111-4111-8111-111111111111'),
+        email: EmailAddress.create('member@example.com'),
+        emailVerifiedAt: new Date('2026-08-02T00:00:00.000Z'),
+        displayName: 'Member',
+        googleId: null,
+      },
+      lane: AccountLane.create('CLIENT'),
+      name: 'Member',
+    });
+
+    const result = await new RequestEmailOtpUseCase(authProvider, users).execute(
+      EmailAddress.create('member@example.com'),
+    );
+
+    expect(result).toEqual({ status: 'OTP_SENT', isNewUser: false });
   });
 
   it('propagates request rate limits', async () => {
     authProvider.requestError = new AuthRateLimitedError();
 
     await expect(
-      new RequestEmailOtpUseCase(authProvider).execute(EmailAddress.create('member@example.com')),
+      new RequestEmailOtpUseCase(authProvider, users).execute(
+        EmailAddress.create('member@example.com'),
+      ),
     ).rejects.toBeInstanceOf(AuthRateLimitedError);
   });
 
   it('provisions the selected lane after verifying an OTP', async () => {
-    const provisionUser = new ProvisionAuthUserUseCase(new InMemoryAuthUserRepository(), {
+    const provisionUser = new ProvisionAuthUserUseCase(users, {
       generate: () => 'STF-TESTCODE01',
     });
     const useCase = new VerifyEmailOtpUseCase(authProvider, provisionUser);
@@ -88,7 +120,7 @@ describe('email OTP use cases', () => {
   });
 
   it('uses the provider display name when first-time verification omits a name', async () => {
-    const provisionUser = new ProvisionAuthUserUseCase(new InMemoryAuthUserRepository(), {
+    const provisionUser = new ProvisionAuthUserUseCase(users, {
       generate: () => 'STF-TESTCODE01',
     });
 
@@ -102,7 +134,6 @@ describe('email OTP use cases', () => {
   });
 
   it('allows a returning user to verify without a name', async () => {
-    const users = new InMemoryAuthUserRepository();
     const provisionUser = new ProvisionAuthUserUseCase(users, {
       generate: () => 'STF-TESTCODE01',
     });
@@ -123,9 +154,29 @@ describe('email OTP use cases', () => {
     expect(result.user.name).toBe('Original member');
   });
 
+  it('allows a returning user to verify without a lane', async () => {
+    const provisionUser = new ProvisionAuthUserUseCase(users, {
+      generate: () => 'STF-TESTCODE01',
+    });
+    const useCase = new VerifyEmailOtpUseCase(authProvider, provisionUser);
+
+    await useCase.execute({
+      email: EmailAddress.create('member@example.com'),
+      token: '123456',
+      lane: AccountLane.create('CLIENT'),
+      name: 'Original member',
+    });
+    const result = await useCase.execute({
+      email: EmailAddress.create('member@example.com'),
+      token: '123456',
+    });
+
+    expect(result.user).toMatchObject({ lane: 'CLIENT', name: 'Original member' });
+  });
+
   it('propagates expired OTP errors', async () => {
     authProvider.verifyError = new OtpExpiredError();
-    const provisionUser = new ProvisionAuthUserUseCase(new InMemoryAuthUserRepository(), {
+    const provisionUser = new ProvisionAuthUserUseCase(users, {
       generate: () => 'STF-TESTCODE01',
     });
 

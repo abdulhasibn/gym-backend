@@ -14,6 +14,8 @@ export interface CreateAuthUser {
 
 export interface AuthUserRepository {
   findById(id: AuthUserId): Promise<AuthUser | null>;
+  /** Live (non-deleted) app user for this email — used to decide first-time vs returning OTP. */
+  existsByEmail(email: EmailAddress): Promise<boolean>;
   create(user: CreateAuthUser): Promise<AuthUser>;
   linkGoogleIdentity(id: AuthUserId, googleId: string): Promise<void>;
 }

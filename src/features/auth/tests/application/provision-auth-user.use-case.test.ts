@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { EmailNotVerifiedError, LaneMismatchError } from '../../application/auth.errors';
+import { EmailNotVerifiedError, LaneMismatchError, LaneRequiredError } from '../../application/auth.errors';
 import { ProvisionAuthUserUseCase } from '../../application/provision-auth-user.use-case';
 import type { AuthenticatedIdentity } from '../../domain/auth-provider.port';
 import { AccountLane } from '../../domain/account-lane.value-object';
@@ -60,6 +60,30 @@ describe('ProvisionAuthUserUseCase', () => {
     await expect(
       useCase.execute({ identity: identity(), lane: AccountLane.create('STAFF'), name: 'Member' }),
     ).rejects.toBeInstanceOf(LaneMismatchError);
+  });
+
+  it('allows a returning sign-in without a lane', async () => {
+    await useCase.execute({
+      identity: identity(),
+      lane: AccountLane.create('CLIENT'),
+      name: 'Member',
+    });
+
+    const user = await useCase.execute({
+      identity: identity(),
+      name: 'Member',
+    });
+
+    expect(user.lane.value).toBe('CLIENT');
+  });
+
+  it('requires a lane when creating a new account', async () => {
+    await expect(
+      useCase.execute({
+        identity: identity(),
+        name: 'Member',
+      }),
+    ).rejects.toBeInstanceOf(LaneRequiredError);
   });
 
   it('requires a verified email address', async () => {

@@ -25,6 +25,15 @@ export class LaneMismatchError extends Error {
   }
 }
 
+export class LaneRequiredError extends Error {
+  readonly code = 'LANE_REQUIRED';
+
+  constructor() {
+    super('Account lane is required when creating a new account');
+    this.name = 'LaneRequiredError';
+  }
+}
+
 export class OAuthConfigurationError extends Error {
   readonly code = 'OAUTH_CONFIGURATION';
 

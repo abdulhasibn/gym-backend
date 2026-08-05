@@ -5,6 +5,7 @@ import { TransientDatabaseFailureError } from '../../../domain/errors/transient-
 import { UniqueViolationError } from '../../../domain/errors/unique-violation.error';
 import type { Database } from '../../../infrastructure/supabase/database.types';
 import { roleCodeForLane } from '../domain/account-lane.value-object';
+import type { EmailAddress } from '../domain/email-address.value-object';
 import type { AuthUserRepository, CreateAuthUser } from '../domain/user.repository';
 import type { AuthUser, AuthUserId } from '../domain/user.entity';
 import { toAuthUser } from './auth-user.mapper';
@@ -15,6 +16,23 @@ export class SupabaseAuthUserRepository implements AuthUserRepository {
 
   async findById(id: AuthUserId): Promise<AuthUser | null> {
     return readAuthUserById(this.client, id);
+  }
+
+  async existsByEmail(email: EmailAddress): Promise<boolean> {
+    const { data, error } = await this.client
+      .from('users')
+      .select('id')
+      .eq('email', email.value)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (error !== null) {
+      throw new TransientDatabaseFailureError('Unable to look up account by email', {
+        cause: error,
+      });
+    }
+
+    return data !== null;
   }
 
   async create(command: CreateAuthUser): Promise<AuthUser> {

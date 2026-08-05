@@ -2,7 +2,7 @@ import type { AccountLane } from '../domain/account-lane.value-object';
 import type { AuthenticatedIdentity } from '../domain/auth-provider.port';
 import type { AuthUser } from '../domain/user.entity';
 import type { AuthUserRepository } from '../domain/user.repository';
-import { EmailNotVerifiedError, LaneMismatchError } from './auth.errors';
+import { EmailNotVerifiedError, LaneMismatchError, LaneRequiredError } from './auth.errors';
 
 export interface StaffCodeGenerator {
   generate(): string;
@@ -10,7 +10,8 @@ export interface StaffCodeGenerator {
 
 export interface ProvisionAuthUserCommand {
   readonly identity: AuthenticatedIdentity;
-  readonly lane: AccountLane;
+  /** Required on first provision; optional for returning sign-ins. */
+  readonly lane?: AccountLane;
   readonly name: string;
 }
 
@@ -30,13 +31,17 @@ export class ProvisionAuthUserUseCase {
 
     const existing = await this.users.findById(command.identity.userId);
     if (existing !== null) {
-      if (!existing.lane.equals(command.lane)) {
+      if (command.lane !== undefined && !existing.lane.equals(command.lane)) {
         throw new LaneMismatchError();
       }
       if (command.identity.googleId !== null && existing.googleId === null) {
         await this.users.linkGoogleIdentity(existing.id, command.identity.googleId);
       }
       return existing;
+    }
+
+    if (command.lane === undefined) {
+      throw new LaneRequiredError();
     }
 
     return this.users.create({

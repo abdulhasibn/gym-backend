@@ -19,6 +19,7 @@ export function createAuthRouter(
 
   router.post('/otp/request', controller.requestOtp);
   router.post('/otp/verify', controller.verifyOtp);
+  router.post('/refresh', controller.refresh);
   router.post('/google/complete', authenticateIdentity, controller.completeGoogle);
   router.get('/me', authenticate, controller.me);
 
