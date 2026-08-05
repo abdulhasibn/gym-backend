@@ -1662,6 +1662,31 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_staff_invite: {
+        Args: {
+          p_invite_id: string;
+          p_user_id: string;
+        };
+        Returns: {
+          accepted_at: string | null;
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          expires_at: string | null;
+          gym_org_id: string;
+          id: string;
+          invited_user_id: string;
+          status: Database['public']['Enums']['invite_status'];
+          target_role: Database['public']['Enums']['staff_invite_target_role'];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'staff_invites';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       create_owned_gym_org: {
         Args: {
           p_address?: string;

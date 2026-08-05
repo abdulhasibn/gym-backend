@@ -21,6 +21,19 @@ export interface GymOrgSummaryDto {
   readonly isOwner: boolean;
 }
 
+export interface StaffInviteDto {
+  readonly id: string;
+  readonly gymOrgId: string;
+  readonly invitedUserId: string;
+  readonly targetRole: string;
+  readonly status: string;
+  readonly expiresAt: string | null;
+  readonly createdBy: string;
+  readonly acceptedAt: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
 export function toGymOrgDto(gymOrg: GymOrg): GymOrgDto {
   return {
     id: gymOrg.id,

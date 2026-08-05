@@ -16,14 +16,20 @@ export interface GymOrgData {
   readonly updatedAt: Date;
 }
 
+export interface UpdateGymOrgProfile {
+  readonly name: GymOrgName;
+  readonly address: string | null;
+  readonly contactPhone: string | null;
+  readonly contactEmail: string | null;
+  readonly logoUrl: string | null;
+  readonly timezone: IanaTimezone;
+}
+
 export class GymOrg {
-  private constructor(private readonly data: GymOrgData) {}
+  private constructor(private data: GymOrgData) {}
 
   static reconstitute(data: GymOrgData): GymOrg {
-    if (data.address?.trim() === '') {
-      throw new Error('Gym organization address cannot be blank');
-    }
-
+    assertProfileFields(data.address, data.contactPhone, data.contactEmail, data.logoUrl);
     return new GymOrg(data);
   }
 
@@ -69,5 +75,45 @@ export class GymOrg {
 
   isOwnedBy(userId: UserId): boolean {
     return this.data.ownerUserId === userId;
+  }
+
+  updateProfile(profile: UpdateGymOrgProfile, updatedAt: Date): void {
+    assertProfileFields(
+      profile.address,
+      profile.contactPhone,
+      profile.contactEmail,
+      profile.logoUrl,
+    );
+
+    this.data = {
+      ...this.data,
+      name: profile.name,
+      address: profile.address,
+      contactPhone: profile.contactPhone,
+      contactEmail: profile.contactEmail,
+      logoUrl: profile.logoUrl,
+      timezone: profile.timezone,
+      updatedAt,
+    };
+  }
+}
+
+function assertProfileFields(
+  address: string | null,
+  contactPhone: string | null,
+  contactEmail: string | null,
+  logoUrl: string | null,
+): void {
+  if (address?.trim() === '') {
+    throw new Error('Gym organization address cannot be blank');
+  }
+  if (contactPhone?.trim() === '') {
+    throw new Error('Gym organization contact phone cannot be blank');
+  }
+  if (contactEmail?.trim() === '') {
+    throw new Error('Gym organization contact email cannot be blank');
+  }
+  if (logoUrl?.trim() === '') {
+    throw new Error('Gym organization logo URL cannot be blank');
   }
 }
