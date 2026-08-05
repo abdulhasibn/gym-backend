@@ -48,7 +48,10 @@ describe('CreateGymOrgUseCase', () => {
   });
 
   it('forbids CLIENT and TRAINER from creating organizations', async () => {
-    const useCase = new CreateGymOrgUseCase(new InMemoryGymOrgRepository(), new CreateGymOrgPolicy());
+    const useCase = new CreateGymOrgUseCase(
+      new InMemoryGymOrgRepository(),
+      new CreateGymOrgPolicy(),
+    );
 
     await expect(
       useCase.execute(

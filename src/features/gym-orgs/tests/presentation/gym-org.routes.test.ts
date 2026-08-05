@@ -37,7 +37,9 @@ class SilentLogger implements Logger {
   }
 }
 
-function createTestApp(roleCode: 'STAFF_UNASSIGNED' | 'CLIENT' | 'ADMIN' | 'TRAINER' = 'STAFF_UNASSIGNED') {
+function createTestApp(
+  roleCode: 'STAFF_UNASSIGNED' | 'CLIENT' | 'ADMIN' | 'TRAINER' = 'STAFF_UNASSIGNED',
+) {
   const gymOrgs = new InMemoryGymOrgRepository();
   const staffInvites = new InMemoryStaffInviteRepository();
   const staffUsers = new InMemoryStaffUserLookup();
@@ -159,10 +161,7 @@ describe('gym-org routes', () => {
 
   it('returns validation errors for a blank organization name', async () => {
     const { app } = createTestApp();
-    const response = await supertest(app)
-      .post('/gym-orgs')
-      .send({ name: '   ' })
-      .expect(422);
+    const response = await supertest(app).post('/gym-orgs').send({ name: '   ' }).expect(422);
 
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
@@ -178,7 +177,11 @@ describe('gym-org routes', () => {
     const gymOrgId = create.body.gymOrg.id as string;
 
     const get = await supertest(app).get(`/gym-orgs/${gymOrgId}`).expect(200);
-    expect(get.body.gymOrg).toMatchObject({ id: gymOrgId, name: 'North Star Fitness', isOwner: true });
+    expect(get.body.gymOrg).toMatchObject({
+      id: gymOrgId,
+      name: 'North Star Fitness',
+      isOwner: true,
+    });
 
     const patch = await supertest(app)
       .patch(`/gym-orgs/${gymOrgId}`)

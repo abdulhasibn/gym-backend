@@ -65,6 +65,14 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-08-05 — Fix Vercel npm install + Prettier CI
+
+- Prod deploy `948dc9c` failed: Vercel ran `npm install` (peer conflict /
+  phantom `eslint-plugin-prettier`) instead of pnpm.
+- Fix: `vercel.json` `installCommand: pnpm install --frozen-lockfile`; pin
+  `engines.node` to `22.x`. Format-check CI failed on 9 files — Prettier
+  applied.
+
 ### 2026-08-05 — Docs + Postman for OTP isNewUser / optional lane
 
 - Updated `docs/client-auth.md`, `docs/product-flows.md` for request

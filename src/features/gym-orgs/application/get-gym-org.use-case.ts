@@ -7,7 +7,10 @@ import type { GymOrgDto } from './gym-org.dto';
 export class GetGymOrgUseCase {
   constructor(private readonly gymOrgQueries: GymOrgQueries) {}
 
-  async execute(actor: AuthenticatedActor, gymOrgId: GymOrgId): Promise<GymOrgDto & { isOwner: boolean }> {
+  async execute(
+    actor: AuthenticatedActor,
+    gymOrgId: GymOrgId,
+  ): Promise<GymOrgDto & { isOwner: boolean }> {
     const detail = await this.gymOrgQueries.getForUser(actor.userId, gymOrgId);
     if (detail === null) {
       throw new NotFoundError('Gym organization not found');

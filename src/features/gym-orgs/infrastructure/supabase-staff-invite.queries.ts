@@ -18,10 +18,7 @@ type StaffInviteRow = Database['public']['Tables']['staff_invites']['Row'];
 export class SupabaseStaffInviteQueries implements StaffInviteQueries {
   constructor(private readonly client: SupabaseClient<Database>) {}
 
-  async listForGym(
-    gymOrgId: GymOrgId,
-    page: Pagination,
-  ): Promise<Page<StaffInviteSummary>> {
+  async listForGym(gymOrgId: GymOrgId, page: Pagination): Promise<Page<StaffInviteSummary>> {
     const now = new Date();
     const { data, error, count } = await this.client
       .from('staff_invites')
@@ -44,10 +41,7 @@ export class SupabaseStaffInviteQueries implements StaffInviteQueries {
     );
   }
 
-  async listInboxForUser(
-    userId: UserId,
-    page: Pagination,
-  ): Promise<Page<StaffInviteSummary>> {
+  async listInboxForUser(userId: UserId, page: Pagination): Promise<Page<StaffInviteSummary>> {
     const now = new Date();
     const { data, error, count } = await this.client
       .from('staff_invites')

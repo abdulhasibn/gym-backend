@@ -1,9 +1,6 @@
 import { z } from 'zod';
 
-import {
-  DEFAULT_PAGE_SIZE,
-  MAX_PAGE_SIZE,
-} from '../../../shared/pagination/pagination';
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../../../shared/pagination/pagination';
 import { GymOrgName } from '../domain/gym-org-name.value-object';
 import { IanaTimezone } from '../domain/iana-timezone.value-object';
 import { StaffCode } from '../domain/staff-code.value-object';

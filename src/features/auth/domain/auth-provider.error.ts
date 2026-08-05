@@ -21,9 +21,7 @@ export class OtpExpiredError extends Error {
 
   constructor() {
     // GoTrue returns otp_expired for both expired and wrong codes.
-    super(
-      'The one-time code is invalid or has expired. Request a new code and try again.',
-    );
+    super('The one-time code is invalid or has expired. Request a new code and try again.');
     this.name = 'OtpExpiredError';
   }
 }

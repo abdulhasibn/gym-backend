@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { EmailNotVerifiedError, LaneMismatchError, LaneRequiredError } from '../../application/auth.errors';
+import {
+  EmailNotVerifiedError,
+  LaneMismatchError,
+  LaneRequiredError,
+} from '../../application/auth.errors';
 import { ProvisionAuthUserUseCase } from '../../application/provision-auth-user.use-case';
 import type { AuthenticatedIdentity } from '../../domain/auth-provider.port';
 import { AccountLane } from '../../domain/account-lane.value-object';

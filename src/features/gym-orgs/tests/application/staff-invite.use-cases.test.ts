@@ -78,13 +78,7 @@ describe('Staff invite use cases', () => {
         return `cccccccc-cccc-4ccc-8ccc-${String(idCounter).padStart(12, '0')}`;
       },
     };
-    const createInvite = new CreateStaffInviteUseCase(
-      policy,
-      staffInvites,
-      staffUsers,
-      clock,
-      ids,
-    );
+    const createInvite = new CreateStaffInviteUseCase(policy, staffInvites, staffUsers, clock, ids);
 
     return { gymOrgs, staffInvites, staffUsers, clock, created, policy, createInvite };
   }

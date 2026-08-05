@@ -76,9 +76,7 @@ export class SupabaseGymOrgQueries implements GymOrgQueries {
     };
   }
 
-  private async loadAffiliationMap(
-    userId: UserId,
-  ): Promise<Map<string, { isOwner: boolean }>> {
+  private async loadAffiliationMap(userId: UserId): Promise<Map<string, { isOwner: boolean }>> {
     const [adminsResult, trainersResult] = await Promise.all([
       this.client
         .from('gym_admins')
