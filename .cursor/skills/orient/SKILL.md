@@ -32,6 +32,7 @@ Do **not** dump every doc into context. Read narrowly.
 
 - Prefer **Current stage** over assuming migrations, seeds, or features exist.
 - If **Next up** conflicts with the user ask, say so briefly, then follow the user.
+- Before calling CreatePlan or marking a plan final that adds/changes feature modules, ports, CQRS split, or composition-root wiring: apply [architecture-compliance](../architecture-compliance/SKILL.md). Do not finalize with known H\* FAILs.
 - After a meaningful chunk of work, update `docs/PROGRESS.md` per `.cursor/rules/progress-log.mdc` (refresh Current stage / Next up; prepend a Log entry).
 - Do not edit plan files to track progress — use the progress log.
 

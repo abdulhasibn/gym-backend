@@ -1,7 +1,3 @@
-import type { Brand } from '../../../shared/primitives/brand';
-
-export type GymOrgId = Brand<string, 'GymOrgId'>;
-
-export function toGymOrgId(value: string): GymOrgId {
-  return value as GymOrgId;
-}
+/** @deprecated Import from `domain/shared/gym-org-id` — re-export for gym-orgs-internal paths. */
+export type { GymOrgId } from '../../../domain/shared/gym-org-id';
+export { toGymOrgId } from '../../../domain/shared/gym-org-id';

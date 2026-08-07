@@ -1,6 +1,8 @@
 import type { RequestHandler } from 'express';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import type { GymOrgId } from '../../domain/shared/gym-org-id';
+import type { UserId } from '../../domain/shared/user-id';
 import type { Database } from '../../infrastructure/supabase/database.types';
 import { SystemClock } from '../../shared/clock/clock';
 import { UuidIdGenerator } from '../../shared/ids/id-generator';
@@ -52,5 +54,7 @@ export function composeGymOrgFeature(
   return {
     router: createGymOrgRouter(controller, authenticate),
     errorMapper: mapGymOrgError,
+    isLiveAdmin: (userId: UserId, gymOrgId: GymOrgId) =>
+      gymOrgs.isLiveAdmin(userId, gymOrgId),
   };
 }

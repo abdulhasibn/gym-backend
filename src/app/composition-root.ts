@@ -6,6 +6,7 @@ import { JSON_BODY_LIMIT } from '../config/constants';
 import type { AppConfig } from '../config/environment';
 import { composeAuthFeature } from '../features/auth/composition';
 import { composeGymOrgFeature } from '../features/gym-orgs/composition';
+import { composeLeadsFeature } from '../features/leads/composition';
 import { createLogger } from '../infrastructure/logging/logger';
 import { createRequestLoggerMiddleware } from '../infrastructure/logging/request-logger.middleware';
 import type { Database } from '../infrastructure/supabase/database.types';
@@ -45,6 +46,9 @@ export function composeApp(config: AppConfig): AppDependencies {
     enableGoogleCallbackHelper: config.nodeEnv !== 'production',
   });
   const gymOrgFeature = composeGymOrgFeature(supabaseClient, authFeature.authenticate);
+  const leadsFeature = composeLeadsFeature(supabaseClient, authFeature.authenticate, {
+    isLiveAdmin: gymOrgFeature.isLiveAdmin,
+  });
 
   const app = express();
 
@@ -53,11 +57,15 @@ export function composeApp(config: AppConfig): AppDependencies {
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(createRequestLoggerMiddleware(logger));
 
-  app.use(createRouter(authFeature.router, gymOrgFeature.router));
+  app.use(createRouter(authFeature.router, gymOrgFeature.router, leadsFeature.router));
 
   app.use(notFoundMiddleware);
   app.use(
-    createErrorHandlerMiddleware(logger, [authFeature.errorMapper, gymOrgFeature.errorMapper]),
+    createErrorHandlerMiddleware(logger, [
+      authFeature.errorMapper,
+      gymOrgFeature.errorMapper,
+      leadsFeature.errorMapper,
+    ]),
   );
 
   return { config, logger, supabaseClient, app };
