@@ -54,6 +54,13 @@ const body = {
   mailer_templates_magic_link_content: otpBody,
   mailer_subjects_confirmation: 'Your verification code is {{ .Token }}',
   mailer_templates_confirmation_content: confirmBody,
+  // Dev-friendly Auth rate limits (custom SMTP required for email_sent > built-in).
+  // otp/verify: requests per hour (project / IP buckets — see Auth rate-limits docs).
+  // smtp_max_frequency: min seconds between emails to the same address.
+  rate_limit_otp: 120,
+  rate_limit_verify: 120,
+  rate_limit_email_sent: 300,
+  smtp_max_frequency: 30,
 };
 
 if (configureSmtp) {
@@ -98,4 +105,8 @@ console.log(`smtp_configured=${configureSmtp}`);
 console.log(`magic_link_subject=${parsed.mailer_subjects_magic_link ?? '(set)'}`);
 console.log(`confirmation_subject=${parsed.mailer_subjects_confirmation ?? '(set)'}`);
 console.log(`mailer_otp_length=${parsed.mailer_otp_length ?? '(unknown)'}`);
+console.log(`rate_limit_otp=${parsed.rate_limit_otp ?? '(unknown)'}`);
+console.log(`rate_limit_verify=${parsed.rate_limit_verify ?? '(unknown)'}`);
+console.log(`rate_limit_email_sent=${parsed.rate_limit_email_sent ?? '(unknown)'}`);
+console.log(`smtp_max_frequency=${parsed.smtp_max_frequency ?? '(unknown)'}s`);
 console.log('Inbox emails will show the 6-digit {{ .Token }} for /auth/otp/verify.');

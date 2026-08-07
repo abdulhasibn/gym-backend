@@ -20,7 +20,8 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "auth:configure-google": "node --env-file=.env scripts/configure-google-oauth.mjs",
-    "auth:configure-email-otp": "node --env-file=.env scripts/configure-email-otp-template.mjs"
+    "auth:configure-email-otp": "node --env-file=.env scripts/configure-email-otp-template.mjs",
+    "db:reset-data": "node --env-file=.env scripts/reset-dev-data.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

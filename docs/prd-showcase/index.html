@@ -3,217 +3,447 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gym SaaS — MVP Product Blueprint</title>
+  <meta name="theme-color" content="#f3f5f4" />
+  <title>Gym SaaS — Product Blueprint</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="orbit.css" />
 </head>
 <body>
   <nav class="nav" aria-label="Primary">
     <div class="nav-inner">
-      <a class="brand" href="#top">Gym SaaS <span>PRD v2.3</span></a>
-      <ul class="nav-links">
-        <li><a href="#positioning">Positioning</a></li>
-        <li><a href="#surfaces">Surfaces</a></li>
-        <li><a href="#modules">Modules</a></li>
-        <li><a href="#matrix">Who uses what</a></li>
-        <li><a href="#stack">Stack</a></li>
-        <li><a href="#out">Out of MVP</a></li>
-      </ul>
+      <a class="brand" href="#top" data-tab-home="prd">Gym SaaS <span>Blueprint</span></a>
+      <div class="nav-center">
+        <div class="site-tabs" role="tablist" aria-label="Site sections">
+          <button type="button" class="site-tab is-active" role="tab" id="tab-prd" aria-selected="true" aria-controls="view-prd" data-tab="prd">Product</button>
+          <button type="button" class="site-tab" role="tab" id="tab-roles" aria-selected="false" aria-controls="view-roles" data-tab="roles">Roles</button>
+          <button type="button" class="site-tab" role="tab" id="tab-orbit" aria-selected="false" aria-controls="view-orbit" data-tab="orbit">Orbit</button>
+        </div>
+        <ul class="nav-links" id="nav-links-prd" data-for-tab="prd">
+          <li><a href="#positioning">Positioning</a></li>
+          <li><a href="#surfaces">Surfaces</a></li>
+          <li><a href="#modules">Modules</a></li>
+          <li><a href="#matrix">Who uses what</a></li>
+          <li><a href="#stack">Stack</a></li>
+          <li><a href="#out">Out of MVP</a></li>
+        </ul>
+        <ul class="nav-links is-hidden" id="nav-links-roles" data-for-tab="roles" hidden>
+          <li><a href="#lanes">Lanes</a></li>
+          <li><a href="#roles-pick">Roles</a></li>
+          <li><a href="#perm-matrix">Permissions</a></li>
+          <li><a href="#authz">Authz stack</a></li>
+        </ul>
+        <ul class="nav-links is-hidden" id="nav-links-orbit" data-for-tab="orbit" hidden>
+          <li><a href="#orbit">Orbit</a></li>
+          <li><a href="#runsheet">Run sheet</a></li>
+          <li><a href="#deferred">Deferred</a></li>
+          <li><a href="orbit-3d.html">3D</a></li>
+        </ul>
+      </div>
     </div>
   </nav>
 
-  <header class="hero wrap" id="top">
-    <div class="hero-visual" aria-hidden="true">
-      <svg viewBox="0 0 560 640" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="40" y="40" width="480" height="560" stroke="#0f5c4c" stroke-opacity="0.25" stroke-width="1"/>
-        <rect x="70" y="70" width="200" height="120" fill="#0f5c4c" fill-opacity="0.08" stroke="#0f5c4c" stroke-opacity="0.35"/>
-        <rect x="290" y="70" width="200" height="120" fill="#b8f000" fill-opacity="0.35" stroke="#1a2e00" stroke-opacity="0.2"/>
-        <rect x="70" y="210" width="420" height="80" fill="#0f5c4c" fill-opacity="0.05" stroke="#0f5c4c" stroke-opacity="0.3"/>
-        <rect x="70" y="310" width="130" height="100" stroke="#0f5c4c" stroke-opacity="0.3"/>
-        <rect x="215" y="310" width="130" height="100" stroke="#0f5c4c" stroke-opacity="0.3"/>
-        <rect x="360" y="310" width="130" height="100" fill="#b8f000" fill-opacity="0.2" stroke="#0f5c4c" stroke-opacity="0.35"/>
-        <rect x="70" y="430" width="420" height="140" stroke="#0f5c4c" stroke-opacity="0.25" stroke-dasharray="6 4"/>
-        <text x="85" y="105" fill="#0f5c4c" fill-opacity="0.7" font-family="IBM Plex Mono, monospace" font-size="11">MOBILE</text>
-        <text x="305" y="105" fill="#1a2e00" fill-opacity="0.7" font-family="IBM Plex Mono, monospace" font-size="11">WEB ADMIN</text>
-        <text x="85" y="255" fill="#0f5c4c" fill-opacity="0.7" font-family="IBM Plex Mono, monospace" font-size="11">API · EXPRESS · SUPABASE</text>
-        <text x="85" y="365" fill="#0f5c4c" fill-opacity="0.55" font-family="IBM Plex Mono, monospace" font-size="10">M1–M5</text>
-        <text x="230" y="365" fill="#0f5c4c" fill-opacity="0.55" font-family="IBM Plex Mono, monospace" font-size="10">M6–M10</text>
-        <text x="375" y="365" fill="#0f5c4c" fill-opacity="0.55" font-family="IBM Plex Mono, monospace" font-size="10">M11–M13</text>
-        <text x="85" y="470" fill="#0f5c4c" fill-opacity="0.45" font-family="IBM Plex Mono, monospace" font-size="10">DOMAIN MODULES</text>
-        <line x1="170" y1="190" x2="170" y2="210" stroke="#0f5c4c" stroke-opacity="0.35"/>
-        <line x1="390" y1="190" x2="390" y2="210" stroke="#0f5c4c" stroke-opacity="0.35"/>
-        <line x1="280" y1="290" x2="280" y2="310" stroke="#0f5c4c" stroke-opacity="0.35"/>
-      </svg>
-    </div>
-    <div class="hero-copy">
-      <p class="sec-label">India-first · Draft v2.3 · August 2026</p>
-      <h1>Gym SaaS</h1>
-      <p>Production MVP blueprint for invite-only joins, base + addon billing, client-owned fitness data with consent grants, renewals, coaching, and the member app.</p>
-      <a class="cta" href="#modules">
-        Explore modules
-        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
-      </a>
-    </div>
-  </header>
-
-  <section id="positioning">
-    <div class="wrap">
-      <p class="sec-label">01 — Positioning</p>
-      <h2 class="sec-title">Who pays, what wins</h2>
-      <p class="sec-lead">Locked after product + ownership grill. Admin buys; every join is an Admin invite; personal fitness data is client-owned with DataGrants; trainer coaching is an addon.</p>
-      <div class="pos-grid">
-        <div class="pos-item"><strong>Buyer</strong><p>Admin — gym owner / manager</p></div>
-        <div class="pos-item"><strong>Wedge</strong><p>Renewals + mini-CRM + desk ops</p></div>
-        <div class="pos-item"><strong>Join</strong><p>Invite-only · no open codes</p></div>
-        <div class="pos-item"><strong>Billing</strong><p>Base + addons · price snapshot</p></div>
-        <div class="pos-item"><strong>Privacy</strong><p>Client-owned data · grants · no copy</p></div>
-        <div class="pos-item"><strong>Beachhead</strong><p>Solo / small owner-operator</p></div>
+  <div id="view-prd" class="view is-active" role="tabpanel" aria-labelledby="tab-prd">
+    <header class="hero wrap" id="top">
+      <div class="hero-visual" aria-hidden="true">
+        <svg viewBox="0 0 560 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="40" y="40" width="480" height="560" stroke="#0f5c4c" stroke-opacity="0.25" stroke-width="1"/>
+          <rect x="70" y="70" width="200" height="120" fill="#0f5c4c" fill-opacity="0.08" stroke="#0f5c4c" stroke-opacity="0.35"/>
+          <rect x="290" y="70" width="200" height="120" fill="#b8f000" fill-opacity="0.35" stroke="#1a2e00" stroke-opacity="0.2"/>
+          <rect x="70" y="210" width="420" height="80" fill="#0f5c4c" fill-opacity="0.05" stroke="#0f5c4c" stroke-opacity="0.3"/>
+          <rect x="70" y="310" width="130" height="100" stroke="#0f5c4c" stroke-opacity="0.3"/>
+          <rect x="215" y="310" width="130" height="100" stroke="#0f5c4c" stroke-opacity="0.3"/>
+          <rect x="360" y="310" width="130" height="100" fill="#b8f000" fill-opacity="0.2" stroke="#0f5c4c" stroke-opacity="0.35"/>
+          <rect x="70" y="430" width="420" height="140" stroke="#0f5c4c" stroke-opacity="0.25" stroke-dasharray="6 4"/>
+          <text x="85" y="105" fill="#0f5c4c" fill-opacity="0.7" font-family="IBM Plex Mono, monospace" font-size="11">MOBILE</text>
+          <text x="305" y="105" fill="#1a2e00" fill-opacity="0.7" font-family="IBM Plex Mono, monospace" font-size="11">WEB ADMIN</text>
+          <text x="85" y="255" fill="#0f5c4c" fill-opacity="0.7" font-family="IBM Plex Mono, monospace" font-size="11">API · EXPRESS · SUPABASE</text>
+          <text x="85" y="365" fill="#0f5c4c" fill-opacity="0.55" font-family="IBM Plex Mono, monospace" font-size="10">M1–M5</text>
+          <text x="230" y="365" fill="#0f5c4c" fill-opacity="0.55" font-family="IBM Plex Mono, monospace" font-size="10">M6–M10</text>
+          <text x="375" y="365" fill="#0f5c4c" fill-opacity="0.55" font-family="IBM Plex Mono, monospace" font-size="10">M11–M13</text>
+          <text x="85" y="470" fill="#0f5c4c" fill-opacity="0.45" font-family="IBM Plex Mono, monospace" font-size="10">DOMAIN MODULES</text>
+          <line x1="170" y1="190" x2="170" y2="210" stroke="#0f5c4c" stroke-opacity="0.35"/>
+          <line x1="390" y1="190" x2="390" y2="210" stroke="#0f5c4c" stroke-opacity="0.35"/>
+          <line x1="280" y1="290" x2="280" y2="310" stroke="#0f5c4c" stroke-opacity="0.35"/>
+        </svg>
       </div>
-    </div>
-  </section>
-
-  <section id="surfaces">
-    <div class="wrap">
-      <p class="sec-label">02 — Surfaces</p>
-      <h2 class="sec-title">Three doors, one backend</h2>
-      <p class="sec-lead">Client and Trainer live on mobile. Admin’s real work happens on web. Everything shares one Express API and Supabase.</p>
-      <div class="surfaces">
-        <article class="surface">
-          <div class="code">S1 · React Native</div>
-          <h3>Mobile</h3>
-          <p>Client + Trainer core flows. Light Admin. Live Apple Health / Health Connect / Samsung Health.</p>
-        </article>
-        <article class="surface">
-          <div class="code">S2 · Next.js</div>
-          <h3>Web Admin</h3>
-          <p>Dashboards, renewals inbox, CRM pipeline, roster tables, desk attendance, plan catalog.</p>
-        </article>
-        <article class="surface">
-          <div class="code">S3 · Express + Supabase</div>
-          <h3>API &amp; data</h3>
-          <p>Auth (email OTP), tenancy, jobs, push, owned Indian food catalog, audit trail.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section id="modules">
-    <div class="wrap">
-      <p class="sec-label">03 — Domain modules</p>
-      <h2 class="sec-title">M1 → M13 blueprint</h2>
-      <p class="sec-lead">Click a module to expand submodules. Filter by persona to see who touches what.</p>
-
-      <div class="mod-toolbar" role="group" aria-label="Filter modules by persona">
-        <button type="button" class="filter-btn active" data-filter="all">All</button>
-        <button type="button" class="filter-btn" data-filter="client">Client</button>
-        <button type="button" class="filter-btn" data-filter="trainer">Trainer</button>
-        <button type="button" class="filter-btn" data-filter="admin">Admin</button>
-        <button type="button" class="filter-btn" data-filter="platform">Platform</button>
-      </div>
-
-      <div class="mod-grid" id="mod-grid"></div>
-    </div>
-  </section>
-
-  <section id="matrix">
-    <div class="wrap">
-      <p class="sec-label">04 — Coverage</p>
-      <h2 class="sec-title">Who uses what</h2>
-      <p class="sec-lead">Primary surface per module. Soft dots mean the surface consumes the module via API without owning the UI.</p>
-      <div class="matrix-wrap">
-        <table class="matrix">
-          <thead>
-            <tr>
-              <th>Module</th>
-              <th>Client app</th>
-              <th>Trainer app</th>
-              <th>Admin web</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>M1 Identity</td><td><span class="dot"></span>Primary</td><td><span class="dot"></span>Primary</td><td><span class="dot"></span>Primary</td></tr>
-            <tr><td>M2 Gym Org</td><td>Invitation list</td><td>Staff invite accept</td><td><span class="dot"></span>Primary</td></tr>
-            <tr><td>M3 Members</td><td>Accept invite / DataGrants</td><td>Assigned roster</td><td><span class="dot"></span>Primary</td></tr>
-            <tr><td>M4 Plans &amp; billing</td><td>Base + addons + renewals</td><td>—</td><td><span class="dot"></span>Primary</td></tr>
-            <tr><td>M5 Attendance</td><td>Self check-in</td><td>View</td><td><span class="dot"></span>Desk mark</td></tr>
-            <tr><td>M6–M7 Coaching</td><td>If PT addon / history</td><td><span class="dot"></span>Primary</td><td>As Trainer (gated)</td></tr>
-            <tr><td>M8 Progress</td><td><span class="dot"></span>Primary</td><td>If PROGRESS grant</td><td>If granted</td></tr>
-            <tr><td>M9 Nutrition</td><td><span class="dot"></span>Primary</td><td>If CALORIES grant</td><td>If granted</td></tr>
-            <tr><td>M10 Health sync</td><td><span class="dot"></span>Primary</td><td>If WEARABLES grant</td><td>If granted</td></tr>
-            <tr><td>M11 CRM</td><td>—</td><td>—</td><td><span class="dot"></span>Primary</td></tr>
-            <tr><td>M12 Notifications</td><td><span class="dot"></span>Primary</td><td><span class="dot"></span>Primary</td><td><span class="dot"></span>Inbox</td></tr>
-            <tr><td>M13 Platform</td><td><span class="dot soft"></span>Via API</td><td><span class="dot soft"></span>Via API</td><td><span class="dot soft"></span>Via API</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <section id="stack">
-    <div class="wrap">
-      <p class="sec-label">05 — Stack</p>
-      <h2 class="sec-title">Locked technology</h2>
-      <p class="sec-lead">Email OTP is canonical identity — free transactional email, no per-message SMS cost. English-only UI. Showcase build is production — live health sync, not stubs.</p>
-      <div class="stack-row">
-        <div class="stack-item">
-          <div class="code">Mobile</div>
-          <h3>React Native</h3>
-          <p>iOS + Android · Client / Trainer</p>
-        </div>
-        <div class="stack-item">
-          <div class="code">Web</div>
-          <h3>Next.js</h3>
-          <p>Admin-primary dashboards</p>
-        </div>
-        <div class="stack-item">
-          <div class="code">API</div>
-          <h3>Node / Express</h3>
-          <p>Domain logic · jobs · webhooks</p>
-        </div>
-        <div class="stack-item">
-          <div class="code">Data &amp; Auth</div>
-          <h3>Supabase</h3>
-          <p>Postgres · email OTP · storage</p>
+      <div class="hero-copy">
+        <p class="sec-label">India-first · Draft v2.3 · August 2026</p>
+        <h1>Gym SaaS</h1>
+        <p>Production MVP blueprint for invite-only joins, base + addon billing, client-owned fitness data with consent grants, renewals, coaching, and the member app.</p>
+        <div class="cta-row">
+          <a class="cta" href="#modules">
+            Explore modules
+            <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
+          </a>
+          <button type="button" class="cta cta-ghost" data-goto-tab="roles">View roles</button>
+          <button type="button" class="cta cta-ghost" data-goto-tab="orbit">View orbit</button>
         </div>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <section id="out">
-    <div class="wrap">
-      <p class="sec-label">06 — Explicitly deferred</p>
-      <h2 class="sec-title">Not in this MVP</h2>
-      <p class="sec-lead">Cut on purpose so the blueprint stays buildable. Round 2 candidates after owner feedback.</p>
-      <div class="out-list">
-        <span class="out-chip">Auto grant inheritance across gyms</span>
-        <span class="out-chip">Shadow profiles</span>
-        <span class="out-chip">Payment gateway</span>
-        <span class="out-chip">WhatsApp reminders</span>
-        <span class="out-chip">Maps gym directory</span>
-        <span class="out-chip">Barcode food scan</span>
-        <span class="out-chip">Third-party nutrition APIs</span>
-        <span class="out-chip">QR / geofence check-in</span>
-        <span class="out-chip">Facebook login</span>
-        <span class="out-chip">Hindi UI</span>
-        <span class="out-chip">Multi-branch switcher UI</span>
-        <span class="out-chip">RBAC / custom roles</span>
-        <span class="out-chip">Class booking · POS</span>
-        <span class="out-chip">Session-pack PT (count-based)</span>
-        <span class="out-chip">Open gym join codes</span>
-        <span class="out-chip">Gym-editable RBAC</span>
+    <section id="positioning">
+      <div class="wrap">
+        <p class="sec-label">01 — Positioning</p>
+        <h2 class="sec-title">Who pays, what wins</h2>
+        <p class="sec-lead">Locked after product + ownership grill. Admin buys; every join is an Admin invite; personal fitness data is client-owned with DataGrants; trainer coaching is an addon.</p>
+        <div class="pos-grid">
+          <div class="pos-item"><strong>Buyer</strong><p>Admin — gym owner / manager</p></div>
+          <div class="pos-item"><strong>Wedge</strong><p>Renewals + mini-CRM + desk ops</p></div>
+          <div class="pos-item"><strong>Join</strong><p>Invite-only · no open codes</p></div>
+          <div class="pos-item"><strong>Billing</strong><p>Base + addons · price snapshot</p></div>
+          <div class="pos-item"><strong>Privacy</strong><p>Client-owned data · grants · no copy</p></div>
+          <div class="pos-item"><strong>Beachhead</strong><p>Solo / small owner-operator</p></div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <section id="surfaces">
+      <div class="wrap">
+        <p class="sec-label">02 — Surfaces</p>
+        <h2 class="sec-title">Three doors, one backend</h2>
+        <p class="sec-lead">Client and Trainer live on mobile. Admin’s real work happens on web. Everything shares one Express API and Supabase.</p>
+        <div class="surfaces">
+          <article class="surface">
+            <div class="code">S1 · React Native</div>
+            <h3>Mobile</h3>
+            <p>Client + Trainer core flows. Light Admin. Live Apple Health / Health Connect / Samsung Health.</p>
+          </article>
+          <article class="surface">
+            <div class="code">S2 · Next.js</div>
+            <h3>Web Admin</h3>
+            <p>Dashboards, renewals inbox, CRM pipeline, roster tables, desk attendance, plan catalog.</p>
+          </article>
+          <article class="surface">
+            <div class="code">S3 · Express + Supabase</div>
+            <h3>API &amp; data</h3>
+            <p>Auth (email OTP), tenancy, jobs, push, owned Indian food catalog, audit trail.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="modules">
+      <div class="wrap">
+        <p class="sec-label">03 — Domain modules</p>
+        <h2 class="sec-title">M1 → M13 blueprint</h2>
+        <p class="sec-lead">Click a module to expand submodules. Filter by persona to see who touches what.</p>
+        <div class="mod-toolbar" role="group" aria-label="Filter modules by persona">
+          <button type="button" class="filter-btn active" data-filter="all">All</button>
+          <button type="button" class="filter-btn" data-filter="client">Client</button>
+          <button type="button" class="filter-btn" data-filter="trainer">Trainer</button>
+          <button type="button" class="filter-btn" data-filter="admin">Admin</button>
+          <button type="button" class="filter-btn" data-filter="platform">Platform</button>
+        </div>
+        <div class="mod-grid" id="mod-grid"></div>
+      </div>
+    </section>
+
+    <section id="matrix">
+      <div class="wrap">
+        <p class="sec-label">04 — Coverage</p>
+        <h2 class="sec-title">Who uses what</h2>
+        <p class="sec-lead">Primary surface per module. Soft dots mean the surface consumes the module via API without owning the UI.</p>
+        <div class="matrix-wrap">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th>Module</th>
+                <th>Client app</th>
+                <th>Trainer app</th>
+                <th>Admin web</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>M1 Identity</td><td><span class="dot"></span>Primary</td><td><span class="dot"></span>Primary</td><td><span class="dot"></span>Primary</td></tr>
+              <tr><td>M2 Gym Org</td><td>Invitation list</td><td>Staff invite accept</td><td><span class="dot"></span>Primary</td></tr>
+              <tr><td>M3 Members</td><td>Accept invite / DataGrants</td><td>Assigned roster</td><td><span class="dot"></span>Primary</td></tr>
+              <tr><td>M4 Plans &amp; billing</td><td>Base + addons + renewals</td><td>—</td><td><span class="dot"></span>Primary</td></tr>
+              <tr><td>M5 Attendance</td><td>Self check-in</td><td>View</td><td><span class="dot"></span>Desk mark</td></tr>
+              <tr><td>M6–M7 Coaching</td><td>If PT addon / history</td><td><span class="dot"></span>Primary</td><td>As Trainer (gated)</td></tr>
+              <tr><td>M8 Progress</td><td><span class="dot"></span>Primary</td><td>If PROGRESS grant</td><td>If granted</td></tr>
+              <tr><td>M9 Nutrition</td><td><span class="dot"></span>Primary</td><td>If CALORIES grant</td><td>If granted</td></tr>
+              <tr><td>M10 Health sync</td><td><span class="dot"></span>Primary</td><td>If WEARABLES grant</td><td>If granted</td></tr>
+              <tr><td>M11 CRM</td><td>—</td><td>—</td><td><span class="dot"></span>Primary</td></tr>
+              <tr><td>M12 Notifications</td><td><span class="dot"></span>Primary</td><td><span class="dot"></span>Primary</td><td><span class="dot"></span>Inbox</td></tr>
+              <tr><td>M13 Platform</td><td><span class="dot soft"></span>Via API</td><td><span class="dot soft"></span>Via API</td><td><span class="dot soft"></span>Via API</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <div class="wrap">
+        <p class="sec-label">05 — Stack</p>
+        <h2 class="sec-title">Locked technology</h2>
+        <p class="sec-lead">Email OTP is canonical identity — free transactional email, no per-message SMS cost. English-only UI. Showcase build is production — live health sync, not stubs.</p>
+        <div class="stack-row">
+          <div class="stack-item">
+            <div class="code">Mobile</div>
+            <h3>React Native</h3>
+            <p>iOS + Android · Client / Trainer</p>
+          </div>
+          <div class="stack-item">
+            <div class="code">Web</div>
+            <h3>Next.js</h3>
+            <p>Admin-primary dashboards</p>
+          </div>
+          <div class="stack-item">
+            <div class="code">API</div>
+            <h3>Node / Express</h3>
+            <p>Domain logic · jobs · webhooks</p>
+          </div>
+          <div class="stack-item">
+            <div class="code">Data &amp; Auth</div>
+            <h3>Supabase</h3>
+            <p>Postgres · email OTP · storage</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="out">
+      <div class="wrap">
+        <p class="sec-label">06 — Explicitly deferred</p>
+        <h2 class="sec-title">Not in this MVP</h2>
+        <p class="sec-lead">Cut on purpose so the blueprint stays buildable. Round 2 candidates after owner feedback.</p>
+        <div class="out-list">
+          <span class="out-chip">Auto grant inheritance across gyms</span>
+          <span class="out-chip">Shadow profiles</span>
+          <span class="out-chip">Payment gateway</span>
+          <span class="out-chip">WhatsApp reminders</span>
+          <span class="out-chip">Maps gym directory</span>
+          <span class="out-chip">Barcode food scan</span>
+          <span class="out-chip">Third-party nutrition APIs</span>
+          <span class="out-chip">QR / geofence check-in</span>
+          <span class="out-chip">Facebook login</span>
+          <span class="out-chip">Hindi UI</span>
+          <span class="out-chip">Multi-branch switcher UI</span>
+          <span class="out-chip">RBAC / custom roles</span>
+          <span class="out-chip">Class booking · POS</span>
+          <span class="out-chip">Session-pack PT (count-based)</span>
+          <span class="out-chip">Open gym join codes</span>
+          <span class="out-chip">Gym-editable RBAC</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="view-roles" class="view" role="tabpanel" aria-labelledby="tab-roles" hidden>
+    <header class="hero hero-roles wrap" id="roles-top">
+      <div class="hero-copy">
+        <p class="sec-label">Frozen seed · MVP · Roles &amp; permissions</p>
+        <h1>Gym SaaS</h1>
+        <p class="lede">Four system roles. Seventeen permission codes. Gyms never edit this matrix — affiliation and grants still decide what you can touch.</p>
+        <div class="cta-row">
+          <a class="cta" href="#roles-pick">
+            Explore roles
+            <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
+          </a>
+          <a class="cta cta-ghost" href="#perm-matrix">Open matrix</a>
+        </div>
+      </div>
+      <div class="roles-ladder" aria-hidden="true">
+        <svg class="ladder-svg" viewBox="0 0 420 380" fill="none">
+          <rect x="24" y="24" width="372" height="332" stroke="#0f5c4c" stroke-opacity="0.2"/>
+          <rect x="40" y="48" width="150" height="280" fill="#0f5c4c" fill-opacity="0.05" stroke="#0f5c4c" stroke-opacity="0.25"/>
+          <text x="55" y="78" class="svg-label">CLIENT LANE</text>
+          <rect x="55" y="100" width="120" height="48" fill="#2f6fed" fill-opacity="0.15" stroke="#2f6fed" stroke-opacity="0.45"/>
+          <text x="115" y="129" text-anchor="middle" class="svg-node">CLIENT</text>
+          <path d="M115 148v40" stroke="#0f5c4c" stroke-opacity="0.35" stroke-dasharray="4 3"/>
+          <text x="115" y="210" text-anchor="middle" class="svg-hint">membership invite</text>
+          <rect x="55" y="230" width="120" height="40" stroke="#0f5c4c" stroke-opacity="0.3" stroke-dasharray="5 4"/>
+          <text x="115" y="255" text-anchor="middle" class="svg-hint">gym affiliation</text>
+          <rect x="220" y="48" width="160" height="280" fill="#b8f000" fill-opacity="0.12" stroke="#0f5c4c" stroke-opacity="0.25"/>
+          <text x="235" y="78" class="svg-label">STAFF LANE</text>
+          <rect x="240" y="100" width="120" height="40" fill="#8a7a5c" fill-opacity="0.18" stroke="#5c5346" stroke-opacity="0.4"/>
+          <text x="300" y="125" text-anchor="middle" class="svg-node-sm">UNASSIGNED</text>
+          <path d="M300 140v18" stroke="#0f5c4c" stroke-opacity="0.4"/>
+          <path d="M260 168h80" stroke="#0f5c4c" stroke-opacity="0.25"/>
+          <path d="M260 168v18M340 168v18" stroke="#0f5c4c" stroke-opacity="0.4"/>
+          <rect x="220" y="190" width="78" height="40" fill="#0f5c4c" fill-opacity="0.12" stroke="#0f5c4c" stroke-opacity="0.4"/>
+          <text x="259" y="215" text-anchor="middle" class="svg-node-sm">TRAINER</text>
+          <rect x="312" y="190" width="68" height="40" fill="#b8f000" fill-opacity="0.45" stroke="#1a2e00" stroke-opacity="0.35"/>
+          <text x="346" y="215" text-anchor="middle" class="svg-node-sm">ADMIN</text>
+          <text x="300" y="270" text-anchor="middle" class="svg-hint">staff invite · or create org</text>
+        </svg>
+      </div>
+    </header>
+
+    <section id="lanes" aria-labelledby="lanes-heading">
+      <div class="wrap">
+        <p class="sec-label" id="lanes-heading">01 — Account lanes</p>
+        <h2 class="sec-title">Two doors, no crossover</h2>
+        <p class="sec-lead">Signup locks a lane. Client accounts never become staff; staff never claim membership invites.</p>
+        <div class="lane-grid">
+          <article class="lane-card lane-client">
+            <p class="lane-kicker">Lane</p>
+            <h3>CLIENT</h3>
+            <p>Signup as member. Affinity to a gym only after an Admin membership invite.</p>
+            <ul>
+              <li>Own profile &amp; grants</li>
+              <li>Own attendance check-in</li>
+              <li>Read coaching assigned to them</li>
+            </ul>
+          </article>
+          <article class="lane-card lane-staff">
+            <p class="lane-kicker">Lane</p>
+            <h3>STAFF</h3>
+            <p>Signup as staff (gets a staff code). Progress Unassigned → Trainer or Admin via invite, or Admin by creating an org.</p>
+            <ul>
+              <li>Create first GymOrg</li>
+              <li>Accept staff invite</li>
+              <li>Tenant-scoped ops after affiliation</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="roles-pick" aria-labelledby="roles-heading">
+      <div class="wrap">
+        <p class="sec-label" id="roles-heading">02 — Roles</p>
+        <h2 class="sec-title">Pick a role</h2>
+        <p class="sec-lead">Click a role to filter the matrix and see its permission set.</p>
+        <div class="role-grid" id="role-grid" role="listbox" aria-label="Roles"></div>
+        <p class="role-detail" id="role-detail" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="perm-matrix" aria-labelledby="perm-matrix-heading">
+      <div class="wrap">
+        <div class="perm-matrix-head">
+          <div>
+            <p class="sec-label" id="perm-matrix-heading">03 — Permission matrix</p>
+            <h2 class="sec-title">Who can do what</h2>
+            <p class="sec-lead">Filled cells mean the role holds that code. Empty means no — affiliation cannot invent it.</p>
+          </div>
+          <div class="perm-filters" id="matrix-filters" role="group" aria-label="Filter by role"></div>
+        </div>
+        <div class="perm-matrix-scroll">
+          <table class="perm-matrix" id="matrix-table">
+            <thead>
+              <tr>
+                <th scope="col">Permission</th>
+                <th scope="col">CLIENT</th>
+                <th scope="col">UNASSIGNED</th>
+                <th scope="col">TRAINER</th>
+                <th scope="col">ADMIN</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-body"></tbody>
+          </table>
+        </div>
+        <p class="perm-legend"><span class="perm-dot on"></span> Granted &nbsp;&nbsp; <span class="perm-dot off"></span> Not granted</p>
+      </div>
+    </section>
+
+    <section id="authz" aria-labelledby="authz-heading">
+      <div class="wrap">
+        <p class="sec-label" id="authz-heading">04 — Authorization stack</p>
+        <h2 class="sec-title">Permission is only the first gate</h2>
+        <p class="sec-lead">Every sensitive action must pass the full stack — a code alone never unlocks another gym or another person’s data.</p>
+        <ol class="authz-stack" id="authz-stack"></ol>
+      </div>
+    </section>
+
+    <section id="roles-notes" aria-labelledby="notes-heading">
+      <div class="wrap">
+        <p class="sec-label" id="notes-heading">05 — Read this twice</p>
+        <h2 class="sec-title">Interpretation</h2>
+        <ul class="notes-list" id="notes-list"></ul>
+      </div>
+    </section>
+  </div>
+
+  <div id="view-orbit" class="view" role="tabpanel" aria-labelledby="tab-orbit" hidden>
+    <header class="hero" id="orbit-top">
+      <div class="hero-atmosphere" aria-hidden="true"></div>
+      <div class="hero-inner wrap">
+        <p class="eyebrow">Gym Backend · API MVP</p>
+        <h1>Gym Backend</h1>
+        <p class="lede">Three orbits from invite to retention. Foundation is lit — walk the circuit one node at a time.</p>
+        <div class="cta-row">
+          <a class="cta" href="#orbit">
+            Enter orbit 1
+            <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
+          </a>
+          <a class="cta cta-ghost" href="orbit-3d.html">View in 3D</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="orbit-section" id="orbit" aria-labelledby="orbit-heading">
+      <div class="wrap orbit-layout">
+        <div class="orbit-stage">
+          <p class="sec-label" id="orbit-heading">Capability Orbit</p>
+          <div class="legend" aria-label="Ownership legend">
+            <span class="legend-item gym"><i></i> Gym-owned</span>
+            <span class="legend-item client"><i></i> Client-owned</span>
+            <span class="legend-item platform"><i></i> Platform</span>
+            <span class="legend-item done"><i></i> Shipped</span>
+          </div>
+          <div class="orbit-frame" id="orbit-frame">
+            <svg id="orbit-svg" viewBox="0 0 640 640" role="img" aria-label="Three concentric orbits of MVP work items around a shipped foundation core">
+              <defs>
+                <filter id="soft-glow" x="-40%" y="-40%" width="180%" height="180%">
+                  <feGaussianBlur stdDeviation="2.5" result="b" />
+                  <feMerge>
+                    <feMergeNode in="b" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <g id="orbit-rings"></g>
+              <g id="orbit-progress"></g>
+              <g id="orbit-spokes"></g>
+              <g id="orbit-core"></g>
+              <g id="orbit-nodes"></g>
+            </svg>
+          </div>
+          <p class="orbit-hint">Click a node · ring dash crawls when idle</p>
+        </div>
+
+        <aside class="dock" id="dock" aria-live="polite">
+          <p class="dock-kicker" id="dock-kicker">Foundation</p>
+          <h2 class="dock-title" id="dock-title">Core is lit</h2>
+          <p class="dock-body" id="dock-body">Auth and gym-orgs are shipped. Select a node on an orbit to see the next build step, PRD anchors, and ownership.</p>
+          <dl class="dock-meta" id="dock-meta" hidden></dl>
+          <p class="dock-exit" id="dock-exit" hidden></p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="runsheet-section" id="runsheet" aria-labelledby="runsheet-heading">
+      <div class="wrap">
+        <p class="sec-label" id="runsheet-heading">One by one</p>
+        <h2 class="sec-title">Run sheet</h2>
+        <p class="sec-lead">Same sequence as the orbit — linear for agents and checklists.</p>
+        <div id="runsheet-root"></div>
+      </div>
+    </section>
+
+    <section class="deferred-section" id="deferred" aria-labelledby="deferred-heading">
+      <div class="wrap">
+        <p class="sec-label" id="deferred-heading">Out of orbit</p>
+        <h2 class="sec-title">Deferred</h2>
+        <ul class="deferred-list" id="deferred-list"></ul>
+      </div>
+    </section>
+  </div>
 
   <footer>
     <div class="wrap foot-row">
-      <p><strong>Gym SaaS</strong> · MVP PRD showcase · sourced from <code>docs/PRD.md</code></p>
+      <p><strong>Gym SaaS</strong> · Product · Roles · Orbit · sourced from <code>docs/PRD.md</code> · <code>docs/permissions.md</code> · <code>docs/MVP_ROADMAP.md</code></p>
       <p>India-first · DPDP-aware · English UI</p>
     </div>
   </footer>
 
+  <script src="roles-data.js"></script>
   <script src="app.js"></script>
+  <script type="module" src="orbit-app.js"></script>
 </body>
 </html>

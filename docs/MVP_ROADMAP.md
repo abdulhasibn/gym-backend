@@ -1,7 +1,8 @@
 # MVP Execution Roadmap
 
 > **Agents:** Prefer this over inventing build order. Visual companion:
-> [`docs/mvp-roadmap/index.html`](mvp-roadmap/index.html) — open locally in a browser.
+> [`docs/prd-showcase/`](prd-showcase/) **Orbit** tab (live:
+> [prd-showcase.vercel.app/#orbit](https://prd-showcase.vercel.app/#orbit)).
 > Source of truth for product behavior remains [`PRD.md`](PRD.md); stage status stays in
 > [`PROGRESS.md`](PROGRESS.md).
 

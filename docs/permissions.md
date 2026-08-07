@@ -1,5 +1,9 @@
 # Frozen Role Permissions
 
+Visual companion: [`docs/prd-showcase/`](prd-showcase/) → **Roles** tab
+([prd-showcase.vercel.app/#roles](https://prd-showcase.vercel.app/#roles)).
+Standalone sketch also at [`docs/roles-permissions/`](roles-permissions/).
+
 `roles` and `role_permissions` are system-owned lookup data. They are seeded by a forward-only migration and are never editable by a gym.
 
 Authorization remains layered:

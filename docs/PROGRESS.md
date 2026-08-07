@@ -27,7 +27,8 @@ Orbit at [`docs/mvp-roadmap/`](mvp-roadmap/).
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); list unions trainer affiliations; `accept_staff_invite` RPC applied |
 | Other feature modules under `src/features/*` | Not started — sequenced in MVP_ROADMAP Stints 1–3 |
-| MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md` + `docs/mvp-roadmap/` |
+| MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D) |
+| Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** (was flat under collection root) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
@@ -41,7 +42,7 @@ Orbit at [`docs/mvp-roadmap/`](mvp-roadmap/).
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | 32 in `public`, RLS enabled (no policies yet) |
 | Migrations applied | 16 (local file `20260804070000_accept_staff_invite.sql`; remote applied) |
-| Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `users` 1 · `client_profiles` 1 |
+| Live rows (spot check) | Clean slate — `roles` 4 · `role_permissions` 29 · all other public + `auth.users` 0 (`pnpm db:reset-data -- --yes`) |
 
 ## Next up
 
@@ -64,6 +65,59 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-06 — Orbit tab merged into PRD showcase + redeploy
+
+- Integrated full Capability Orbit into `docs/prd-showcase/` as **Orbit** tab
+  (2D orbit, dock, run sheet, deferred) + `orbit-3d.html` for 3D.
+- Assets: `roadmap-data.js`, `orbit-app.js`, `orbit.css`, `orbit-3d.*`.
+- `docs/mvp-roadmap/` redirects to showcase `#orbit` / 3D page.
+- Redeployed production `prd-showcase` (Product · Roles · Orbit).
+
+### 2026-08-06 — Raise Auth OTP / login rate limits
+
+- Patched Auth config on `igcmptpjmagzwoccxcnw`:
+  `rate_limit_otp` 30→120, `rate_limit_verify` 30→120,
+  `rate_limit_email_sent` 100→300, `smtp_max_frequency` 180s→30s
+  (min gap between emails to the same address).
+- Mirrored in `scripts/configure-email-otp-template.mjs` so re-running
+  `pnpm auth:configure-email-otp` keeps the higher limits.
+
+### 2026-08-06 — Daily DB wipe + `db:reset-data` script
+
+- Wiped remote `igcmptpjmagzwoccxcnw` again (auth + public); roles re-seeded.
+- Added `scripts/sql/reset-dev-data.sql` + `scripts/reset-dev-data.mjs`
+  (Management API SQL via `SUPABASE_ACCESS_TOKEN`).
+- npm script: `pnpm db:reset-data -- --yes` (or `--dry-run`). Confirms
+  `auth.users` 0 · `roles` 4 · `role_permissions` 29 after run.
+
+### 2026-08-06 — Roles tab merged into PRD showcase + redeploy
+
+- Merged roles/permissions UI into `docs/prd-showcase/` as a **Product | Roles**
+  top tab (lanes, role cards, permission matrix, authz stack).
+- Added `roles-data.js`; extended `app.js` / `styles.css` / `index.html`.
+- Redeployed production `prd-showcase` →
+  [prd-showcase.vercel.app](https://prd-showcase.vercel.app)
+  (`#roles` for the Roles tab). Linked from `permissions.md` + `PRD.md`.
+
+### 2026-08-06 — Roles & permissions visual docs site
+
+- Added `docs/roles-permissions/` static site: lane split, interactive role
+  cards, filterable permission matrix, authz stack, interpretation notes.
+- Mirrors `docs/permissions.md` + seed
+  `20260802021422_seed_roles_and_permissions.sql`. Linked from permissions.md.
+- Same athletic teal/lime docs language as `prd-showcase`. Open
+  `docs/roles-permissions/index.html` or deploy that folder (vercel.json
+  included).
+
+### 2026-08-06 — Remote DB clean slate (auth + public data)
+
+- Truncated all 32 `public` tables on `igcmptpjmagzwoccxcnw` (users, gyms,
+  profiles, invites, etc.).
+- Deleted all `auth.users` (26) — identities/sessions cleared with them.
+- Re-seeded frozen `roles` (4) + `role_permissions` (29) from
+  `supabase/migrations/20260802021422_seed_roles_and_permissions.sql`.
+- Schema / migrations unchanged; ready for fresh Auth + gym-orgs smoke.
 
 ### 2026-08-05 — Postman: categorize gym-orgs vs staff invites
 
