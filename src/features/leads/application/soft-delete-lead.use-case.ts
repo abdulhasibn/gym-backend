@@ -13,11 +13,7 @@ export class SoftDeleteLeadUseCase {
     private readonly clock: Clock,
   ) {}
 
-  async execute(
-    actor: AuthenticatedActor,
-    gymOrgId: GymOrgId,
-    leadId: LeadId,
-  ): Promise<void> {
+  async execute(actor: AuthenticatedActor, gymOrgId: GymOrgId, leadId: LeadId): Promise<void> {
     await this.policy.requireLeadAccess(actor, gymOrgId);
 
     const lead = await this.leads.findById(gymOrgId, leadId);

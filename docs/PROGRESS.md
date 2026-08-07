@@ -64,6 +64,13 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-08-07 — Prettier CI fix + Husky hooks
+
+- Formatted the 7 files that failed GitHub Actions `format:check` (gym-orgs
+  composition + leads use cases / routes / route tests).
+- Added `husky` + `lint-staged`: pre-commit formats staged files; pre-push runs
+  `format:check`, `typecheck`, `lint`, and `test` to catch CI failures locally.
+
 ### 2026-08-07 — Staff invite inbox embeds gym profile
 
 - `GET /gym-orgs/staff-invites/inbox` items now include nested `gym`

@@ -27,7 +27,10 @@ export class CreateLeadUseCase {
     private readonly ids: IdGenerator,
   ) {}
 
-  async execute(actor: AuthenticatedActor, command: CreateLeadCommand): Promise<LeadMutationResult> {
+  async execute(
+    actor: AuthenticatedActor,
+    command: CreateLeadCommand,
+  ): Promise<LeadMutationResult> {
     await this.policy.requireLeadAccess(actor, command.gymOrgId);
 
     const openIds = await this.leads.findOpenLeadIdsByPhone(command.gymOrgId, command.phone);
@@ -44,8 +47,7 @@ export class CreateLeadUseCase {
     });
     await this.leads.save(lead);
 
-    const warnings =
-      openIds.length > 0 ? [duplicatePhoneWarning(openIds.map((id) => id))] : [];
+    const warnings = openIds.length > 0 ? [duplicatePhoneWarning(openIds.map((id) => id))] : [];
 
     return { lead: toLeadDto(lead), warnings };
   }

@@ -28,7 +28,10 @@ export class UpdateLeadUseCase {
     private readonly clock: Clock,
   ) {}
 
-  async execute(actor: AuthenticatedActor, command: UpdateLeadCommand): Promise<LeadMutationResult> {
+  async execute(
+    actor: AuthenticatedActor,
+    command: UpdateLeadCommand,
+  ): Promise<LeadMutationResult> {
     await this.policy.requireLeadAccess(actor, command.gymOrgId);
 
     const lead = await this.leads.findById(command.gymOrgId, command.leadId);
@@ -49,15 +52,13 @@ export class UpdateLeadUseCase {
         source: command.source,
         interest: command.interest,
         notes: command.notes,
-        followUpDate:
-          command.followUpDate === undefined ? lead.followUpDate : command.followUpDate,
+        followUpDate: command.followUpDate === undefined ? lead.followUpDate : command.followUpDate,
       },
       this.clock.now(),
     );
     await this.leads.save(lead);
 
-    const warnings =
-      openIds.length > 0 ? [duplicatePhoneWarning(openIds.map((id) => id))] : [];
+    const warnings = openIds.length > 0 ? [duplicatePhoneWarning(openIds.map((id) => id))] : [];
 
     return { lead: toLeadDto(lead), warnings };
   }

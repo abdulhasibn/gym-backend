@@ -43,6 +43,11 @@ curl http://localhost:3000/health
 | `pnpm lint` / `pnpm lint:fix`       | ESLint                                              |
 | `pnpm format` / `pnpm format:check` | Prettier                                            |
 
+Git hooks (Husky, installed via `pnpm install` → `prepare`):
+
+- **pre-commit** — `lint-staged` runs Prettier (and ESLint check) on staged files
+- **pre-push** — `format:check`, `typecheck`, `lint`, and `test` (mirrors CI quality gates)
+
 ## Project structure
 
 ```text

@@ -2,10 +2,7 @@ import { Router, type RequestHandler } from 'express';
 
 import type { LeadController } from './lead.controller';
 
-export function createLeadRouter(
-  controller: LeadController,
-  authenticate: RequestHandler,
-): Router {
+export function createLeadRouter(controller: LeadController, authenticate: RequestHandler): Router {
   const router = Router({ mergeParams: true });
 
   router.use(authenticate);

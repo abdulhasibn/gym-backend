@@ -116,9 +116,7 @@ describe('lead routes', () => {
       })
       .expect(200);
 
-    const due = await supertest(app)
-      .get(`/gym-orgs/${gymOrgId}/leads/due-follow-ups`)
-      .expect(200);
+    const due = await supertest(app).get(`/gym-orgs/${gymOrgId}/leads/due-follow-ups`).expect(200);
     expect(due.body.leads.total).toBe(1);
 
     await supertest(app).delete(`/gym-orgs/${gymOrgId}/leads/${leadId}`).expect(204);

@@ -12,11 +12,7 @@ export class GetLeadUseCase {
     private readonly policy: LeadAdminPolicy,
   ) {}
 
-  async execute(
-    actor: AuthenticatedActor,
-    gymOrgId: GymOrgId,
-    leadId: LeadId,
-  ): Promise<LeadDto> {
+  async execute(actor: AuthenticatedActor, gymOrgId: GymOrgId, leadId: LeadId): Promise<LeadDto> {
     await this.policy.requireLeadAccess(actor, gymOrgId);
 
     const summary = await this.queries.get(gymOrgId, leadId);

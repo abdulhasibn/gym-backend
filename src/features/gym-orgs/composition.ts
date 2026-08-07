@@ -54,7 +54,6 @@ export function composeGymOrgFeature(
   return {
     router: createGymOrgRouter(controller, authenticate),
     errorMapper: mapGymOrgError,
-    isLiveAdmin: (userId: UserId, gymOrgId: GymOrgId) =>
-      gymOrgs.isLiveAdmin(userId, gymOrgId),
+    isLiveAdmin: (userId: UserId, gymOrgId: GymOrgId) => gymOrgs.isLiveAdmin(userId, gymOrgId),
   };
 }
