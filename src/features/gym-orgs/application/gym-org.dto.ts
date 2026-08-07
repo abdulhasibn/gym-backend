@@ -34,6 +34,20 @@ export interface StaffInviteDto {
   readonly updatedAt: string;
 }
 
+export interface StaffInviteGymDto {
+  readonly id: string;
+  readonly name: string;
+  readonly address: string | null;
+  readonly contactPhone: string | null;
+  readonly contactEmail: string | null;
+  readonly logoUrl: string | null;
+  readonly timezone: string;
+}
+
+export interface StaffInviteInboxItemDto extends StaffInviteDto {
+  readonly gym: StaffInviteGymDto;
+}
+
 export function toGymOrgDto(gymOrg: GymOrg): GymOrgDto {
   return {
     id: gymOrg.id,

@@ -19,7 +19,22 @@ export interface StaffInviteSummary {
   readonly updatedAt: string;
 }
 
+/** Public gym profile embedded on invitee inbox items. */
+export interface StaffInviteGymSummary {
+  readonly id: GymOrgId;
+  readonly name: string;
+  readonly address: string | null;
+  readonly contactPhone: string | null;
+  readonly contactEmail: string | null;
+  readonly logoUrl: string | null;
+  readonly timezone: string;
+}
+
+export interface StaffInviteInboxItem extends StaffInviteSummary {
+  readonly gym: StaffInviteGymSummary;
+}
+
 export interface StaffInviteQueries {
   listForGym(gymOrgId: GymOrgId, page: Pagination): Promise<Page<StaffInviteSummary>>;
-  listInboxForUser(userId: UserId, page: Pagination): Promise<Page<StaffInviteSummary>>;
+  listInboxForUser(userId: UserId, page: Pagination): Promise<Page<StaffInviteInboxItem>>;
 }

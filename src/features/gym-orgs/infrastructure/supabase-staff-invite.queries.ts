@@ -9,11 +9,30 @@ import { toPage } from '../../../shared/pagination/pagination';
 import { toGymOrgId } from '../domain/gym-org-id';
 import type { GymOrgId } from '../domain/gym-org-id';
 import { toStaffInviteId } from '../domain/staff-invite-id';
-import type { StaffInviteQueries, StaffInviteSummary } from '../domain/staff-invite.queries';
+import type {
+  StaffInviteGymSummary,
+  StaffInviteInboxItem,
+  StaffInviteQueries,
+  StaffInviteSummary,
+} from '../domain/staff-invite.queries';
 import type { StaffInviteStatus } from '../domain/staff-invite-status';
 import type { StaffInviteTargetRole } from '../domain/staff-invite-target-role';
 
 type StaffInviteRow = Database['public']['Tables']['staff_invites']['Row'];
+
+type GymOrgEmbedRow = {
+  id: string;
+  name: string;
+  address: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  logo_url: string | null;
+  timezone: string;
+};
+
+type StaffInviteInboxRow = StaffInviteRow & {
+  gym_orgs: GymOrgEmbedRow | GymOrgEmbedRow[] | null;
+};
 
 export class SupabaseStaffInviteQueries implements StaffInviteQueries {
   constructor(private readonly client: SupabaseClient<Database>) {}
@@ -41,13 +60,17 @@ export class SupabaseStaffInviteQueries implements StaffInviteQueries {
     );
   }
 
-  async listInboxForUser(userId: UserId, page: Pagination): Promise<Page<StaffInviteSummary>> {
+  async listInboxForUser(userId: UserId, page: Pagination): Promise<Page<StaffInviteInboxItem>> {
     const now = new Date();
     const { data, error, count } = await this.client
       .from('staff_invites')
-      .select('*', { count: 'exact' })
+      .select(
+        '*, gym_orgs!inner ( id, name, address, contact_phone, contact_email, logo_url, timezone )',
+        { count: 'exact' },
+      )
       .eq('invited_user_id', userId)
       .is('deleted_at', null)
+      .is('gym_orgs.deleted_at', null)
       .order('created_at', { ascending: false })
       .range(page.offset, page.offset + page.limit - 1);
 
@@ -58,7 +81,7 @@ export class SupabaseStaffInviteQueries implements StaffInviteQueries {
     }
 
     return toPage(
-      (data ?? []).map((row) => toSummary(row, now)),
+      ((data ?? []) as StaffInviteInboxRow[]).map((row) => toInboxItem(row, now)),
       count ?? 0,
       page,
     );
@@ -79,6 +102,30 @@ function toSummary(row: StaffInviteRow, now: Date): StaffInviteSummary {
     acceptedAt: row.accepted_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function toInboxItem(row: StaffInviteInboxRow, now: Date): StaffInviteInboxItem {
+  return {
+    ...toSummary(row, now),
+    gym: toGymSummary(row.gym_orgs),
+  };
+}
+
+function toGymSummary(embed: GymOrgEmbedRow | GymOrgEmbedRow[] | null): StaffInviteGymSummary {
+  const gym = Array.isArray(embed) ? (embed[0] ?? null) : embed;
+  if (gym === null) {
+    throw new TransientDatabaseFailureError('Staff invite inbox row missing gym_orgs embed');
+  }
+
+  return {
+    id: toGymOrgId(gym.id),
+    name: gym.name,
+    address: gym.address,
+    contactPhone: gym.contact_phone,
+    contactEmail: gym.contact_email,
+    logoUrl: gym.logo_url,
+    timezone: gym.timezone,
   };
 }
 

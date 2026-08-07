@@ -181,7 +181,7 @@ Admin at the gym:
 
 Invitee (STAFF):
 
-- `GET /gym-orgs/staff-invites/inbox?limit&offset` — pending/other invites; past `expiresAt` show as `EXPIRED` without a write
+- `GET /gym-orgs/staff-invites/inbox?limit&offset` — pending/other invites; past `expiresAt` show as `EXPIRED` without a write. Each item embeds `gym`: `{ id, name, address, contactPhone, contactEmail, logoUrl, timezone }` (soft-deleted gyms omitted).
 - `POST /gym-orgs/staff-invites/:inviteId/accept` → affiliations + role upgrade (`TRAINER` or desk `ADMIN`; Admin-as-Trainer gets a trainer profile too)
 
 Useful errors: `STAFF_INVITE_FORBIDDEN`, `INVALID_STAFF_INVITEE`, `STAFF_ALREADY_AFFILIATED`, `STAFF_INVITE_ADMIN_CAP`, `STAFF_INVITE_EXPIRED`

@@ -53,6 +53,15 @@ describe('Staff invite use cases', () => {
       },
     );
     staffInvites.seedAdmin(toGymOrgId(created.id), owner.userId);
+    staffInvites.seedGymProfile({
+      id: toGymOrgId(created.id),
+      name: created.name,
+      address: created.address,
+      contactPhone: created.contactPhone,
+      contactEmail: created.contactEmail,
+      logoUrl: created.logoUrl,
+      timezone: created.timezone,
+    });
 
     staffUsers.seed('STF-OWNER', {
       userId: owner.userId,
@@ -197,6 +206,15 @@ describe('Staff invite use cases', () => {
       { limit: 20, offset: 0 },
     );
     expect(inboxBefore.items[0]?.status).toBe('EXPIRED');
+    expect(inboxBefore.items[0]?.gym).toEqual({
+      id: created.id,
+      name: 'North Star',
+      address: null,
+      contactPhone: null,
+      contactEmail: null,
+      logoUrl: null,
+      timezone: 'Asia/Kolkata',
+    });
     expect((await staffInvites.findById(invite.id as never))?.status).toBe('PENDING');
 
     await expect(

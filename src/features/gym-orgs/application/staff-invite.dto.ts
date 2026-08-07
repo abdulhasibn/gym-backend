@@ -1,6 +1,6 @@
 import type { StaffInvite } from '../domain/staff-invite.entity';
-import type { StaffInviteSummary } from '../domain/staff-invite.queries';
-import type { StaffInviteDto } from './gym-org.dto';
+import type { StaffInviteInboxItem, StaffInviteSummary } from '../domain/staff-invite.queries';
+import type { StaffInviteDto, StaffInviteInboxItemDto } from './gym-org.dto';
 
 export function toStaffInviteDto(invite: StaffInvite): StaffInviteDto {
   return {
@@ -29,5 +29,20 @@ export function toStaffInviteDtoFromSummary(summary: StaffInviteSummary): StaffI
     acceptedAt: summary.acceptedAt,
     createdAt: summary.createdAt,
     updatedAt: summary.updatedAt,
+  };
+}
+
+export function toStaffInviteInboxItemDto(item: StaffInviteInboxItem): StaffInviteInboxItemDto {
+  return {
+    ...toStaffInviteDtoFromSummary(item),
+    gym: {
+      id: item.gym.id,
+      name: item.gym.name,
+      address: item.gym.address,
+      contactPhone: item.gym.contactPhone,
+      contactEmail: item.gym.contactEmail,
+      logoUrl: item.gym.logoUrl,
+      timezone: item.gym.timezone,
+    },
   };
 }

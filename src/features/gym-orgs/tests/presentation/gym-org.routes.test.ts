@@ -267,6 +267,15 @@ describe('gym-org routes', () => {
       timezone: IanaTimezone.create('Asia/Kolkata'),
     });
     staffInvites.seedAdmin(created.id, ownerId);
+    staffInvites.seedGymProfile({
+      id: created.id,
+      name: 'Gym',
+      address: null,
+      contactPhone: null,
+      contactEmail: null,
+      logoUrl: null,
+      timezone: 'Asia/Kolkata',
+    });
     staffUsers.seed('STF-TRAINER01', {
       userId: inviteeId,
       roleCode: 'STAFF_UNASSIGNED',
@@ -322,6 +331,15 @@ describe('gym-org routes', () => {
 
     const inbox = await supertest(app).get('/gym-orgs/staff-invites/inbox').expect(200);
     expect(inbox.body.staffInvites.items).toHaveLength(1);
+    expect(inbox.body.staffInvites.items[0].gym).toEqual({
+      id: created.id,
+      name: 'Gym',
+      address: null,
+      contactPhone: null,
+      contactEmail: null,
+      logoUrl: null,
+      timezone: 'Asia/Kolkata',
+    });
 
     const accepted = await supertest(app)
       .post(`/gym-orgs/staff-invites/${invite.id}/accept`)

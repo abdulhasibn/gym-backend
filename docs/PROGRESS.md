@@ -4,9 +4,8 @@
 
 ## Current stage
 
-**Stage:** Auth MVP + gym-orgs shipped. **Active detour:** pull-forward
-Mini-CRM (`src/features/leads/`, A11–A13) before Stint 1 memberships. See
-[`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md) Pull-forward section and Orbit run sheet.
+**Stage:** Auth MVP + gym-orgs + Mini-CRM (A11–A13) shipped. Next: Stint 1
+memberships. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 
 | Area | Status |
 |------|--------|
@@ -24,12 +23,12 @@ Mini-CRM (`src/features/leads/`, A11–A13) before Stint 1 memberships. See
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
-| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); list unions trainer affiliations; `accept_staff_invite` RPC applied |
-| Mini-CRM / leads (`src/features/leads`) | Next — pull-forward A11–A13 (CRUD, pipeline, soft dup warn, follow-up date + due list). A14 convert + push reminders deferred |
-| Other feature modules under `src/features/*` | Not started — Stints 1–3 after Mini-CRM pull-forward |
+| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied |
+| Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
+| Other feature modules under `src/features/*` | Not started — Stints 1–3 next |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** (was flat under collection root) |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** + **Leads** |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -46,23 +45,17 @@ Mini-CRM (`src/features/leads/`, A11–A13) before Stint 1 memberships. See
 
 ## Next up
 
-1. **Pull-forward — Mini-CRM (A11–A13)** in `src/features/leads/`:
-   create/list/get/update/soft-delete; New→Lost pipeline; soft warn on
-   duplicate open-lead phone; `follow_up_date` + due-list query.
-   **Out of this chunk:** A14 convert→membership invite (needs Stint 1);
-   push/inbox follow-up jobs (Stint 3.5 notifications). Details:
-   [`MVP_ROADMAP.md`](MVP_ROADMAP.md) · [`product-flows.md`](product-flows.md) M11.
-2. **Then Stint 1 — Open the Floor:** plan catalog → membership invites →
+1. **Stint 1 — Open the Floor:** plan catalog → membership invites →
    accept + DataGrants → subscriptions → roster/offboard/block.
-3. Then Stint 2 (attendance, profile/progress, renewals read model), then
+2. Then Stint 2 (attendance, profile/progress, renewals read model), then
    Stint 3 remainder (coaching, nutrition, health-sync, CRM A14 + notifications).
-4. Feature-scoped RLS — not needed while the API uses service-role only;
+3. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
-5. Extra Auth provider/failure-path tests — only when a concrete gap blocks
+4. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
-6. Manual Postman STAFF OTP smoke for get/patch + invite create
-   (`422 INVALID_STAFF_INVITEE`) and accept/revoke with a second STAFF
-   `inviteeStaffCode` (no committed tokens).
+5. Manual Postman smoke: Admin OTP → gym → **Leads** create/pipeline/due list
+   (+ soft-warn on duplicate open phone); STAFF invite paths as before
+   (no committed tokens).
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
 Gmail; App Password rotation (OTP working; rotation skipped for now); push
@@ -70,6 +63,25 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-07 — Staff invite inbox embeds gym profile
+
+- `GET /gym-orgs/staff-invites/inbox` items now include nested `gym`
+  (`id`, `name`, `address`, `contactPhone`, `contactEmail`, `logoUrl`,
+  `timezone`) via `StaffInviteQueries.listInboxForUser` inner join on
+  live `gym_orgs`. Admin list / create / accept / revoke unchanged.
+- Docs: `client-auth.md`, `product-flows.md` F2.2; Postman inbox example.
+
+### 2026-08-07 — Mini-CRM leads APIs (A11–A13)
+
+- Shipped `src/features/leads/`: create/list/get/update/soft-delete;
+  `PATCH .../status` pipeline; soft `DUPLICATE_OPEN_LEAD_PHONE` warn on
+  create/update (command-repo lookup); `followUpDate` + due-follow-ups query.
+- Routes: `/gym-orgs/:gymOrgId/leads` (feature-owned router). Authz: ADMIN +
+  live admin via `LiveGymAdminPort` from gym-orgs composition.
+- Promoted `GymOrgId` to `src/domain/shared/gym-org-id.ts` (gym-orgs re-exports).
+- Vitest: domain + use-case + route coverage. Postman folder **Leads**.
+- Deferred: A14 convert → membership invite; push/inbox follow-up delivery.
 
 ### 2026-08-07 — Pull Mini-CRM ahead of Stint 1 (docs)
 

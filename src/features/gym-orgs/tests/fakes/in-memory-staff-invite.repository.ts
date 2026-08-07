@@ -5,18 +5,28 @@ import { toPage } from '../../../../shared/pagination/pagination';
 import type { GymOrgId } from '../../domain/gym-org-id';
 import type { StaffInvite } from '../../domain/staff-invite.entity';
 import type { StaffInviteId } from '../../domain/staff-invite-id';
-import type { StaffInviteQueries, StaffInviteSummary } from '../../domain/staff-invite.queries';
+import type {
+  StaffInviteGymSummary,
+  StaffInviteInboxItem,
+  StaffInviteQueries,
+  StaffInviteSummary,
+} from '../../domain/staff-invite.queries';
 import type { StaffInviteRepository } from '../../domain/staff-invite.repository';
 import type { StaffInviteStatus } from '../../domain/staff-invite-status';
 
 export class InMemoryStaffInviteRepository implements StaffInviteRepository, StaffInviteQueries {
   private readonly invites = new Map<string, StaffInvite>();
+  private readonly gymProfiles = new Map<string, StaffInviteGymSummary>();
   private readonly liveAdmins = new Map<string, Set<UserId>>();
   private readonly liveTrainers = new Map<string, Set<UserId>>();
   private now = new Date('2026-08-04T00:00:00.000Z');
 
   setNow(value: Date): void {
     this.now = value;
+  }
+
+  seedGymProfile(gym: StaffInviteGymSummary): void {
+    this.gymProfiles.set(gym.id, gym);
   }
 
   seedAdmin(gymOrgId: GymOrgId, userId: UserId): void {
@@ -95,10 +105,11 @@ export class InMemoryStaffInviteRepository implements StaffInviteRepository, Sta
     return toPage(items.slice(page.offset, page.offset + page.limit), items.length, page);
   }
 
-  async listInboxForUser(userId: UserId, page: Pagination): Promise<Page<StaffInviteSummary>> {
+  async listInboxForUser(userId: UserId, page: Pagination): Promise<Page<StaffInviteInboxItem>> {
     const items = [...this.invites.values()]
       .filter((invite) => invite.invitedUserId === userId)
-      .map((invite) => this.toSummary(invite));
+      .map((invite) => this.toInboxItem(invite))
+      .filter((item): item is StaffInviteInboxItem => item !== null);
     return toPage(items.slice(page.offset, page.offset + page.limit), items.length, page);
   }
 
@@ -119,6 +130,17 @@ export class InMemoryStaffInviteRepository implements StaffInviteRepository, Sta
       acceptedAt: invite.acceptedAt?.toISOString() ?? null,
       createdAt: invite.createdAt.toISOString(),
       updatedAt: invite.updatedAt.toISOString(),
+    };
+  }
+
+  private toInboxItem(invite: StaffInvite): StaffInviteInboxItem | null {
+    const gym = this.gymProfiles.get(invite.gymOrgId);
+    if (gym === undefined) {
+      return null;
+    }
+    return {
+      ...this.toSummary(invite),
+      gym,
     };
   }
 }

@@ -185,7 +185,7 @@ Create and configure the gym tenant; issue client and staff invites; own brandin
 
 1. Admin enters/scans staff_code of existing STAFF user.
 2. Target role TRAINER → pending staff invite (default expire 14 days).
-3. Staff sees invite in-app → Accept → role TRAINER + trainer_profiles.
+3. Staff sees invite in-app (inbox shows gym name, address, and contact details) → Accept → role TRAINER + trainer_profiles.
 4. Notify both sides (M12).
 
 **F2.3 Invite desk Admin**
