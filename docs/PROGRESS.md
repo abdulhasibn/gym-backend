@@ -4,10 +4,9 @@
 
 ## Current stage
 
-**Stage:** Auth MVP + gym-orgs profile update and staff invites. Ship via push
-to `main` (Vercel auto-deploy). Next: Stint 1 of the MVP roadmap — memberships /
-plan catalog. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md) and the Capability
-Orbit at [`docs/mvp-roadmap/`](mvp-roadmap/).
+**Stage:** Auth MVP + gym-orgs shipped. **Active detour:** pull-forward
+Mini-CRM (`src/features/leads/`, A11–A13) before Stint 1 memberships. See
+[`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md) Pull-forward section and Orbit run sheet.
 
 | Area | Status |
 |------|--------|
@@ -26,8 +25,9 @@ Orbit at [`docs/mvp-roadmap/`](mvp-roadmap/).
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); list unions trainer affiliations; `accept_staff_invite` RPC applied |
-| Other feature modules under `src/features/*` | Not started — sequenced in MVP_ROADMAP Stints 1–3 |
-| MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D) |
+| Mini-CRM / leads (`src/features/leads`) | Next — pull-forward A11–A13 (CRUD, pipeline, soft dup warn, follow-up date + due list). A14 convert + push reminders deferred |
+| Other feature modules under `src/features/*` | Not started — Stints 1–3 after Mini-CRM pull-forward |
+| MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** (was flat under collection root) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
@@ -46,16 +46,21 @@ Orbit at [`docs/mvp-roadmap/`](mvp-roadmap/).
 
 ## Next up
 
-1. **Stint 1 — Open the Floor** per [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md):
-   plan catalog → membership invites → accept + DataGrants → subscriptions →
-   roster/offboard/block. Visual: [`docs/mvp-roadmap/`](mvp-roadmap/).
-2. Then Stint 2 (attendance, profile/progress, renewals read model), then
-   Stint 3 (coaching, nutrition/food seed, health-sync, leads, notifications).
-3. Feature-scoped RLS — not needed while the API uses service-role only;
+1. **Pull-forward — Mini-CRM (A11–A13)** in `src/features/leads/`:
+   create/list/get/update/soft-delete; New→Lost pipeline; soft warn on
+   duplicate open-lead phone; `follow_up_date` + due-list query.
+   **Out of this chunk:** A14 convert→membership invite (needs Stint 1);
+   push/inbox follow-up jobs (Stint 3.5 notifications). Details:
+   [`MVP_ROADMAP.md`](MVP_ROADMAP.md) · [`product-flows.md`](product-flows.md) M11.
+2. **Then Stint 1 — Open the Floor:** plan catalog → membership invites →
+   accept + DataGrants → subscriptions → roster/offboard/block.
+3. Then Stint 2 (attendance, profile/progress, renewals read model), then
+   Stint 3 remainder (coaching, nutrition, health-sync, CRM A14 + notifications).
+4. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
-4. Extra Auth provider/failure-path tests — only when a concrete gap blocks
+5. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
-5. Manual Postman STAFF OTP smoke for get/patch + invite create
+6. Manual Postman STAFF OTP smoke for get/patch + invite create
    (`422 INVALID_STAFF_INVITEE`) and accept/revoke with a second STAFF
    `inviteeStaffCode` (no committed tokens).
 
@@ -65,6 +70,14 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-07 — Pull Mini-CRM ahead of Stint 1 (docs)
+
+- Decision: implement Mini-CRM (`leads`, A11–A13) as one chunk before
+  memberships/plan catalog. Gym-owned; only depends on shipped gym-orgs + Admin.
+- Updated [`MVP_ROADMAP.md`](MVP_ROADMAP.md) Pull-forward section; Orbit
+  `roadmap-data.js` + run sheet; [`product-flows.md`](product-flows.md) M11
+  build scope. A14 + push reminders stay deferred until Stint 1 / 3.5.
 
 ### 2026-08-06 — Orbit tab merged into PRD showcase + redeploy
 

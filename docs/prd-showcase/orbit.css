@@ -256,6 +256,15 @@
   margin-bottom: 2rem;
 }#view-orbit .stint-block{
   margin-bottom: 2.5rem;
+}#view-orbit .pull-forward-block{
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  margin-left: -0.15rem;
+}#view-orbit .pull-forward-block .stint-tag{
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
 }#view-orbit .stint-head{
   display: flex;
   flex-wrap: wrap;

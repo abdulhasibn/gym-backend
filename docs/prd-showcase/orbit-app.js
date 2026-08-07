@@ -24,6 +24,11 @@ function indexData() {
   for (const item of ROADMAP.foundation.items) {
     itemIndex.set(item.id, { item, stint: ROADMAP.foundation, kind: "foundation" });
   }
+  if (ROADMAP.pullForward) {
+    for (const item of ROADMAP.pullForward.items) {
+      itemIndex.set(item.id, { item, stint: ROADMAP.pullForward, kind: "pull-forward" });
+    }
+  }
   for (const stint of ROADMAP.stints) {
     for (const item of stint.items) {
       itemIndex.set(item.id, { item, stint, kind: "stint" });
@@ -314,7 +319,7 @@ function selectItem(id) {
     title: `${item.num}  ${item.title}`,
     body: item.body,
     meta,
-    exit: kind === "stint" ? stint.exit : null,
+    exit: kind === "stint" || kind === "pull-forward" ? stint.exit : null,
     ownership: item.ownership,
   });
 
@@ -362,6 +367,31 @@ function renderRunsheet() {
   }
   fBlock.appendChild(fList);
   root.appendChild(fBlock);
+
+  if (ROADMAP.pullForward) {
+    const pf = ROADMAP.pullForward;
+    const pfBlock = document.createElement("article");
+    pfBlock.className = "stint-block pull-forward-block";
+    pfBlock.id = "stint-pull-forward";
+    pfBlock.innerHTML = `
+      <div class="stint-head">
+        <h3>${escapeHtml(pf.label)} — ${escapeHtml(pf.title)}</h3>
+        <span class="stint-tag">${escapeHtml(pf.tagline)}</span>
+      </div>
+      <p class="stint-outcome">${escapeHtml(pf.outcome)}</p>
+    `;
+    const pfList = document.createElement("ul");
+    pfList.className = "item-list";
+    for (const item of pf.items) {
+      pfList.appendChild(runsheetItem(item, true));
+    }
+    pfBlock.appendChild(pfList);
+    const pfExit = document.createElement("p");
+    pfExit.className = "exit-banner";
+    pfExit.textContent = `Exit: ${pf.exit}`;
+    pfBlock.appendChild(pfExit);
+    root.appendChild(pfBlock);
+  }
 
   for (const stint of ROADMAP.stints) {
     const block = document.createElement("article");

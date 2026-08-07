@@ -595,6 +595,16 @@ C12 · Client-owned · grant-gated staff · production-quality live sync.
 
 Admin desk pipeline for prospects before they are members.
 
+### Build scope (execution)
+
+| In pull-forward (now) | Deferred |
+|---|---|
+| A11 capture + soft duplicate-phone warn | A14 convert → membership invite (needs Stint 1) |
+| A12 status pipeline | A13 *delivery* of follow-up reminders (push/inbox — Stint 3.5) |
+| A13 store `follow_up_date` + Admin due-list query | |
+
+See [`MVP_ROADMAP.md`](MVP_ROADMAP.md) Pull-forward and [`PROGRESS.md`](PROGRESS.md) Next up.
+
 ### Screens (Admin web)
 
 | Screen | Contents |

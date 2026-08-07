@@ -37,6 +37,11 @@ const itemIndex = new Map();
 for (const item of ROADMAP.foundation.items) {
   itemIndex.set(item.id, { item, stint: ROADMAP.foundation, kind: "foundation" });
 }
+if (ROADMAP.pullForward) {
+  for (const item of ROADMAP.pullForward.items) {
+    itemIndex.set(item.id, { item, stint: ROADMAP.pullForward, kind: "pull-forward" });
+  }
+}
 for (const stint of ROADMAP.stints) {
   for (const item of stint.items) {
     itemIndex.set(item.id, { item, stint, kind: "stint" });
@@ -312,7 +317,7 @@ function selectItem(id) {
       Ownership: ownershipLabel(item.ownership),
       Status: item.status === "done" ? "Shipped" : "Todo",
     },
-    exit: kind === "stint" ? stint.exit : null,
+    exit: kind === "stint" || kind === "pull-forward" ? stint.exit : null,
     ownership: item.ownership,
   });
 

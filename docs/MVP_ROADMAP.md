@@ -12,8 +12,16 @@ Schema already exists (32 tables). Remaining work is feature modules, not greenf
 **Rule:** Finish a stint’s exit criteria before starting the next. Items inside a stint are
 listed in build order — do them one by one.
 
+**Exception (active):** One documented **pull-forward** may run between Foundation and
+Stint 1 when [`PROGRESS.md`](PROGRESS.md) **Next up** says so. Do not invent further
+reorders without updating this file + Progress + Orbit `roadmap-data.js`.
+
 ```
-Foundation (shipped) → Stint 1 Open the Floor → Stint 2 Run the Desk → Stint 3 Keep Them Coming
+Foundation (shipped)
+  → Pull-forward: Mini-CRM A11–A13 (active)
+  → Stint 1 Open the Floor
+  → Stint 2 Run the Desk
+  → Stint 3 Keep Them Coming (CRM remainder + rest)
 ```
 
 ---
@@ -24,6 +32,35 @@ Foundation (shipped) → Stint 1 Open the Floor → Stint 2 Run the Desk → Sti
 |--------|---------|--------|
 | M1 Identity | `src/features/auth` | Done — OTP, Google, refresh, `/me`, provisioning |
 | M2 Gym Org | `src/features/gym-orgs` | Done — create/list/get/patch, staff invite lifecycle |
+
+---
+
+## Pull-forward (active) — Mini-CRM
+
+**Why now:** Self-contained gym-owned module; depends only on shipped Auth + gym-orgs.
+Finishes a wedge slice in one chunk before memberships complexity.
+
+**Outcome:** Admin can capture leads, move the pipeline, set follow-up dates, and list
+due follow-ups. Soft warn (not hard-block) on duplicate open-lead phone at the same gym.
+
+| # | Work item | Paths | PRD | Ownership |
+|---|-----------|-------|-----|-----------|
+| PF.1 | Leads CRUD + soft-delete + gym-scoped list/get | `src/features/leads/` | A11 | Gym-owned |
+| PF.2 | Status pipeline New → Contacted → Trial → Converted → Lost | `leads` | A12 | Gym-owned |
+| PF.3 | Soft duplicate-phone warn on create/update (open leads) | `leads` | A11 | Gym-owned |
+| PF.4 | `follow_up_date` set/clear + Admin due-list query | `leads` | A13 (store + query) | Gym-owned |
+
+**Exit criteria:** Staff Admin OTP → gym org → create lead → pipeline move → due list
+returns follow-ups; duplicate open phone returns a soft warning payload (still saves).
+
+**Explicitly out of this pull-forward:**
+
+| Deferred | Until | Why |
+|----------|-------|-----|
+| A14 Convert lead → membership invite (pre-filled) | After Stint 1.2+ | Needs membership invites |
+| Push / in-app / web-inbox follow-up reminders | Stint 3.5 | Needs notifications + jobs |
+
+Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 
 ---
 
@@ -46,7 +83,7 @@ Foundation (shipped) → Stint 1 Open the Floor → Stint 2 Run the Desk → Sti
 
 ## Stint 2 — Run the Desk (daily ops)
 
-**Outcome:** Desk and Client can run a normal gym day without coaching/CRM.
+**Outcome:** Desk and Client can run a normal gym day without coaching (CRM may already exist via pull-forward).
 
 | # | Work item | Paths | PRD | Ownership |
 |---|-----------|-------|-----|-----------|
@@ -61,18 +98,20 @@ Foundation (shipped) → Stint 1 Open the Floor → Stint 2 Run the Desk → Sti
 
 ## Stint 3 — Keep Them Coming (wedge + retention)
 
-**Outcome:** Full MVP loop — coaching differentiator, Client fitness, CRM wedge, automated nudges.
+**Outcome:** Full MVP loop — coaching differentiator, Client fitness, CRM convert + nudges.
 
 | # | Work item | Paths | PRD | Ownership |
 |---|-----------|-------|-----|-----------|
 | 3.1 | Coaching: diet + workout assign + per-day completions | `src/features/coaching/` | C5–C6, T5–T6 | Client-owned plans |
 | 3.2 | Food catalog seed + calorie log (+ NL/qty parser) | `src/features/nutrition/` | C9 | Client-owned (+ catalog seed) |
 | 3.3 | Health sync ingest/read APIs (provider adapters) | `src/features/health-sync/` | C12 | Client-owned |
-| 3.4 | Mini-CRM leads pipeline + follow-up reminders | `src/features/leads/` | A11–A13 | Gym-owned |
+| 3.4 | CRM remainder: A14 convert lead → membership invite; follow-up *delivery* via 3.5 | `leads` + invites | A14 (+ A13 push) | Gym-owned / platform |
 | 3.5 | Notifications + scheduled jobs (T-2 renewals, unpaid digest, lead follow-ups) | `src/features/notifications/` + jobs | C11, A10, A10b, M12 | Platform |
 | 3.6 | Audit trail writes for sensitive ops (payments, desk attendance, blocks, grants) | cross-cutting in use cases | M13 | Platform |
 
-**Exit criteria:** Solo owner can run renewals inbox + CRM + (self-)coaching; Client can log food, sync health, complete plans; T-2 / unpaid jobs fire idempotently.
+**Exit criteria:** Solo owner can run renewals inbox + CRM convert + (self-)coaching; Client can log food, sync health, complete plans; T-2 / unpaid / lead-follow-up jobs fire idempotently.
+
+**Note:** Core Mini-CRM A11–A13 is the active **Pull-forward** above — do not rebuild it in 3.4.
 
 ---
 
@@ -106,4 +145,6 @@ npx --yes serve docs/mvp-roadmap -p 5177
 - [`mvp-roadmap/3d.html`](mvp-roadmap/3d.html) — Three.js orbit (same data)
 - Shared data: [`mvp-roadmap/roadmap-data.js`](mvp-roadmap/roadmap-data.js)
 
-Update the markdown and `roadmap-data.js` together when the execution sequence changes; refresh [`PROGRESS.md`](PROGRESS.md) Current stage when a stint item ships.
+Update the markdown and `roadmap-data.js` together when the execution sequence changes
+(including pull-forwards); refresh [`PROGRESS.md`](PROGRESS.md) Current stage when a
+stint item or pull-forward ships.

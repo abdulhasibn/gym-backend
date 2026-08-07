@@ -30,6 +30,58 @@ export const ROADMAP = {
       },
     ],
   },
+  pullForward: {
+    id: "pull-forward",
+    label: "Pull-forward",
+    title: "Mini-CRM (now)",
+    tagline: "Active detour",
+    body: "Gym-owned leads ahead of Stint 1 — only needs shipped Auth + gym-orgs. Finish A11–A13 as one chunk.",
+    outcome:
+      "Admin can capture leads, move the pipeline, set follow-up dates, and list due follow-ups. Soft warn on duplicate open-lead phone.",
+    exit: "Staff Admin → gym org → create lead → pipeline move → due list works; duplicate open phone soft-warns but still saves.",
+    items: [
+      {
+        id: "pf.1",
+        num: "PF.1",
+        title: "Leads CRUD + soft-delete",
+        body: "Gym-scoped create/list/get/update/soft-delete. Name, phone, source, interest, notes.",
+        paths: "src/features/leads/",
+        prd: "A11",
+        ownership: "gym",
+        status: "todo",
+      },
+      {
+        id: "pf.2",
+        num: "PF.2",
+        title: "Status pipeline",
+        body: "New → Contacted → Trial → Converted → Lost.",
+        paths: "src/features/leads/",
+        prd: "A12",
+        ownership: "gym",
+        status: "todo",
+      },
+      {
+        id: "pf.3",
+        num: "PF.3",
+        title: "Soft duplicate-phone warn",
+        body: "Warn on create/update when another open lead at the same gym shares the phone. Do not hard-block.",
+        paths: "src/features/leads/",
+        prd: "A11",
+        ownership: "gym",
+        status: "todo",
+      },
+      {
+        id: "pf.4",
+        num: "PF.4",
+        title: "Follow-up date + due list",
+        body: "Set/clear follow_up_date; Admin due-list query. Push/inbox delivery waits for Stint 3.5.",
+        paths: "src/features/leads/",
+        prd: "A13 (store + query)",
+        ownership: "gym",
+        status: "todo",
+      },
+    ],
+  },
   stints: [
     {
       id: "s1",
@@ -109,7 +161,8 @@ export const ROADMAP = {
       label: "Stint 2",
       title: "Run the Desk",
       tagline: "Daily ops",
-      outcome: "Desk and Client can run a normal gym day without coaching or CRM.",
+      outcome:
+        "Desk and Client can run a normal gym day without coaching (CRM may already exist via pull-forward).",
       exit: "ACTIVE member with in-date base can check in; Admin can desk-mark and list renewals; staff see Client-owned fields only when granted.",
       items: [
         {
@@ -161,8 +214,8 @@ export const ROADMAP = {
       title: "Keep Them Coming",
       tagline: "Wedge + retention",
       outcome:
-        "Full MVP loop — coaching differentiator, Client fitness, CRM wedge, automated nudges.",
-      exit: "Solo owner can run renewals inbox + CRM + (self-)coaching; Client can log food, sync health, complete plans; T-2 / unpaid jobs fire idempotently.",
+        "Full MVP loop — coaching differentiator, Client fitness, CRM convert + automated nudges.",
+      exit: "Solo owner can run renewals inbox + CRM convert + (self-)coaching; Client can log food, sync health, complete plans; T-2 / unpaid / lead-follow-up jobs fire idempotently.",
       items: [
         {
           id: "3.1",
@@ -197,10 +250,10 @@ export const ROADMAP = {
         {
           id: "3.4",
           num: "3.4",
-          title: "Mini-CRM leads pipeline",
-          body: "Lead capture, New→Lost pipeline, follow-up reminders. Soft warn on duplicate phone.",
-          paths: "src/features/leads/",
-          prd: "A11–A13",
+          title: "CRM remainder (A14 + reminder delivery)",
+          body: "Core A11–A13 is pull-forward. Remaining: convert lead → membership invite; follow-up push/inbox via 3.5.",
+          paths: "src/features/leads/ + invites",
+          prd: "A14 (+ A13 push)",
           ownership: "gym",
           status: "todo",
         },
