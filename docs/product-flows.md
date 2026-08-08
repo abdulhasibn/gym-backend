@@ -7,6 +7,8 @@
 
 This document describes **what people do**, **what they see**, **what is blocked**, and **how screens connect**. It is organized by domain module (M1–M13). Cross-cutting rules that affect every screen appear first.
 
+**API delivery (backend):** Auth + gym-orgs + Mini-CRM A11–A13 + membership plan catalog + Admin membership invites + Client inbox/accept + DataGrants are **live**. Next: Admin subscription manage (1.5) then roster (1.6). See [`PROGRESS.md`](PROGRESS.md), [`client-auth.md`](client-auth.md), [`membership-invites.md`](membership-invites.md), Orbit at [gym-prd-visual.vercel.app/#orbit](https://gym-prd-visual.vercel.app/#orbit).
+
 ---
 
 ## Cross-cutting product rules
@@ -111,6 +113,8 @@ Open join codes · shadow profiles · payment gateway · WhatsApp/SMS reminders 
 
 Authenticate users, choose account lane, establish frozen system roles. No gym powers until affiliation exists.
 
+**API status:** Shipped — see [`client-auth.md`](client-auth.md).
+
 ### Screens / entry points
 
 | Screen | Personas | Surface |
@@ -161,6 +165,8 @@ C1, T1, A1 (auth portion) · frozen roles · Admin-as-Trainer is affiliation lat
 ### Purpose
 
 Create and configure the gym tenant; issue client and staff invites; own branding and timezone.
+
+**API status:** Gym org CRUD + staff invite lifecycle **shipped**. Client membership invite issuance lives under M3 APIs ([`membership-invites.md`](membership-invites.md)).
 
 ### Screens (Admin web primary)
 
@@ -215,6 +221,8 @@ A1, A2, A2b · timezone for all calendar-day displays · single-gym UI.
 ### Purpose
 
 Invite → accept → ACTIVE membership; roster; trainer assignment; DataGrants; offboard; block check-in.
+
+**API status:** Admin invite create/list/revoke, Client inbox/accept, and Client `my-data-grants` GET/PUT are **shipped**. Roster, trainer assign, offboard, and block check-in are **not yet** (Stint 1.6). Integration: [`membership-invites.md`](membership-invites.md).
 
 ### Screens
 
@@ -308,6 +316,8 @@ C2, C2b, C2c, C3, A3, A4, A6, A15, A17, A18 · no shadow profiles · no open joi
 ### Purpose
 
 Catalog of BASE/ADDON plans; subscription lines with snapshotted price; renewals; payment status tracking (no gateway).
+
+**API status:** Plan catalog CRUD **shipped**. Accept already creates snapshotted subscription lines. Admin payment/start override APIs are **next** (roadmap 1.5). Renewals inbox / unpaid digest later.
 
 ### Screens (Admin web)
 
@@ -594,6 +604,8 @@ C12 · Client-owned · grant-gated staff · production-quality live sync.
 ### Purpose
 
 Admin desk pipeline for prospects before they are members.
+
+**API status:** A11–A13 (CRUD, pipeline, soft dup-phone warn, follow-up due list) **shipped**. A14 convert → membership invite and reminder *delivery* remain later.
 
 ### Build scope (execution)
 

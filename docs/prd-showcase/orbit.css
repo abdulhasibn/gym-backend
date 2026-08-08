@@ -305,6 +305,8 @@
   transition: background 120ms ease;
 }#view-orbit .item-list li:hover, #view-orbit .item-list li.is-active{
   background: rgba(148, 163, 199, 0.05);
+}#view-orbit .item-list li.is-done .num{
+  color: var(--accent);
 }#view-orbit .item-list .num{
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.8rem;

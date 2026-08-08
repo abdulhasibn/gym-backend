@@ -1,12 +1,29 @@
-# Client auth integration
+# Client auth & CLIENT app integration
 
 Brief guide for mobile/web (and AI agents) integrating with the gym Backend API.
 
 **Base URL:** `https://gym-backend-lovat-mu.vercel.app` (prod) or `http://localhost:3000` (local)  
 **Postman:** [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) — request docs + Examples  
-**Membership join / grants:** [`membership-invites.md`](membership-invites.md)
+**Membership join / grants:** [`membership-invites.md`](membership-invites.md)  
+**Roadmap / status:** [`MVP_ROADMAP.md`](MVP_ROADMAP.md) · [`PROGRESS.md`](PROGRESS.md)
 
 There is **no separate sign-up**. First successful OTP verify or Google complete **creates** the app user. Later logins return the same user.
+
+---
+
+## CLIENT surface available now
+
+Use lane `CLIENT` on first provision. Staff-only routes (gym create, leads, plan catalog Admin, invite **create**) return `403` for CLIENT.
+
+| Area | Endpoints | Notes |
+|------|-----------|--------|
+| Auth | `POST /auth/otp/request`, `/otp/verify`, `/refresh`; Google start/complete; `GET /auth/me` | This guide |
+| Invite inbox | `GET /membership-invites/inbox` | Pending invites by user/email + gym profile |
+| Accept join | `POST /membership-invites/:id/accept` | ACTIVE membership + sub snapshots; one ACTIVE max |
+| DataGrants | `GET` / `PUT /gym-orgs/:gymOrgId/my-data-grants` | Required DOB/HEIGHT/WEIGHT sticky; optional toggles |
+| Health | `GET /health` | Liveness |
+
+**Not yet for CLIENT:** roster self-view, attendance check-in, profile/progress edit, renewals, coaching, calories, health sync, push — later stints ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
 
 ---
 
@@ -189,12 +206,13 @@ Useful errors: `STAFF_INVITE_FORBIDDEN`, `INVALID_STAFF_INVITEE`, `STAFF_ALREADY
 
 ---
 
-## Client UX checklist
+## CLIENT UX checklist
 
 1. **No “Sign up” vs “Log in”** — one auth path; first success creates the account.
-2. Ask for **lane** only when OTP request returns `isNewUser: true` (or hard-code lane in CLIENT vs STAFF apps). Omit lane on returning verify.
+2. Ask for **lane** only when OTP request returns `isNewUser: true` (or hard-code `CLIENT` in the member app). Omit lane on returning verify.
 3. On `LANE_MISMATCH`, tell the user this email belongs to the other account type.
 4. On `OTP_EXPIRED`, send them back to request a new code.
 5. On API `401`, try `POST /auth/refresh` once with the stored refresh token; replace both tokens on success; re-login if refresh fails.
-6. Treat any non-2xx as `{ error.code }` — branch UI on `code`, show `message` as fallback.
-7. Prefer Postman **Examples** on each request when generating clients.
+6. After login: poll **`GET /membership-invites/inbox`**; on accept use the Sharing checklist (required vitals locked on) — see [`membership-invites.md`](membership-invites.md).
+7. Treat any non-2xx as `{ error.code }` — branch UI on `code`, show `message` as fallback.
+8. Prefer Postman **Examples** on each request when generating clients.

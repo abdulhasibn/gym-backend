@@ -5,6 +5,7 @@
 |---|---|
 | **Status** | Draft v2.3 (client-owned data + grants grill) |
 | **Date** | August 1, 2026 |
+| **API delivery** | Auth · gym-orgs · Mini-CRM A11–A13 · plans · membership invites · Client accept + DataGrants live — see [`PROGRESS.md`](PROGRESS.md) |
 | **Owner** | Product Team |
 | **Supersedes** | Gym SaaS MVP PRD Draft v2.2 |
 | **Launch geography** | India-first |

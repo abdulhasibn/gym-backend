@@ -67,6 +67,18 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-08-08 — Docs + PRD showcase synced to Phase 3
+
+- Marked Mini-CRM PF.1–PF.4 and Stint 1.1–1.4 as **shipped** in
+  `docs/MVP_ROADMAP.md` + `prd-showcase/roadmap-data.js` (synced to
+  `mvp-roadmap/`). Orbit 2D/3D show done nodes as shipped; run sheet badges.
+- Product tab module copy notes API-live vs next; Orbit hero/dock copy updated.
+- Integration docs: `client-auth.md` CLIENT surface table; `membership-invites.md`
+  status links; `product-flows.md` API status on M1–M4/M11; `PRD.md` delivery row;
+  `README.md` rewritten past boilerplate.
+- Redeploy `gym-prd-visual` from `docs/prd-showcase/` to publish Orbit/Product
+  (local files updated; live host refresh when Vercel deploy succeeds).
+
 ### 2026-08-08 — Membership invites docs + Postman Examples
 
 - Added `docs/membership-invites.md` — Admin create/list/revoke, Client

@@ -5,7 +5,7 @@ window.ROLES_DATA = {
       code: "CLIENT",
       name: "Client",
       lane: "CLIENT",
-      blurb: "Member account from signup. Gym affiliation comes later via membership invite.",
+      blurb: "Member account from signup. Joins via Admin membership invite (inbox → accept + DataGrants).",
       color: "client",
     },
     {

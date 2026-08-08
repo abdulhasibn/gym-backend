@@ -197,7 +197,7 @@ function renderOrbit() {
       });
 
       const pulse = svgEl("g", { class: "node-pulse" });
-      const own = item.ownership;
+      const own = item.status === "done" ? "done" : item.ownership;
       const disk = svgEl("circle", {
         class: "node-disk",
         cx: 0,
@@ -320,7 +320,7 @@ function selectItem(id) {
     body: item.body,
     meta,
     exit: kind === "stint" || kind === "pull-forward" ? stint.exit : null,
-    ownership: item.ownership,
+    ownership: item.status === "done" ? "done" : item.ownership,
   });
 
   pauseOrbitBriefly();
@@ -423,13 +423,21 @@ function renderRunsheet() {
 function runsheetItem(item, clickable) {
   const li = document.createElement("li");
   li.dataset.id = item.id;
+  if (item.status === "done") li.classList.add("is-done");
+  const ownLabel =
+    item.status === "done"
+      ? item.ownership === "done"
+        ? "Shipped"
+        : `Shipped · ${ownershipLabel(item.ownership)}`
+      : ownershipLabel(item.ownership);
+  const ownClass = item.status === "done" ? "own-done" : ownershipClass(item.ownership);
   li.innerHTML = `
     <span class="num">${escapeHtml(item.num)}</span>
     <span>
       <span class="title">${escapeHtml(item.title)}</span>
       <span class="paths">${escapeHtml(item.paths)}</span>
     </span>
-    <span class="own ${ownershipClass(item.ownership)}">${escapeHtml(ownershipLabel(item.ownership))}</span>
+    <span class="own ${ownClass}">${escapeHtml(ownLabel)}</span>
   `;
   if (clickable) {
     li.addEventListener("click", () => {

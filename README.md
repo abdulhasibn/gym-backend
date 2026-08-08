@@ -1,10 +1,11 @@
 # Gym SaaS Backend
 
-Node.js + Express + TypeScript backend for the Gym SaaS product, using Supabase for
-PostgreSQL and Auth. This repository currently contains only the architectural
-boilerplate — no feature modules, business logic, or database schema yet. See
-[`docs/architecture.md`](./docs/architecture.md) for the full, normative architecture spec
-that all future code must follow.
+Node.js + Express + TypeScript API for the Gym SaaS product (Supabase PostgreSQL + Auth).
+Clean Architecture feature modules under `src/features/*`. Normative spec:
+[`docs/architecture.md`](./docs/architecture.md).
+
+**Live API:** `https://gym-backend-lovat-mu.vercel.app` · **PRD visual:**
+[gym-prd-visual.vercel.app](https://gym-prd-visual.vercel.app)
 
 ## Stack
 
@@ -30,6 +31,19 @@ Verify it's running:
 curl http://localhost:3000/health
 ```
 
+## Client / Admin integration docs
+
+| Guide                                                        | Audience                                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| [`docs/client-auth.md`](./docs/client-auth.md)               | Auth + **CLIENT** surface map (inbox / accept / grants)                   |
+| [`docs/membership-invites.md`](./docs/membership-invites.md) | Admin invites + Client accept + DataGrants                                |
+| [`docs/PROGRESS.md`](./docs/PROGRESS.md)                     | Current stage / next up                                                   |
+| [`docs/MVP_ROADMAP.md`](./docs/MVP_ROADMAP.md)               | Build order (Orbit tab visualizes this)                                   |
+| Postman                                                      | [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) |
+
+**Shipped for CLIENT apps:** OTP/Google auth, membership invite inbox, accept → ACTIVE membership, DataGrants GET/PUT.  
+**Next:** Admin subscription manage (1.5), then roster / offboard / block (1.6).
+
 ## Scripts
 
 | Script                              | Purpose                                             |
@@ -52,16 +66,16 @@ Git hooks (Husky, installed via `pnpm install` → `prepare`):
 
 ```text
 src/
-├── app/              # composition root, HTTP server entrypoint, route mounting
-├── domain/errors/    # generic infra errors shared by every feature (NotFound, Conflict, ...)
-├── infrastructure/   # Supabase client, Pino logger — the only place vendor SDKs are imported
-├── presentation/http/ # Express middleware: request logging, 404, global error handler
-├── shared/           # framework-neutral primitives: Result, Pagination, branded-id helper
-└── config/           # Zod-validated startup config, cross-cutting constants
+├── app/                 # composition root, HTTP server, route mounting
+├── features/            # auth, gym-orgs, leads, memberships, …
+├── domain/errors/       # shared infra errors (NotFound, Conflict, …)
+├── infrastructure/      # Supabase client, logger
+├── presentation/http/   # Express middleware
+├── shared/              # Result, Pagination, branded-id helper
+└── config/              # Zod-validated startup config
 ```
 
-`src/features/` does not exist yet — it is added when the first feature module (e.g. `auth`)
-is implemented, following the module anatomy described in `docs/architecture.md` §7.
+Feature anatomy follows `docs/architecture.md` §7 (domain / application / infrastructure / presentation / composition).
 
 ## Environment variables
 
@@ -78,12 +92,5 @@ docker run --env-file .env -p 3000:3000 gym-backend
 
 ## Architecture
 
-This project follows a strict layered/clean-architecture structure (Presentation →
-Application → Domain, with Infrastructure implementing Domain ports). Before adding any
-code, read:
-
-- [`docs/architecture.md`](./docs/architecture.md) — the normative spec
-- [`.cursor/rules/code-quality.mdc`](./.cursor/rules/code-quality.mdc) — naming, Value Objects, branded ids
-- [`.cursor/rules/error-handling.mdc`](./.cursor/rules/error-handling.mdc) — error taxonomy and HTTP mapping
-- [`.cursor/rules/cursor-database.mdc`](./.cursor/rules/cursor-database.mdc) — Supabase access rules
-- [`.cursor/rules/testing.mdc`](./.cursor/rules/testing.mdc) — Vitest/Supertest conventions
+Read [`docs/architecture.md`](./docs/architecture.md) before changing layers, modules, or
+dependency directions. ADRs under `docs/adr/` supersede where they conflict.

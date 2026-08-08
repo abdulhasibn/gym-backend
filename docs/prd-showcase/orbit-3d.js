@@ -318,7 +318,7 @@ function selectItem(id) {
       Status: item.status === "done" ? "Shipped" : "Todo",
     },
     exit: kind === "stint" || kind === "pull-forward" ? stint.exit : null,
-    ownership: item.ownership,
+    ownership: item.status === "done" ? "done" : item.ownership,
   });
 
   const ref = nodeRefs.get(id);
@@ -525,7 +525,8 @@ for (const stint of ROADMAP.stints) {
     const angle = start + (sweep / Math.max(n - 1, 1)) * i;
     const x = Math.cos(angle) * r;
     const z = Math.sin(angle) * r;
-    const own = OWN[item.ownership];
+    const ownKey = item.status === "done" ? "done" : item.ownership;
+    const own = OWN[ownKey];
 
     const node = new THREE.Group();
     node.position.set(x, 0, z);
@@ -572,7 +573,7 @@ for (const stint of ROADMAP.stints) {
     band.rotation.x = Math.PI / 2;
     mesh.add(band);
 
-    if (item.ownership === "client") {
+    if (ownKey === "client") {
       const dash = new THREE.Mesh(
         new THREE.TorusGeometry(0.235, 0.008, 8, 28),
         new THREE.MeshBasicMaterial({

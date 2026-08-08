@@ -3,7 +3,9 @@
 Brief guide for Admin/Client apps (and AI agents) integrating join + consent APIs.
 
 **Base URL:** `https://gym-backend-lovat-mu.vercel.app` (prod) or `http://localhost:3000` (local)  
-**Postman:** [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) → folder **Membership Invites** (request docs + Examples)
+**Postman:** [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) → folder **Membership Invites** (request docs + Examples)  
+**Auth / CLIENT surface map:** [`client-auth.md`](client-auth.md)  
+**Status:** Stint 1.1–1.4 shipped ([`MVP_ROADMAP.md`](MVP_ROADMAP.md) · [`PROGRESS.md`](PROGRESS.md))
 
 Join is **Admin invite only** — no open gym codes. Accept creates an ACTIVE membership (+ subscription snapshots). DataGrants gate staff visibility of Client-owned profile/class data ([ADR-0002](adr/0002-client-owned-records-and-data-grants.md)).
 
