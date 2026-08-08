@@ -4,8 +4,8 @@
 
 ## Current stage
 
-**Stage:** Auth MVP + gym-orgs + Mini-CRM (A11–A13) shipped. Next: Stint 1
-memberships. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+**Stage:** Stint 1 Phase 1 (plan catalog) shipped. Next: Phase 2 membership
+invites. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 
 | Area | Status |
 |------|--------|
@@ -25,10 +25,12 @@ memberships. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
-| Other feature modules under `src/features/*` | Not started — Stints 1–3 next |
+| Memberships feature (`src/features/memberships`) | Phase 1 done — plan catalog CRUD (`BASE`/`ADDON` + `TRAINER_COACHING`); invites/accept/subscriptions/roster not started |
+| Other feature modules under `src/features/*` | Not started — Stint 1 Phases 2–5, then Stints 2–3 |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** + **Leads** |
+| PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** + **Leads** + **Plans** |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -45,17 +47,17 @@ memberships. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 
 ## Next up
 
-1. **Stint 1 — Open the Floor:** plan catalog → membership invites →
-   accept + DataGrants → subscriptions → roster/offboard/block.
-2. Then Stint 2 (attendance, profile/progress, renewals read model), then
-   Stint 3 remainder (coaching, nutrition, health-sync, CRM A14 + notifications).
-3. Feature-scoped RLS — not needed while the API uses service-role only;
+1. **Stint 1 Phase 2 — Membership invites:** create / list / revoke (roadmap 1.2).
+2. Then Phase 3 (inbox + accept + DataGrants), Phase 4 (subscriptions),
+   Phase 5 (roster / offboard / block).
+3. Then Stint 2 (attendance, profile/progress, renewals), Stint 3 remainder.
+4. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
-4. Extra Auth provider/failure-path tests — only when a concrete gap blocks
+5. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
-5. Manual Postman smoke: Admin OTP → gym → **Leads** create/pipeline/due list
-   (+ soft-warn on duplicate open phone); STAFF invite paths as before
-   (no committed tokens).
+6. Manual Postman smoke: Admin OTP → gym → **Plans** create BASE (+ optional
+   ADDON) → list/patch; Leads + STAFF invite paths as before (no committed
+   tokens).
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
 Gmail; App Password rotation (OTP working; rotation skipped for now); push
@@ -63,6 +65,26 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-08 — PRD showcase rehosted as `gym-prd-visual`
+
+- Deleted exposed Vercel project `prd-showcase` (old URL now 404).
+- Recreated as `gym-prd-visual`
+  (`prj_EtVPC7ovvVam8sXPcfdePCZbwblP`) from `docs/prd-showcase/`.
+- Live: [gym-prd-visual.vercel.app](https://gym-prd-visual.vercel.app)
+  (Product · Roles · Orbit). Doc links updated in PRD / permissions /
+  MVP_ROADMAP + redirect HTML stubs.
+
+### 2026-08-08 — Stint 1 Phase 1: plan catalog CRUD
+
+- Shipped `src/features/memberships/` plan catalog (PRD A7 / roadmap 1.1):
+  create/list/get/update/soft-delete under `/gym-orgs/:gymOrgId/plans`.
+- Domain: `MembershipPlan` enforces BASE⇔no capability, ADDON⇔
+  `TRAINER_COACHING`; kind/capability immutable after create; soft-delete via
+  `deleted_at`. Authz: ADMIN + `LiveGymAdminPort` (composition-root wire).
+- No migration — table/enums already applied. Vitest domain + use-case +
+  route coverage. Postman folder **Plans**.
+- Deferred: invites, accept, DataGrants, subscriptions, roster (Phases 2–5).
 
 ### 2026-08-07 — Prettier CI fix + Husky hooks
 

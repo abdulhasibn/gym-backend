@@ -7,6 +7,7 @@ import type { AppConfig } from '../config/environment';
 import { composeAuthFeature } from '../features/auth/composition';
 import { composeGymOrgFeature } from '../features/gym-orgs/composition';
 import { composeLeadsFeature } from '../features/leads/composition';
+import { composeMembershipsFeature } from '../features/memberships/composition';
 import { createLogger } from '../infrastructure/logging/logger';
 import { createRequestLoggerMiddleware } from '../infrastructure/logging/request-logger.middleware';
 import type { Database } from '../infrastructure/supabase/database.types';
@@ -49,6 +50,9 @@ export function composeApp(config: AppConfig): AppDependencies {
   const leadsFeature = composeLeadsFeature(supabaseClient, authFeature.authenticate, {
     isLiveAdmin: gymOrgFeature.isLiveAdmin,
   });
+  const membershipsFeature = composeMembershipsFeature(supabaseClient, authFeature.authenticate, {
+    isLiveAdmin: gymOrgFeature.isLiveAdmin,
+  });
 
   const app = express();
 
@@ -57,7 +61,14 @@ export function composeApp(config: AppConfig): AppDependencies {
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(createRequestLoggerMiddleware(logger));
 
-  app.use(createRouter(authFeature.router, gymOrgFeature.router, leadsFeature.router));
+  app.use(
+    createRouter(
+      authFeature.router,
+      gymOrgFeature.router,
+      leadsFeature.router,
+      membershipsFeature.router,
+    ),
+  );
 
   app.use(notFoundMiddleware);
   app.use(
@@ -65,6 +76,7 @@ export function composeApp(config: AppConfig): AppDependencies {
       authFeature.errorMapper,
       gymOrgFeature.errorMapper,
       leadsFeature.errorMapper,
+      membershipsFeature.errorMapper,
     ]),
   );
 

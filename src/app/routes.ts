@@ -7,6 +7,7 @@ export function createRouter(
   authRouter: RequestHandler,
   gymOrgRouter: RequestHandler,
   leadsRouter: RequestHandler,
+  membershipsRouter: RequestHandler,
 ): Router {
   const router = Router();
 
@@ -16,6 +17,7 @@ export function createRouter(
   router.use('/auth', authRouter);
   router.use('/gym-orgs', gymOrgRouter);
   router.use('/gym-orgs/:gymOrgId/leads', leadsRouter);
+  router.use('/gym-orgs/:gymOrgId/plans', membershipsRouter);
 
   return router;
 }

@@ -29,7 +29,7 @@ This PRD scopes the production MVP for a gym management SaaS with three hard-cod
 
 ### 1.2 App blueprint — modules & submodules
 
-> **Visual showcase (source in repo):** [`docs/prd-showcase/`](prd-showcase/) — open `index.html` locally. Live: [prd-showcase.vercel.app](https://prd-showcase.vercel.app) (tabs: **Product** · **Roles** · **Orbit**).  
+> **Visual showcase (source in repo):** [`docs/prd-showcase/`](prd-showcase/) — open `index.html` locally. Live: [gym-prd-visual.vercel.app](https://gym-prd-visual.vercel.app) (tabs: **Product** · **Roles** · **Orbit**).  
 > **UI / product flows brief:** [`docs/product-flows.md`](product-flows.md) — module-by-module screens, journeys, grants, and empty states for Client / Trainer / Admin.
 
 High-level shape of the product. Surfaces consume shared domain modules via the API.

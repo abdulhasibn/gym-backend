@@ -1,93 +1,55 @@
 ---
-description: Clean Architecture boundaries, dependency rules, folder placement, and feature module anatomy for gymBackend. Source of truth is docs/architecture.md.
-alwaysApply: true
+description: Enforce Clean Architecture from docs/architecture.md. Do not invent alternate layering.
+globs: src/**/*.ts,docs/architecture.md,docs/adr/**/*.md
+alwaysApply: false
 ---
 
-# Architecture Rules
+# Architecture Enforcement
 
-Full spec: `docs/architecture.md`. If code conflicts with it, change the code (or write an ADR).
+**Authoritative source:** `docs/architecture.md`. This rule only enforces it.
 
-## Layer Ownership
+If implementation conflicts with `docs/architecture.md`, change the implementation—not the architecture (or supersede via ADR).
 
-| Layer | Owns | Must Never |
-|---|---|---|
-| **Presentation** (`*.controller.ts`, `*.routes.ts`, `*.schemas.ts`, middleware) | HTTP parsing, validation, response serialization | Contain business logic, query Supabase, call provider SDKs |
-| **Application** (`*.use-case.ts`, `*.dto.ts`, `*.policy.ts`) | Use-case orchestration, authorization, DTO contracts | Import Express, Supabase, or provider SDK types |
-| **Domain** (`*.entity.ts`, `*.value-object.ts`, `*.repository.ts`, `*.queries.ts`) | Business invariants, state transitions, port interfaces | Import Express, Supabase, Pino, env vars, or any infrastructure package |
-| **Infrastructure** (`supabase-*.repository.ts`, `*.mapper.ts`, provider adapters) | Supabase queries, row mapping, external provider calls | Define business rules, accept HTTP requests, bypass application authorization |
+Consult by section: §2 Principles · §4 Layers · §5 Dependency Rule · §6–7 Folders · §9 Responsibilities · §10 Repositories · §12 DB access · §14 Validation · §16–17 Checklists · §18 Placement.
 
-## Dependency Rule
+## Must follow
 
-```
-Presentation → Application → Domain
-Infrastructure → Domain (implements ports)
-Presentation ✗ Infrastructure (never direct)
-Domain ✗ any outer layer
-```
+- Consult `docs/architecture.md` before introducing new layers, modules, or architectural abstractions.
+- When unsure where new code belongs, use the placement guidance in §18 instead of guessing.
+- Obey the Dependency Rule (§2.2, §5): dependencies point inward; Domain depends on nothing outer.
+- Place code by layer ownership (§4, §9, §18): Presentation / Application / Domain / Infrastructure.
+- Keep business logic out of Presentation (§4.1, §9).
+- Keep framework and infrastructure types out of Domain (§4.3, §5).
+- Access Supabase and provider SDKs only in Infrastructure (§4.4, §12).
+- Depend on repository/query interfaces—never concrete adapters—from Application (§10, §11).
+- Segregate command repos from query interfaces; do not mix in one fat port (§2.12, §10).
+- Map persistence rows before leaving Infrastructure; never return raw persistence models (§10).
+- Respect feature boundaries: no cross-feature `infrastructure/` imports (§6–7).
+- Wire concretes only in feature `composition.ts` / composition root (§7, §11).
 
-Forbidden import pairs (hard reject):
-- `*.use-case.ts` importing `createClient` or `@supabase/supabase-js`
-- `*.entity.ts` or `*.value-object.ts` importing `express`, `Request`, or `Response`
-- `*.controller.ts` calling `.from('table_name')`
-- `*.use-case.ts` importing a concrete repository class (only interfaces allowed)
-- One feature importing another feature's `infrastructure/` internals
+## Hard reject
 
-## Folder Placement — Rule of Thumb (§18)
+- Dependency Rule violation (e.g. Domain → Application/Infrastructure; Presentation → Infrastructure).
+- Business logic in controllers, routes, or Zod schemas.
+- Domain importing Express, Supabase, Pino, env, or any provider SDK.
+- Supabase/SQL (or `.from(...)`) outside Infrastructure.
+- Use case importing a concrete repository/adapter class or SDK types.
+- Bypassing repository/query ports (direct DB/SDK from Application/Presentation).
+- Returning unmapped persistence rows or table-shaped types across boundaries.
+- Cross-feature infrastructure coupling.
+- Anemic Domain (invalid-state VOs; entities as data bags with no invariants).
+- Duplicating a Domain VO rule in Zod instead of delegating (§14).
+- Creating new architectural patterns, abstractions, or dependency directions that contradict `docs/architecture.md` without an approved ADR.
 
-When adding new code, ask in order:
-1. HTTP-specific (parsing, status codes, headers)? → **Presentation**
-2. Orchestrating a workflow with no business rule of its own? → **Application**
-3. A business rule, invariant, or calculation? → **Domain**
-4. Persistence or external system call? → **Infrastructure**
-5. Read for display/reporting, no invariant to protect? → **Application use case + Query Interface** (not command repo)
+## Review checklist
 
-When in doubt, place closer to Domain than to the framework. It is cheaper to promote a rule outward later than to untangle it from Express or Supabase.
+- ✓ Correct layer ownership (§4, §9, §18)
+- ✓ Dependency direction respected (§5)
+- ✓ Repository/query interfaces used (§10)
+- ✓ No framework leakage into Domain (§4.3, §5)
+- ✓ DTOs at boundaries (§4.2, §9)
+- ✓ Business rules in Domain/Application (§4.2–4.3)
+- ✓ Persistence only in Infrastructure (§4.4, §12)
+- ✓ No deviation from `docs/architecture.md` without an ADR
 
-## Feature Module Anatomy
-
-Every feature under `src/features/<name>/` must follow this structure:
-
-```
-features/<name>/
-├── domain/          # entities, value objects, repository interface, query interface
-├── application/     # use cases, DTOs, policies
-├── presentation/    # controller, routes, Zod schemas
-├── infrastructure/  # supabase repository impl, mapper
-├── composition.ts   # wires repos + use cases; consumed only by composition-root
-└── tests/
-    ├── application/
-    └── presentation/
-```
-
-`composition.ts` must NOT be imported by the feature's own domain, application, or presentation code — only by `src/app/composition-root.ts`.
-
-## Repository Segregation (Logical CQRS)
-
-Every feature exposes two separate interfaces — never one fat interface:
-
-```ts
-// Command repo — invariant-preserving lookups + save
-interface MembershipRepository {
-  findById(id: MembershipId): Promise<ClientMembership | null>;
-  findActiveByClient(clientId: UserId): Promise<ClientMembership | null>;
-  save(membership: ClientMembership): Promise<void>;
-}
-
-// Query interface — listing, filtering, reporting read-models
-interface MembershipQueries {
-  listExpiringSoon(criteria: ExpiringSoonCriteria, page: Pagination): Promise<Page<MembershipSummary>>;
-  listRoster(criteria: RosterCriteria, page: Pagination): Promise<Page<MembershipSummary>>;
-}
-```
-
-A command use case depends only on the command repo. A read use case depends only on the query interface.
-
-## Hard-Reject Checklist (per layer)
-
-**Presentation:** business logic inside controller · Supabase/SQL in route handler · Zod schema re-implementing a rule a Value Object already enforces (delegate with `superRefine` instead)
-
-**Application:** direct Supabase/SQL in use case · same business rule duplicated across use cases · infrastructure SDK types leaking into use-case signatures · command use case depending on query interface or vice versa
-
-**Domain:** imports from `express`, `@supabase/supabase-js`, `pino`, or any provider SDK · mutable Value Object or one whose constructor allows invalid state · Entity that is a pure data container (getters/setters, no invariant enforcement) · repository interface exposing SQL, table names, or row-shaped types
-
-**Infrastructure:** business rules embedded in a repository · raw Supabase rows returned without mapping · adapter called directly from application/domain code, bypassing its port
+When this rule and `docs/architecture.md` appear to differ, treat `docs/architecture.md` as authoritative. Do not invent or infer architecture beyond what it specifies.

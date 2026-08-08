@@ -2,7 +2,7 @@
 
 > **Agents:** Prefer this over inventing build order. Visual companion:
 > [`docs/prd-showcase/`](prd-showcase/) **Orbit** tab (live:
-> [prd-showcase.vercel.app/#orbit](https://prd-showcase.vercel.app/#orbit)).
+> [gym-prd-visual.vercel.app/#orbit](https://gym-prd-visual.vercel.app/#orbit)).
 > Source of truth for product behavior remains [`PRD.md`](PRD.md); stage status stays in
 > [`PROGRESS.md`](PROGRESS.md).
 
