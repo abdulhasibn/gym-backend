@@ -66,6 +66,15 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-08-08 — Postman docs + Examples for Leads and Plans
+
+- Cloud collection `Gym Backend API` (My Workspace): enriched request
+  descriptions for all **Leads** (7) and **Plans** (6) endpoints to match
+  Gym Orgs style (auth, body fields, success/error codes).
+- Added 19 saved Examples (success + key errors: soft phone warn,
+  `LEAD_FORBIDDEN` / `PLAN_FORBIDDEN`, `NOT_FOUND`, validation).
+- Git export `../gym-backend-postman` collection JSON updated in lockstep.
+
 ### 2026-08-08 — PRD showcase rehosted as `gym-prd-visual`
 
 - Deleted exposed Vercel project `prd-showcase` (old URL now 404).
