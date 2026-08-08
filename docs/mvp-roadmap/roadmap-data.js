@@ -7,6 +7,20 @@ export const ROADMAP = {
     title: "Core is lit",
     body: "Auth and gym-orgs are shipped. Identity, tenancy, and staff invites unlock every orbit ahead.",
     ownership: "done",
+    detail: {
+      purpose:
+        "Ship identity and tenancy so every later stint can authenticate actors and scope Gym-owned data.",
+      howItWorks: [
+        "M1 Auth: OTP + Google, refresh, /me, frozen roles, CLIENT|STAFF lanes.",
+        "M2 Gym orgs: create/list/get/patch + staff invite lifecycle via staff_code.",
+        "Together they unlock Admin desks, trainer affiliations, and client join flows.",
+      ],
+      acceptance: [
+        "Staff can provision, create a gym, and accept staff invites.",
+        "Clients can provision on the CLIENT lane.",
+      ],
+      prdRefs: "C1, T1, A1, A2, A2b, T2",
+    },
     items: [
       {
         id: "f1",
@@ -17,6 +31,17 @@ export const ROADMAP = {
         prd: "C1, T1, A1",
         ownership: "done",
         status: "done",
+        detail: {
+          purpose: "Canonical authentication and role provisioning for all personas.",
+          howItWorks: [
+            "Email OTP request/verify; first success creates the app user.",
+            "Google OAuth secondary with verified email + complete step.",
+            "Refresh rotates tokens; /auth/me restores session UI.",
+            "Lane locked on first provision; roles are frozen seeds.",
+          ],
+          acceptance: ["OTP and Google paths return session + user with lane/roleCode."],
+          prdRefs: "C1, T1, A1",
+        },
       },
       {
         id: "f2",
@@ -27,6 +52,16 @@ export const ROADMAP = {
         prd: "A2, A2b, T2",
         ownership: "done",
         status: "done",
+        detail: {
+          purpose: "Stand up the tenant and bring Trainers / desk Admins into the gym.",
+          howItWorks: [
+            "Owner creates Gym Org from STAFF_UNASSIGNED.",
+            "Staff invites use staff_code / QR; inbox embeds gym profile.",
+            "Accept upgrades role and writes affiliations (trainer profile when needed).",
+          ],
+          acceptance: ["Invite → inbox → accept works; Admin cap enforced for desk Admins."],
+          prdRefs: "A2, A2b, T2",
+        },
       },
     ],
   },
@@ -49,6 +84,15 @@ export const ROADMAP = {
         prd: "A11",
         ownership: "gym",
         status: "done",
+        detail: {
+          purpose: "Capture prospects before they become members.",
+          howItWorks: [
+            "All operations scoped to gym_org_id for affiliated Admins.",
+            "Soft-delete via deleted_at — not hard delete.",
+          ],
+          acceptance: ["Admin can create/list/get/update/soft-delete leads at their gym."],
+          prdRefs: "A11",
+        },
       },
       {
         id: "pf.2",
@@ -59,6 +103,12 @@ export const ROADMAP = {
         prd: "A12",
         ownership: "gym",
         status: "done",
+        detail: {
+          purpose: "Move leads through a fixed desk pipeline.",
+          howItWorks: ["Status changes are explicit Admin actions on the lead."],
+          acceptance: ["Pipeline transitions persist and list filters work."],
+          prdRefs: "A12",
+        },
       },
       {
         id: "pf.3",
@@ -69,6 +119,15 @@ export const ROADMAP = {
         prd: "A11",
         ownership: "gym",
         status: "done",
+        detail: {
+          purpose: "Surface likely duplicates without blocking walk-in capture.",
+          howItWorks: [
+            "Phone is contact-only — not a unique identity key.",
+            "API returns a soft warning payload and still saves.",
+          ],
+          acceptance: ["Duplicate open phone warns; lead is still created/updated."],
+          prdRefs: "A11",
+        },
       },
       {
         id: "pf.4",
@@ -79,6 +138,15 @@ export const ROADMAP = {
         prd: "A13 (store + query)",
         ownership: "gym",
         status: "done",
+        detail: {
+          purpose: "Query leads that need a call/visit today without waiting on push infra.",
+          howItWorks: [
+            "Store/clear follow_up_date on the lead.",
+            "Due-list endpoint for Admins; notification delivery deferred to 3.5.",
+          ],
+          acceptance: ["Due list returns leads with follow_up_date on/before today."],
+          prdRefs: "A13",
+        },
       },
     ],
   },
@@ -102,6 +170,16 @@ export const ROADMAP = {
           prd: "A7",
           ownership: "gym",
           status: "done",
+          detail: {
+            purpose: "Give Admins sellable products before inviting clients.",
+            howItWorks: [
+              "Create/list/get/patch/soft-delete plans under a gym.",
+              "kind BASE | ADDON; ADDON requires capability (MVP: TRAINER_COACHING).",
+              "Invite validation requires an active BASE plan.",
+            ],
+            acceptance: ["Admin creates BASE plan usable on membership invites."],
+            prdRefs: "A7 · PRD §5.13",
+          },
         },
         {
           id: "1.2",
@@ -112,6 +190,16 @@ export const ROADMAP = {
           prd: "A6, C2",
           ownership: "gym",
           status: "done",
+          detail: {
+            purpose: "Only join path for clients — Admin invite, not open codes.",
+            howItWorks: [
+              "Create PENDING invite with invitee identity + base (± addon) payment statuses.",
+              "Optional expiresAt (default +14 days); revoke only from PENDING.",
+              "Cannot invite STAFF emails; addon must be active TRAINER_COACHING.",
+            ],
+            acceptance: ["Admin create/list/revoke; Client later sees invite in inbox."],
+            prdRefs: "A6, C2 · PRD §5.2",
+          },
         },
         {
           id: "1.3",
@@ -122,6 +210,16 @@ export const ROADMAP = {
           prd: "C2",
           ownership: "gym",
           status: "done",
+          detail: {
+            purpose: "Let the Client claim a gym seat and create the membership row.",
+            howItWorks: [
+              "Inbox matches invited_user_id or pending email; embeds gym profile.",
+              "Accept RPC creates ACTIVE membership + snapshotted subscription lines.",
+              "Fails with ACTIVE_MEMBERSHIP_CONFLICT if another ACTIVE exists.",
+            ],
+            acceptance: ["Accept returns membershipId; invite becomes ACCEPTED."],
+            prdRefs: "C2 · PRD §5.3",
+          },
         },
         {
           id: "1.4",
@@ -132,6 +230,16 @@ export const ROADMAP = {
           prd: "C2b, C2c",
           ownership: "client",
           status: "done",
+          detail: {
+            purpose: "Consent gate for staff visibility of Client-owned data — grants, never copies.",
+            howItWorks: [
+              "Accept always grants DOB, HEIGHT, WEIGHT.",
+              "Optional profile/class grants from checklist default off.",
+              "GET/PUT my-data-grants while ACTIVE; required attributes sticky on PUT.",
+            ],
+            acceptance: ["Required grants present after accept; optional toggles update."],
+            prdRefs: "C2b, C2c · ADR-0002",
+          },
         },
         {
           id: "1.5",
@@ -142,6 +250,16 @@ export const ROADMAP = {
           prd: "A8, A8b, A19, C10",
           ownership: "gym",
           status: "todo",
+          detail: {
+            purpose: "Admin manage payment status and start dates after accept; attach addons later.",
+            howItWorks: [
+              "Accept already creates snapshotted base (± addon) lines.",
+              "This item adds Admin APIs for payment status, start override, later addon attach.",
+              "Unpaid does not auto-lock access; entitlement follows dates.",
+            ],
+            acceptance: ["Admin can update payment/start; Client can view subscription lines."],
+            prdRefs: "A8, A8b, A19, C10 · PRD §5.9 · §5.13",
+          },
         },
         {
           id: "1.6",
@@ -152,6 +270,19 @@ export const ROADMAP = {
           prd: "A3, A4, A15, A18, C3",
           ownership: "gym",
           status: "todo",
+          detail: {
+            purpose: "Day-to-day member management after join.",
+            howItWorks: [
+              "Roster lists ACTIVE/INACTIVE memberships for the gym.",
+              "Trainer assign requires in-date TRAINER_COACHING addon.",
+              "Offboard → INACTIVE + clear grants; retain attendance/billing.",
+              "Block check-in is a manual safety valve.",
+            ],
+            acceptance: [
+              "Roster shows ACTIVE after accept; offboard clears grants; block prevents check-in.",
+            ],
+            prdRefs: "A3, A4, A15, A18, C3 · PRD §5.4 · §5.12",
+          },
         },
       ],
     },
@@ -174,6 +305,16 @@ export const ROADMAP = {
           prd: "C4, A5",
           ownership: "gym",
           status: "todo",
+          detail: {
+            purpose: "Record presence for ops and optional base-subscription start.",
+            howItWorks: [
+              "Client self check-in when ACTIVE, not blocked, base in-date.",
+              "Admin desk mark for walk-ins without phones.",
+              "Gym-owned logs retained after leave.",
+            ],
+            acceptance: ["Self + desk check-in and logs work for an ACTIVE member."],
+            prdRefs: "C4, A5 · PRD §5.6",
+          },
         },
         {
           id: "2.2",
@@ -184,6 +325,15 @@ export const ROADMAP = {
           prd: "C7, C8, C14",
           ownership: "client",
           status: "todo",
+          detail: {
+            purpose: "Member-owned body metrics without gym ownership of the rows.",
+            howItWorks: [
+              "Profile edit; weight writes ProgressLog.",
+              "BMI derived when height + current weight available.",
+            ],
+            acceptance: ["Client can edit profile and see BMI/trend."],
+            prdRefs: "C7, C8, C14",
+          },
         },
         {
           id: "2.3",
@@ -194,6 +344,15 @@ export const ROADMAP = {
           prd: "T4, A17",
           ownership: "client",
           status: "todo",
+          detail: {
+            purpose: "Enforce ADR-0002 on every staff read of Client-owned data.",
+            howItWorks: [
+              "Affiliation + permission + live grant required.",
+              "Absent grant → empty / not-shared UI, never invented values.",
+            ],
+            acceptance: ["Staff without PROGRESS cannot read progress trend."],
+            prdRefs: "T4, A17 · ADR-0002",
+          },
         },
         {
           id: "2.4",
@@ -204,6 +363,15 @@ export const ROADMAP = {
           prd: "A9",
           ownership: "gym",
           status: "todo",
+          detail: {
+            purpose: "Admin inbox read model before scheduled T-2 push jobs.",
+            howItWorks: [
+              "Query base + addon lines nearing end_date, labeled.",
+              "Push delivery comes in Stint 3.5.",
+            ],
+            acceptance: ["Admin due-list returns expiring base and addon lines."],
+            prdRefs: "A9",
+          },
         },
       ],
     },
@@ -226,6 +394,15 @@ export const ROADMAP = {
           prd: "C5–C6, T5–T6",
           ownership: "client",
           status: "todo",
+          detail: {
+            purpose: "Retention wedge — trainer programming under TRAINER_COACHING addon.",
+            howItWorks: [
+              "Assign diet/workout while addon in-date.",
+              "Client completes per calendar day; adherence grant-gated for other staff.",
+            ],
+            acceptance: ["Assign + daily complete works with active addon."],
+            prdRefs: "C5–C6, T5–T6 · PRD §5.5",
+          },
         },
         {
           id: "3.2",
@@ -236,6 +413,14 @@ export const ROADMAP = {
           prd: "C9",
           ownership: "client",
           status: "todo",
+          detail: {
+            purpose: "Practical Indian meal logging without third-party nutrition APIs.",
+            howItWorks: [
+              "Seed FoodItem catalog; parse qty phrases; manual fallback always available.",
+            ],
+            acceptance: ["Phrase resolves or manual entry saves a CalorieLogEntry."],
+            prdRefs: "C9 · PRD §5.10",
+          },
         },
         {
           id: "3.3",
@@ -246,6 +431,14 @@ export const ROADMAP = {
           prd: "C12",
           ownership: "client",
           status: "todo",
+          detail: {
+            purpose: "Live wearable ingest into Client-owned metrics (production bar).",
+            howItWorks: [
+              "Connect provider; sync steps/workouts/calories/weight; weight → ProgressLog.",
+            ],
+            acceptance: ["Ingest + read APIs work for at least one provider path."],
+            prdRefs: "C12 · PRD §5.11",
+          },
         },
         {
           id: "3.4",
@@ -256,6 +449,15 @@ export const ROADMAP = {
           prd: "A14 (+ A13 push)",
           ownership: "gym",
           status: "todo",
+          detail: {
+            purpose: "Close the CRM loop into membership invites and delivered reminders.",
+            howItWorks: [
+              "Convert prefills membership invite — Client must still accept.",
+              "Reminder delivery shared with notifications jobs.",
+            ],
+            acceptance: ["Convert creates PENDING invite; follow-up delivery arrives via 3.5."],
+            prdRefs: "A14, A13",
+          },
         },
         {
           id: "3.5",
@@ -266,6 +468,15 @@ export const ROADMAP = {
           prd: "C11, A10, A10b, M12",
           ownership: "platform",
           status: "todo",
+          detail: {
+            purpose: "Automate renewals and desk nudges without WhatsApp/SMS in MVP.",
+            howItWorks: [
+              "Daily jobs for T-2, unpaid/partial digest, lead follow-ups.",
+              "Push + in-app + Admin inbox; idempotent runs.",
+            ],
+            acceptance: ["Jobs fire once per target day without duplicates."],
+            prdRefs: "C11, A10, A10b, M12 · PRD §8",
+          },
         },
         {
           id: "3.6",
@@ -276,6 +487,14 @@ export const ROADMAP = {
           prd: "M13",
           ownership: "platform",
           status: "todo",
+          detail: {
+            purpose: "Attributable history for sensitive desk and membership actions.",
+            howItWorks: [
+              "Append-only audit_logs on payment status, desk attendance, blocks, grants, membership transitions.",
+            ],
+            acceptance: ["Listed sensitive ops produce audit rows with actor + timestamp."],
+            prdRefs: "M13 · PRD §9",
+          },
         },
       ],
     },

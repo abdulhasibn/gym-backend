@@ -408,6 +408,46 @@
       border-top: 1px solid var(--line);
     }
     .mod.open .mod-body { display: block; animation: rise 0.3s ease both; }
+    .mod-summary {
+      padding-top: 1rem;
+      font-size: 0.98rem;
+      color: var(--ink);
+      line-height: 1.55;
+      max-width: 52rem;
+    }
+    .mod-personas {
+      margin-top: 0.5rem;
+      font-size: 0.88rem;
+      color: var(--ink-soft);
+    }
+    .mod-how-label {
+      margin-top: 1rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .mod-how {
+      margin: 0.45rem 0 0 1.1rem;
+      max-width: 48rem;
+    }
+    .mod-how li {
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+      margin-bottom: 0.35rem;
+      padding-left: 0;
+    }
+    .mod-how li::before { display: none; }
+    .mod-actions {
+      margin-top: 1.1rem;
+      padding-top: 0.85rem;
+      border-top: 1px dashed var(--line);
+    }
+    .mod-detail-btn {
+      display: inline-block;
+      cursor: pointer;
+    }
     .mod-body ul {
       list-style: none;
       display: grid;

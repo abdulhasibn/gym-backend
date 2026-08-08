@@ -240,7 +240,10 @@ function renderOrbit() {
   }
 }
 
-function setDock({ kicker, title, body, meta, exit, ownership }) {
+/** @type {{ title: string, detail: object, exit?: string | null } | null} */
+let dockDetailPayload = null;
+
+function setDock({ kicker, title, body, meta, exit, ownership, detail }) {
   const dock = document.getElementById("dock");
   dock.dataset.ownership = ownership || "gym";
   document.getElementById("dock-kicker").textContent = kicker;
@@ -249,6 +252,7 @@ function setDock({ kicker, title, body, meta, exit, ownership }) {
 
   const metaEl = document.getElementById("dock-meta");
   const exitEl = document.getElementById("dock-exit");
+  const detailBtn = document.getElementById("dock-detail-btn");
 
   if (meta && Object.keys(meta).length) {
     metaEl.hidden = false;
@@ -274,6 +278,25 @@ function setDock({ kicker, title, body, meta, exit, ownership }) {
     exitEl.hidden = true;
     exitEl.textContent = "";
   }
+
+  if (detail && typeof window.openReaderModal === "function") {
+    dockDetailPayload = { title, detail, exit: exit || null };
+    if (detailBtn) detailBtn.hidden = false;
+  } else {
+    dockDetailPayload = null;
+    if (detailBtn) detailBtn.hidden = true;
+  }
+}
+
+function openDockDetail() {
+  if (!dockDetailPayload || typeof window.openReaderModal !== "function") return;
+  const { title, detail, exit } = dockDetailPayload;
+  window.openReaderModal({
+    title,
+    kicker: "Orbit · detailed view",
+    showToc: true,
+    sections: window.sectionsFromDetail(detail, { exit }),
+  });
 }
 
 function clearNodeSelection() {
@@ -294,6 +317,7 @@ function selectFoundation() {
     },
     exit: null,
     ownership: "done",
+    detail: ROADMAP.foundation.detail || null,
   });
   pauseOrbitBriefly();
 }
@@ -321,6 +345,7 @@ function selectItem(id) {
     meta,
     exit: kind === "stint" || kind === "pull-forward" ? stint.exit : null,
     ownership: item.status === "done" ? "done" : item.ownership,
+    detail: item.detail || null,
   });
 
   pauseOrbitBriefly();
@@ -481,6 +506,9 @@ export function bootOrbit() {
   const frame = document.getElementById("orbit-frame");
   frame.addEventListener("mouseenter", () => frame.classList.add("is-paused"));
   frame.addEventListener("mouseleave", () => frame.classList.remove("is-paused"));
+
+  document.getElementById("dock-detail-btn")?.addEventListener("click", openDockDetail);
+
   orbitBooted = true;
 }
 

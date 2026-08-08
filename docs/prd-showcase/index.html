@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="orbit.css" />
+  <link rel="stylesheet" href="reader-modal.css" />
 </head>
 <body>
   <nav class="nav" aria-label="Primary">
@@ -79,6 +80,7 @@
             Explore modules
             <svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
           </a>
+          <button type="button" class="cta cta-ghost" id="open-full-prd">Read full PRD</button>
           <button type="button" class="cta cta-ghost" data-goto-tab="roles">View roles</button>
           <button type="button" class="cta cta-ghost" data-goto-tab="orbit">View orbit</button>
         </div>
@@ -414,6 +416,7 @@
           <p class="dock-body" id="dock-body">Auth, gym-orgs, Mini-CRM, plans, and client join + DataGrants are shipped. Select a node for the next build step, PRD anchors, and ownership.</p>
           <dl class="dock-meta" id="dock-meta" hidden></dl>
           <p class="dock-exit" id="dock-exit" hidden></p>
+          <button type="button" class="dock-detail-btn" id="dock-detail-btn" hidden>Read detailed view</button>
         </aside>
       </div>
     </section>
@@ -443,6 +446,35 @@
     </div>
   </footer>
 
+  <div
+    id="reader-modal"
+    class="reader-modal"
+    hidden
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="reader-modal-title"
+  >
+    <div class="reader-modal__panel">
+      <header class="reader-modal__header">
+        <div>
+          <p class="reader-modal__kicker" id="reader-modal-kicker">Reading view</p>
+          <h2 class="reader-modal__title" id="reader-modal-title">Details</h2>
+        </div>
+        <button type="button" class="reader-modal__close" id="reader-modal-close">Close</button>
+      </header>
+      <div class="reader-modal__layout" id="reader-modal-layout">
+        <nav class="reader-modal__toc" id="reader-modal-toc" hidden aria-label="Sections">
+          <p>On this page</p>
+          <div id="reader-modal-toc-list"></div>
+        </nav>
+        <div class="reader-modal__body" id="reader-modal-body" tabindex="0"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="reader-modal.js"></script>
+  <script src="prd-reader-data.js"></script>
+  <script src="modules-data.js"></script>
   <script src="roles-data.js"></script>
   <script src="app.js"></script>
   <script type="module" src="orbit-app.js"></script>

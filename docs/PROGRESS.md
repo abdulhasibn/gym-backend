@@ -67,6 +67,16 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-08-08 — PRD showcase reading modals + deeper module detail
+
+- Shared large reading modal (`reader-modal.js` / `.css`) for Product + Orbit
+  2D/3D: Esc/backdrop/close, focus trap, optional TOC.
+- Hero **Read full PRD** opens curated `prd-reader-data.js` (PRD §§1–11).
+- Modules: `modules-data.js` adds summary / how-it-works + full-detail modal
+  per M1–M13 (outline unchanged).
+- Orbit: `detail` on roadmap items; dock **Read detailed view** in 2D + 3D.
+- Redeploy `gym-prd-visual` from `docs/prd-showcase/`.
+
 ### 2026-08-08 — Docs + PRD showcase synced to Phase 3
 
 - Marked Mini-CRM PF.1–PF.4 and Stint 1.1–1.4 as **shipped** in

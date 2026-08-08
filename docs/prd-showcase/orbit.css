@@ -217,7 +217,12 @@
   letter-spacing: -0.02em;
   line-height: 1.15;
   margin-bottom: 0.65rem;
-}#view-orbit .dock-.dock-meta{
+}#view-orbit .dock-body{
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}#view-orbit .dock-meta{
   display: grid;
   gap: 0.55rem;
   margin-bottom: 1rem;
@@ -233,7 +238,25 @@
   letter-spacing: 0.06em;
   color: var(--muted);
   padding-top: 0.15rem;
-}#view-orbit .dock-meta dd{ color: var(--ink); word-break: break-word; }#view-orbit .dock-exit{
+}#view-orbit .dock-meta dd{ color: var(--ink); word-break: break-word; }#view-orbit .dock-detail-btn{
+  margin-top: 1rem;
+  appearance: none;
+  width: 100%;
+  border: 1px solid rgba(227, 194, 132, 0.45);
+  background: rgba(227, 194, 132, 0.12);
+  color: var(--accent);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.7rem 0.85rem;
+  cursor: pointer;
+  text-align: left;
+}#view-orbit .dock-detail-btn:hover{
+  background: rgba(227, 194, 132, 0.22);
+}#view-orbit .dock-detail-btn[hidden]{
+  display: none !important;
+}#view-orbit .dock-exit{
   font-size: 0.85rem;
   color: var(--accent);
   background: rgba(227, 194, 132, 0.08);

@@ -244,7 +244,10 @@ function pulseDock() {
   dockEl.classList.add("dock-in");
 }
 
-function setDock({ kicker, title, body, meta, exit, ownership }) {
+/** @type {{ title: string, detail: object, exit?: string | null } | null} */
+let dockDetailPayload = null;
+
+function setDock({ kicker, title, body, meta, exit, ownership, detail }) {
   dockEl.dataset.ownership = ownership || "gym";
   document.getElementById("dock-kicker").textContent = kicker;
   document.getElementById("dock-title").textContent = title;
@@ -252,6 +255,7 @@ function setDock({ kicker, title, body, meta, exit, ownership }) {
 
   const metaEl = document.getElementById("dock-meta");
   const exitEl = document.getElementById("dock-exit");
+  const detailBtn = document.getElementById("dock-detail-btn");
 
   if (meta && Object.keys(meta).length) {
     metaEl.hidden = false;
@@ -278,7 +282,26 @@ function setDock({ kicker, title, body, meta, exit, ownership }) {
     exitEl.textContent = "";
   }
 
+  if (detail && typeof window.openReaderModal === "function") {
+    dockDetailPayload = { title, detail, exit: exit || null };
+    if (detailBtn) detailBtn.hidden = false;
+  } else {
+    dockDetailPayload = null;
+    if (detailBtn) detailBtn.hidden = true;
+  }
+
   pulseDock();
+}
+
+function openDockDetail() {
+  if (!dockDetailPayload || typeof window.openReaderModal !== "function") return;
+  const { title, detail, exit } = dockDetailPayload;
+  window.openReaderModal({
+    title,
+    kicker: "Orbit · detailed view",
+    showToc: true,
+    sections: window.sectionsFromDetail(detail, { exit }),
+  });
 }
 
 function selectFoundation() {
@@ -295,6 +318,7 @@ function selectFoundation() {
     },
     exit: null,
     ownership: "done",
+    detail: ROADMAP.foundation.detail || null,
   });
   focusTarget(new THREE.Vector3(0, 0.35, 0));
   resumeAutoRotateSoon(2200);
@@ -319,6 +343,7 @@ function selectItem(id) {
     },
     exit: kind === "stint" || kind === "pull-forward" ? stint.exit : null,
     ownership: item.status === "done" ? "done" : item.ownership,
+    detail: item.detail || null,
   });
 
   const ref = nodeRefs.get(id);
@@ -717,6 +742,7 @@ function tick() {
   requestAnimationFrame(tick);
 }
 
+document.getElementById("dock-detail-btn")?.addEventListener("click", openDockDetail);
 selectFoundation();
 if (reduceMotion) document.body.classList.add("ready");
 tick();

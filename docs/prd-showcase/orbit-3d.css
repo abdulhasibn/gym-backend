@@ -273,6 +273,30 @@ body.ready .chrome {
   line-height: 1.4;
 }
 
+.dock-detail-btn {
+  margin-top: 0.85rem;
+  appearance: none;
+  width: 100%;
+  border: 1px solid rgba(227, 194, 132, 0.45);
+  background: rgba(227, 194, 132, 0.12);
+  color: var(--accent);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dock-detail-btn:hover {
+  background: rgba(227, 194, 132, 0.22);
+}
+
+.dock-detail-btn[hidden] {
+  display: none !important;
+}
+
 .hint {
   bottom: clamp(1.25rem, 3vw, 2rem);
   left: clamp(1.25rem, 3vw, 2rem);
