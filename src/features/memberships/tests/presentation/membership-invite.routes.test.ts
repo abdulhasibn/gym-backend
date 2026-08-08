@@ -8,19 +8,34 @@ import { setAuthenticatedActor } from '../../../../presentation/http/context/req
 import { createErrorHandlerMiddleware } from '../../../../presentation/http/errors/error-handler.middleware';
 import type { Logger } from '../../../../shared/logging/logger.port';
 import { FixedClock } from '../../../gym-orgs/tests/fakes/fixed-clock';
+import { AcceptMembershipInviteUseCase } from '../../application/accept-membership-invite.use-case';
 import { CreateMembershipInviteUseCase } from '../../application/create-membership-invite.use-case';
 import { CreateMembershipPlanUseCase } from '../../application/create-membership-plan.use-case';
+import { GetMyDataGrantsUseCase } from '../../application/get-my-data-grants.use-case';
 import { ListMembershipInvitesUseCase } from '../../application/list-membership-invites.use-case';
+import { ListMyMembershipInviteInboxUseCase } from '../../application/list-my-membership-invite-inbox.use-case';
 import { PlanAdminPolicy } from '../../application/plan-admin.policy';
 import { RevokeMembershipInviteUseCase } from '../../application/revoke-membership-invite.use-case';
+import { UpdateMyDataGrantsUseCase } from '../../application/update-my-data-grants.use-case';
 import { DurationDays } from '../../domain/duration-days.value-object';
+import { InviteeEmail } from '../../domain/invitee-email.value-object';
+import { InviteeName } from '../../domain/invitee-name.value-object';
+import { MembershipInvite } from '../../domain/membership-invite.entity';
+import { toMembershipInviteId } from '../../domain/membership-invite-id';
+import { toMembershipPlanId } from '../../domain/membership-plan-id';
 import { PlanName } from '../../domain/plan-name.value-object';
 import { PlanPrice } from '../../domain/plan-price.value-object';
 import { MembershipInviteController } from '../../presentation/membership-invite.controller';
-import { createMembershipInviteRouter } from '../../presentation/membership-invite.routes';
+import {
+  createMembershipInviteClientRouter,
+  createMembershipInviteRouter,
+  createMyDataGrantsRouter,
+} from '../../presentation/membership-invite.routes';
 import { mapMembershipPlanError } from '../../presentation/membership-plan.error-mapper';
 import { FixedLiveGymAdmin } from '../fakes/fixed-live-gym-admin';
+import { InMemoryClientMembershipStore } from '../fakes/in-memory-client-membership.repository';
 import { InMemoryClientUserLookup } from '../fakes/in-memory-client-user-lookup';
+import { InMemoryDataGrantStore } from '../fakes/in-memory-data-grant.store';
 import { InMemoryMembershipInviteStore } from '../fakes/in-memory-membership-invite.repository';
 import { InMemoryMembershipPlanStore } from '../fakes/in-memory-membership-plan.repository';
 
@@ -36,16 +51,29 @@ class SilentLogger implements Logger {
 const gymOrgId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const adminUserId = '11111111-1111-4111-8111-111111111111';
 
+const clientUserId = '22222222-2222-4222-8222-222222222222';
+
 async function createTestApp(roleCode: 'ADMIN' | 'TRAINER' | 'CLIENT' = 'ADMIN') {
   const plans = new InMemoryMembershipPlanStore();
   const invites = new InMemoryMembershipInviteStore();
   const clientUsers = new InMemoryClientUserLookup();
+  const memberships = new InMemoryClientMembershipStore();
+  const grants = new InMemoryDataGrantStore();
   const admins = new FixedLiveGymAdmin();
   // Always seed so plan fixture can be created; request actor role still gates invites.
   admins.seed(toUserId(adminUserId), toGymOrgId(gymOrgId));
   const policy = new PlanAdminPolicy(admins);
   const clock = new FixedClock(new Date('2026-08-08T00:00:00.000Z'));
   invites.setNow(clock.now());
+  invites.seedGymProfile({
+    id: toGymOrgId(gymOrgId),
+    name: 'North Star',
+    address: null,
+    contactPhone: null,
+    contactEmail: null,
+    logoUrl: null,
+    timezone: 'Asia/Kolkata',
+  });
   let n = 0;
   const ids = {
     generate: () => {
@@ -77,15 +105,20 @@ async function createTestApp(roleCode: 'ADMIN' | 'TRAINER' | 'CLIENT' = 'ADMIN')
     new CreateMembershipInviteUseCase(policy, invites, plans, clientUsers, clock, ids),
     new ListMembershipInvitesUseCase(policy, invites),
     new RevokeMembershipInviteUseCase(policy, invites, clock),
+    new ListMyMembershipInviteInboxUseCase(invites),
+    new AcceptMembershipInviteUseCase(invites, clock),
+    new GetMyDataGrantsUseCase(grants),
+    new UpdateMyDataGrantsUseCase(memberships, grants, clock),
   );
 
   const authenticate: RequestHandler = (req, _res, next) => {
+    const isClient = roleCode === 'CLIENT';
     setAuthenticatedActor(req, {
-      userId: toUserId(adminUserId),
+      userId: toUserId(isClient ? clientUserId : adminUserId),
       roleCode,
-      lane: roleCode === 'CLIENT' ? 'CLIENT' : 'STAFF',
-      email: 'admin@example.com',
-      staffCode: 'STF-ADMIN',
+      lane: isClient ? 'CLIENT' : 'STAFF',
+      email: isClient ? 'client@example.com' : 'admin@example.com',
+      staffCode: isClient ? null : 'STF-ADMIN',
     });
     next();
   };
@@ -96,9 +129,11 @@ async function createTestApp(roleCode: 'ADMIN' | 'TRAINER' | 'CLIENT' = 'ADMIN')
     `/gym-orgs/:gymOrgId/membership-invites`,
     createMembershipInviteRouter(controller, authenticate),
   );
+  app.use('/membership-invites', createMembershipInviteClientRouter(controller, authenticate));
+  app.use(`/gym-orgs/:gymOrgId/my-data-grants`, createMyDataGrantsRouter(controller, authenticate));
   app.use(createErrorHandlerMiddleware(new SilentLogger(), [mapMembershipPlanError]));
 
-  return { app, basePlanId: base.id, clientUsers };
+  return { app, basePlanId: base.id, clientUsers, memberships, grants, invites };
 }
 
 describe('membership invite routes', () => {
@@ -175,5 +210,59 @@ describe('membership invite routes', () => {
         basePaymentStatus: 'unpaid',
       })
       .expect(422);
+  });
+
+  it('client inbox accepts invite and manages grants', async () => {
+    const { app, invites, memberships, grants } = await createTestApp('CLIENT');
+
+    const invite = MembershipInvite.create({
+      id: toMembershipInviteId('dddddddd-dddd-4ddd-8ddd-dddddddddddd'),
+      gymOrgId: toGymOrgId(gymOrgId),
+      invitedEmail: InviteeEmail.create('client@example.com'),
+      invitedUserId: toUserId(clientUserId),
+      inviteeName: InviteeName.create('Alex'),
+      inviteePhone: null,
+      basePlanId: toMembershipPlanId('cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+      basePaymentStatus: 'unpaid',
+      addonPlanId: null,
+      addonPaymentStatus: null,
+      expiresAt: new Date('2026-08-22T00:00:00.000Z'),
+      createdBy: toUserId(adminUserId),
+      now: new Date('2026-08-08T00:00:00.000Z'),
+    });
+    await invites.save(invite);
+
+    const inbox = await supertest(app).get('/membership-invites/inbox').expect(200);
+    expect(inbox.body.membershipInvites.total).toBe(1);
+
+    const accepted = await supertest(app)
+      .post(`/membership-invites/${invite.id}/accept`)
+      .send({
+        optionalProfileAttributes: ['GENDER'],
+        optionalClassGrants: ['PROGRESS'],
+      })
+      .expect(200);
+
+    expect(accepted.body.membershipInvite.status).toBe('ACCEPTED');
+    expect(accepted.body.grants.profileAttributes).toEqual(
+      expect.arrayContaining(['DOB', 'HEIGHT', 'WEIGHT', 'GENDER']),
+    );
+
+    memberships.seedActive(toUserId(clientUserId), toGymOrgId(gymOrgId));
+    grants.seedActiveMembership(toUserId(clientUserId), toGymOrgId(gymOrgId));
+    grants.seedRequiredGrants(toUserId(clientUserId), toGymOrgId(gymOrgId));
+
+    const updated = await supertest(app)
+      .put(`/gym-orgs/${gymOrgId}/my-data-grants`)
+      .send({
+        optionalProfileAttributes: ['MEDICAL_NOTES'],
+        optionalClassGrants: ['CALORIES'],
+      })
+      .expect(200);
+
+    expect(updated.body.dataGrants.profileAttributes).toEqual(
+      expect.arrayContaining(['DOB', 'HEIGHT', 'WEIGHT', 'MEDICAL_NOTES']),
+    );
+    expect(updated.body.dataGrants.classGrants).toContain('CALORIES');
   });
 });

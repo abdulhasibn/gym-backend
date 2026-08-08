@@ -1,10 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { ConflictError } from '../../../domain/errors/conflict.error';
 import { NotFoundError } from '../../../domain/errors/not-found.error';
 import { TransientDatabaseFailureError } from '../../../domain/errors/transient-database-failure.error';
 import { UniqueViolationError } from '../../../domain/errors/unique-violation.error';
-import type { GymOrgId } from '../../../domain/shared/gym-org-id';
+import type { UserId } from '../../../domain/shared/user-id';
 import type { Database } from '../../../infrastructure/supabase/database.types';
+import type { GrantChecklist } from '../domain/grant-checklist';
 import type { MembershipInvite } from '../domain/membership-invite.entity';
 import type { MembershipInviteId } from '../domain/membership-invite-id';
 import type { MembershipInviteRepository } from '../domain/membership-invite.repository';
@@ -13,15 +15,11 @@ import { toMembershipInvite } from './membership-invite.mapper';
 export class SupabaseMembershipInviteRepository implements MembershipInviteRepository {
   constructor(private readonly client: SupabaseClient<Database>) {}
 
-  async findById(
-    gymOrgId: GymOrgId,
-    inviteId: MembershipInviteId,
-  ): Promise<MembershipInvite | null> {
+  async findById(inviteId: MembershipInviteId): Promise<MembershipInvite | null> {
     const { data, error } = await this.client
       .from('membership_invites')
       .select('*')
       .eq('id', inviteId)
-      .eq('gym_org_id', gymOrgId)
       .is('deleted_at', null)
       .maybeSingle();
 
@@ -115,5 +113,35 @@ export class SupabaseMembershipInviteRepository implements MembershipInviteRepos
     if (data === null) {
       throw new NotFoundError('Membership invite not found');
     }
+  }
+
+  async accept(
+    inviteId: MembershipInviteId,
+    actorUserId: UserId,
+    checklist: GrantChecklist,
+  ): Promise<MembershipInvite> {
+    const { data, error } = await this.client.rpc('accept_membership_invite', {
+      p_invite_id: inviteId,
+      p_user_id: actorUserId,
+      p_optional_profile_attributes: [...checklist.optionalProfileAttributes],
+      p_optional_class_grants: [...checklist.optionalClassGrants],
+    });
+
+    if (error !== null) {
+      if (error.code === 'P0001') {
+        throw new ConflictError(error.message || 'Unable to accept membership invite');
+      }
+      if (error.code === '23505') {
+        throw new UniqueViolationError('Client already has an ACTIVE membership');
+      }
+      throw new TransientDatabaseFailureError('Unable to accept membership invite', {
+        cause: error,
+      });
+    }
+    if (data === null) {
+      throw new TransientDatabaseFailureError('Membership invite accept returned no result');
+    }
+
+    return toMembershipInvite(data);
   }
 }

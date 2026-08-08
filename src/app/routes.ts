@@ -9,6 +9,8 @@ export function createRouter(
   leadsRouter: RequestHandler,
   membershipPlansRouter: RequestHandler,
   membershipInvitesRouter: RequestHandler,
+  membershipInviteClientRouter: RequestHandler,
+  myDataGrantsRouter: RequestHandler,
 ): Router {
   const router = Router();
 
@@ -20,6 +22,8 @@ export function createRouter(
   router.use('/gym-orgs/:gymOrgId/leads', leadsRouter);
   router.use('/gym-orgs/:gymOrgId/plans', membershipPlansRouter);
   router.use('/gym-orgs/:gymOrgId/membership-invites', membershipInvitesRouter);
+  router.use('/gym-orgs/:gymOrgId/my-data-grants', myDataGrantsRouter);
+  router.use('/membership-invites', membershipInviteClientRouter);
 
   return router;
 }

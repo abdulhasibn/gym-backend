@@ -1662,6 +1662,40 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_membership_invite: {
+        Args: {
+          p_invite_id: string;
+          p_optional_class_grants?: Database['public']['Enums']['data_grant_class'][];
+          p_optional_profile_attributes?: Database['public']['Enums']['profile_attribute'][];
+          p_user_id: string;
+        };
+        Returns: {
+          accepted_at: string | null;
+          accepted_membership_id: string | null;
+          addon_payment_status: Database['public']['Enums']['payment_status'] | null;
+          addon_plan_id: string | null;
+          base_payment_status: Database['public']['Enums']['payment_status'];
+          base_plan_id: string;
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          expires_at: string | null;
+          gym_org_id: string;
+          id: string;
+          invited_email: string;
+          invited_user_id: string | null;
+          invitee_name: string;
+          invitee_phone: string | null;
+          status: Database['public']['Enums']['invite_status'];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'membership_invites';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       accept_staff_invite: {
         Args: {
           p_invite_id: string;

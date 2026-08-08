@@ -1,7 +1,13 @@
+import type { DataGrantClass } from '../domain/data-grant-class';
 import type { MembershipInvite } from '../domain/membership-invite.entity';
-import type { MembershipInviteSummary } from '../domain/membership-invite.queries';
+import type {
+  MembershipInviteGymSummary,
+  MembershipInviteInboxItem,
+  MembershipInviteSummary,
+} from '../domain/membership-invite.queries';
 import type { MembershipInviteStatus } from '../domain/membership-invite-status';
 import type { PaymentStatus } from '../domain/payment-status';
+import type { ProfileAttribute } from '../domain/profile-attribute';
 
 export interface MembershipInviteDto {
   readonly id: string;
@@ -21,6 +27,29 @@ export interface MembershipInviteDto {
   readonly acceptedMembershipId: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
+}
+
+export interface MembershipInviteGymSummaryDto {
+  readonly id: string;
+  readonly name: string;
+  readonly address: string | null;
+  readonly contactPhone: string | null;
+  readonly contactEmail: string | null;
+  readonly logoUrl: string | null;
+  readonly timezone: string;
+}
+
+export interface MembershipInviteInboxItemDto extends MembershipInviteDto {
+  readonly gym: MembershipInviteGymSummaryDto;
+}
+
+export interface AcceptMembershipInviteResultDto {
+  readonly membershipInvite: MembershipInviteDto;
+  readonly membershipId: string | null;
+  readonly grants: {
+    readonly profileAttributes: ProfileAttribute[];
+    readonly classGrants: DataGrantClass[];
+  };
 }
 
 export function toMembershipInviteDto(invite: MembershipInvite): MembershipInviteDto {
@@ -66,5 +95,26 @@ export function toMembershipInviteDtoFromSummary(
     acceptedMembershipId: summary.acceptedMembershipId,
     createdAt: summary.createdAt,
     updatedAt: summary.updatedAt,
+  };
+}
+
+function toGymSummaryDto(gym: MembershipInviteGymSummary): MembershipInviteGymSummaryDto {
+  return {
+    id: gym.id,
+    name: gym.name,
+    address: gym.address,
+    contactPhone: gym.contactPhone,
+    contactEmail: gym.contactEmail,
+    logoUrl: gym.logoUrl,
+    timezone: gym.timezone,
+  };
+}
+
+export function toMembershipInviteInboxItemDto(
+  item: MembershipInviteInboxItem,
+): MembershipInviteInboxItemDto {
+  return {
+    ...toMembershipInviteDtoFromSummary(item),
+    gym: toGymSummaryDto(item.gym),
   };
 }

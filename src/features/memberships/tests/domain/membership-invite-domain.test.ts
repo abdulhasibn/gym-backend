@@ -71,4 +71,34 @@ describe('MembershipInvite domain', () => {
       }),
     ).toThrow(/both be set or both be null/);
   });
+
+  it('accepts by email match when invitedUserId is null', () => {
+    const invite = createPending();
+    expect(() =>
+      invite.assertAcceptableBy(
+        toUserId('22222222-2222-4222-8222-222222222222'),
+        'client@example.com',
+        now,
+      ),
+    ).not.toThrow();
+  });
+
+  it('rejects accept for wrong email or expired invite', () => {
+    const invite = createPending();
+    expect(() =>
+      invite.assertAcceptableBy(
+        toUserId('22222222-2222-4222-8222-222222222222'),
+        'other@example.com',
+        now,
+      ),
+    ).toThrow(MembershipInviteInvalidTransitionError);
+
+    expect(() =>
+      invite.assertAcceptableBy(
+        toUserId('22222222-2222-4222-8222-222222222222'),
+        'client@example.com',
+        new Date('2026-08-23T00:00:00.000Z'),
+      ),
+    ).toThrow(MembershipInviteInvalidTransitionError);
+  });
 });

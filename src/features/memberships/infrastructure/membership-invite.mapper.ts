@@ -6,6 +6,7 @@ import { InviteeEmail } from '../domain/invitee-email.value-object';
 import { InviteeName } from '../domain/invitee-name.value-object';
 import { InviteePhone } from '../domain/invitee-phone.value-object';
 import { MembershipInvite } from '../domain/membership-invite.entity';
+import { toMembershipId } from '../domain/membership-id';
 import { toMembershipInviteId } from '../domain/membership-invite-id';
 import {
   isMembershipInviteStatus,
@@ -43,7 +44,8 @@ export function toMembershipInvite(row: MembershipInviteRow): MembershipInvite {
       expiresAt: row.expires_at === null ? null : toValidDate(row.expires_at),
       createdBy: toUserId(row.created_by),
       acceptedAt: row.accepted_at === null ? null : toValidDate(row.accepted_at),
-      acceptedMembershipId: row.accepted_membership_id,
+      acceptedMembershipId:
+        row.accepted_membership_id === null ? null : toMembershipId(row.accepted_membership_id),
       deletedAt: row.deleted_at === null ? null : toValidDate(row.deleted_at),
       createdAt: toValidDate(row.created_at),
       updatedAt: toValidDate(row.updated_at),

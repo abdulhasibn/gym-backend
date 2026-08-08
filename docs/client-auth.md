@@ -3,7 +3,8 @@
 Brief guide for mobile/web (and AI agents) integrating with the gym Backend API.
 
 **Base URL:** `https://gym-backend-lovat-mu.vercel.app` (prod) or `http://localhost:3000` (local)  
-**Postman:** [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) — request docs + Examples
+**Postman:** [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) — request docs + Examples  
+**Membership join / grants:** [`membership-invites.md`](membership-invites.md)
 
 There is **no separate sign-up**. First successful OTP verify or Google complete **creates** the app user. Later logins return the same user.
 

@@ -3,6 +3,7 @@ import type { UserId } from '../../../domain/shared/user-id';
 import type { InviteeEmail } from './invitee-email.value-object';
 import type { InviteeName } from './invitee-name.value-object';
 import type { InviteePhone } from './invitee-phone.value-object';
+import type { MembershipId } from './membership-id';
 import { MembershipInviteInvalidTransitionError } from './membership-invite-invalid-transition.error';
 import type { MembershipInviteId } from './membership-invite-id';
 import type { MembershipInviteStatus } from './membership-invite-status';
@@ -24,7 +25,7 @@ export interface MembershipInviteData {
   readonly expiresAt: Date | null;
   readonly createdBy: UserId;
   readonly acceptedAt: Date | null;
-  readonly acceptedMembershipId: string | null;
+  readonly acceptedMembershipId: MembershipId | null;
   readonly deletedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -143,7 +144,7 @@ export class MembershipInvite {
     return this.data.acceptedAt;
   }
 
-  get acceptedMembershipId(): string | null {
+  get acceptedMembershipId(): MembershipId | null {
     return this.data.acceptedMembershipId;
   }
 
@@ -163,14 +164,51 @@ export class MembershipInvite {
     return this.data.deletedAt !== null;
   }
 
+  isExpiredAt(now: Date): boolean {
+    return this.data.expiresAt !== null && this.data.expiresAt.getTime() <= now.getTime();
+  }
+
+  markExpired(now: Date): void {
+    this.requirePending('EXPIRED');
+    this.data = {
+      ...this.data,
+      status: 'EXPIRED',
+      updatedAt: now,
+    };
+  }
+
   revoke(now: Date): void {
-    if (this.data.status !== 'PENDING') {
-      throw new MembershipInviteInvalidTransitionError(this.data.status, 'REVOKED');
-    }
+    this.requirePending('REVOKED');
     this.data = {
       ...this.data,
       status: 'REVOKED',
       updatedAt: now,
     };
+  }
+
+  /**
+   * Identity: invited_user_id match, or null invited_user_id with email match.
+   */
+  assertAcceptableBy(actorUserId: UserId, actorEmail: string, now: Date): void {
+    if (this.data.status !== 'PENDING') {
+      throw new MembershipInviteInvalidTransitionError(this.data.status, 'ACCEPTED');
+    }
+    if (this.isExpiredAt(now)) {
+      throw new MembershipInviteInvalidTransitionError(this.data.status, 'ACCEPTED');
+    }
+
+    const emailMatches = this.data.invitedEmail.value === actorEmail.trim().toLowerCase();
+    const addressed =
+      this.data.invitedUserId !== null ? this.data.invitedUserId === actorUserId : emailMatches;
+
+    if (!addressed) {
+      throw new MembershipInviteInvalidTransitionError(this.data.status, 'ACCEPTED');
+    }
+  }
+
+  private requirePending(to: MembershipInviteStatus): void {
+    if (this.data.status !== 'PENDING') {
+      throw new MembershipInviteInvalidTransitionError(this.data.status, to);
+    }
   }
 }

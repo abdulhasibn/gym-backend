@@ -4,8 +4,8 @@
 
 ## Current stage
 
-**Stage:** Stint 1 Phase 2 (membership invites create/list/revoke) shipped.
-Next: Phase 3 client inbox + accept + DataGrants. See
+**Stage:** Stint 1 Phase 3 (client inbox + accept + DataGrants) shipped.
+Next: Phase 4 subscriptions Admin APIs. See
 [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 
 | Area | Status |
@@ -13,8 +13,8 @@ Next: Phase 3 client inbox + accept + DataGrants. See
 | Repo scaffold (Express / TS / Vitest) | Done |
 | Domain glossary / PRD / architecture docs | Done |
 | DBML source of truth (`docs/schema.dbml`) | Done |
-| Supabase project + SQL migrations applied | Done — 16 local; remote includes `accept_staff_invite` |
-| Generated `database.types.ts` | Done — includes `accept_staff_invite` RPC |
+| Supabase project + SQL migrations applied | Done — 17 local; remote includes `accept_staff_invite` + `accept_membership_invite` |
+| Generated `database.types.ts` | Done — includes `accept_staff_invite` + `accept_membership_invite` RPC |
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
 | Food catalog seed | Not started (`food_items` empty) |
@@ -26,8 +26,8 @@ Next: Phase 3 client inbox + accept + DataGrants. See
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
-| Memberships feature (`src/features/memberships`) | Phase 1–2 done — plan catalog + membership invite create/list/revoke; accept/DataGrants/subscriptions/roster not started |
-| Other feature modules under `src/features/*` | Not started — Stint 1 Phases 3–5, then Stints 2–3 |
+| Memberships feature (`src/features/memberships`) | Phase 1–3 done — plan catalog, Admin invites, client inbox/accept + DataGrants; Phase 4 Admin subscription APIs + Phase 5 roster not started |
+| Other feature modules under `src/features/*` | Not started — Stint 1 Phases 4–5, then Stints 2–3 |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
@@ -43,22 +43,22 @@ Next: Phase 3 client inbox + accept + DataGrants. See
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | 32 in `public`, RLS enabled (no policies yet) |
-| Migrations applied | 16 (local file `20260804070000_accept_staff_invite.sql`; remote applied) |
+| Migrations applied | 17 (local file `20260808130426_accept_membership_invite.sql`; remote applied) |
 | Live rows (spot check) | Clean slate — `roles` 4 · `role_permissions` 29 · all other public + `auth.users` 0 (`pnpm db:reset-data -- --yes`) |
 
 ## Next up
 
-1. **Stint 1 Phase 3 — Client invite inbox + accept + DataGrants** (roadmap
-   1.3–1.4).
-2. Then Phase 4 (subscriptions), Phase 5 (roster / offboard / block).
+1. **Stint 1 Phase 4 — Subscriptions Admin APIs** (roadmap 1.5): payment
+   status, start override, later addon attach (accept already snapshots lines).
+2. Then Phase 5 (roster / offboard / block).
 3. Then Stint 2 (attendance, profile/progress, renewals), Stint 3 remainder.
 4. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
 5. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
-6. Manual Postman smoke: Admin OTP → gym → **Plans** BASE → **Membership
-   Invites** create/list/revoke; Leads + STAFF invite paths as before (no
-   committed tokens).
+6. Manual Postman smoke deferred until end of Stint 1 phases (user choice);
+   when run: Admin → Plans BASE → invite → Client inbox/accept + grants.
+
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
 Gmail; App Password rotation (OTP working; rotation skipped for now); push
@@ -66,6 +66,26 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-08 — Membership invites docs + Postman Examples
+
+- Added `docs/membership-invites.md` — Admin create/list/revoke, Client
+  inbox/accept, my-data-grants request/response examples + error codes.
+- Postman **Membership Invites**: saved Examples on all 7 requests; README
+  links to the guide; cloud sync via `putCollection` after git push.
+
+### 2026-08-08 — Stint 1 Phase 3: client inbox + accept + DataGrants
+
+- Extended `src/features/memberships/` for roadmap 1.3–1.4 / PRD C2–C2c:
+  `GET /membership-invites/inbox`, `POST /membership-invites/:id/accept`,
+  `GET`/`PUT /gym-orgs/:gymOrgId/my-data-grants`.
+- Migration `accept_membership_invite` RPC (applied remote): atomic ACTIVE
+  `client_memberships` + base (± addon) subscription snapshots + required
+  DOB/HEIGHT/WEIGHT grants + optional checklist; single-ACTIVE enforced.
+- Domain: invite accept/expiry asserts; `ClientMembership`; grant ports
+  (CQRS). Required grants sticky on PUT. Vitest domain + UC + routes.
+- Deferred: Phase 4 Admin subscription manage APIs; Phase 5 roster/offboard;
+  invite email/push; Postman sync for new client routes (smoke after phases).
 
 ### 2026-08-08 — Stint 1 Phase 2: membership invite create/list/revoke
 

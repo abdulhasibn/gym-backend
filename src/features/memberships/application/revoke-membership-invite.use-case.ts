@@ -22,8 +22,8 @@ export class RevokeMembershipInviteUseCase {
   ): Promise<MembershipInviteDto> {
     await this.policy.requirePlanAccess(actor, gymOrgId);
 
-    const invite = await this.invites.findById(gymOrgId, inviteId);
-    if (invite === null) {
+    const invite = await this.invites.findById(inviteId);
+    if (invite === null || invite.gymOrgId !== gymOrgId) {
       throw new NotFoundError('Membership invite not found');
     }
 

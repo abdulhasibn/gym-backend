@@ -1,10 +1,15 @@
 import { z } from 'zod';
 
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../../../shared/pagination/pagination';
+import { DATA_GRANT_CLASSES, isDataGrantClass } from '../domain/data-grant-class';
 import { InviteeEmail } from '../domain/invitee-email.value-object';
 import { InviteeName } from '../domain/invitee-name.value-object';
 import { InviteePhone } from '../domain/invitee-phone.value-object';
 import { PAYMENT_STATUSES } from '../domain/payment-status';
+import {
+  isOptionalProfileAttribute,
+  OPTIONAL_PROFILE_ATTRIBUTES,
+} from '../domain/profile-attribute';
 
 const inviteeNameSchema = z.string().transform((value, context) => {
   try {
@@ -89,3 +94,47 @@ export const createMembershipInviteSchema = z
     addonPaymentStatus: value.addonPaymentStatus ?? null,
     expiresAt: value.expiresAt,
   }));
+
+const optionalProfileAttributesSchema = z
+  .array(z.enum(OPTIONAL_PROFILE_ATTRIBUTES))
+  .default([])
+  .transform((values, context) => {
+    const unique = [...new Set(values)];
+    for (const value of unique) {
+      if (!isOptionalProfileAttribute(value)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Invalid optional profile attribute: ${value}`,
+        });
+        return z.NEVER;
+      }
+    }
+    return unique;
+  });
+
+const optionalClassGrantsSchema = z
+  .array(z.enum(DATA_GRANT_CLASSES))
+  .default([])
+  .transform((values, context) => {
+    const unique = [...new Set(values)];
+    for (const value of unique) {
+      if (!isDataGrantClass(value)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Invalid class grant: ${value}`,
+        });
+        return z.NEVER;
+      }
+    }
+    return unique;
+  });
+
+export const acceptMembershipInviteSchema = z.object({
+  optionalProfileAttributes: optionalProfileAttributesSchema,
+  optionalClassGrants: optionalClassGrantsSchema,
+});
+
+export const updateMyDataGrantsSchema = z.object({
+  optionalProfileAttributes: optionalProfileAttributesSchema,
+  optionalClassGrants: optionalClassGrantsSchema,
+});
