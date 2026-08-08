@@ -4,8 +4,9 @@
 
 ## Current stage
 
-**Stage:** Stint 1 Phase 1 (plan catalog) shipped. Next: Phase 2 membership
-invites. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+**Stage:** Stint 1 Phase 2 (membership invites create/list/revoke) shipped.
+Next: Phase 3 client inbox + accept + DataGrants. See
+[`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 
 | Area | Status |
 |------|--------|
@@ -25,12 +26,12 @@ invites. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
-| Memberships feature (`src/features/memberships`) | Phase 1 done — plan catalog CRUD (`BASE`/`ADDON` + `TRAINER_COACHING`); invites/accept/subscriptions/roster not started |
-| Other feature modules under `src/features/*` | Not started — Stint 1 Phases 2–5, then Stints 2–3 |
+| Memberships feature (`src/features/memberships`) | Phase 1–2 done — plan catalog + membership invite create/list/revoke; accept/DataGrants/subscriptions/roster not started |
+| Other feature modules under `src/features/*` | Not started — Stint 1 Phases 3–5, then Stints 2–3 |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** + **Leads** + **Plans** |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** + **Leads** + **Plans** + **Membership Invites** |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -47,17 +48,17 @@ invites. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 
 ## Next up
 
-1. **Stint 1 Phase 2 — Membership invites:** create / list / revoke (roadmap 1.2).
-2. Then Phase 3 (inbox + accept + DataGrants), Phase 4 (subscriptions),
-   Phase 5 (roster / offboard / block).
+1. **Stint 1 Phase 3 — Client invite inbox + accept + DataGrants** (roadmap
+   1.3–1.4).
+2. Then Phase 4 (subscriptions), Phase 5 (roster / offboard / block).
 3. Then Stint 2 (attendance, profile/progress, renewals), Stint 3 remainder.
 4. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
 5. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
-6. Manual Postman smoke: Admin OTP → gym → **Plans** create BASE (+ optional
-   ADDON) → list/patch; Leads + STAFF invite paths as before (no committed
-   tokens).
+6. Manual Postman smoke: Admin OTP → gym → **Plans** BASE → **Membership
+   Invites** create/list/revoke; Leads + STAFF invite paths as before (no
+   committed tokens).
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
 Gmail; App Password rotation (OTP working; rotation skipped for now); push
@@ -65,6 +66,21 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-08 — Stint 1 Phase 2: membership invite create/list/revoke
+
+- Extended `src/features/memberships/` with Admin membership invites
+  (PRD A6 / roadmap 1.2): `POST`/`GET`
+  `/gym-orgs/:gymOrgId/membership-invites`,
+  `POST .../:inviteId/revoke`.
+- Domain: `MembershipInvite` PENDING→REVOKED; email normalize; optional
+  CLIENT `invited_user_id` via `ClientUserLookup`; base BASE + optional
+  TRAINER_COACHING ADDON validation on active plans. Authz reuses
+  `PlanAdminPolicy`. No migration — table already applied. No email/push.
+- Vitest domain + use-case + route coverage. Postman folder
+  **Membership Invites**.
+- Deferred: client inbox/accept, DataGrants, subscriptions, roster
+  (Phases 3–5); outbound invite email; A14 lead convert.
 
 ### 2026-08-08 — Postman docs + Examples for Leads and Plans
 

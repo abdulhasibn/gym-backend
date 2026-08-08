@@ -66,7 +66,8 @@ export function composeApp(config: AppConfig): AppDependencies {
       authFeature.router,
       gymOrgFeature.router,
       leadsFeature.router,
-      membershipsFeature.router,
+      membershipsFeature.plansRouter,
+      membershipsFeature.invitesRouter,
     ),
   );
 
