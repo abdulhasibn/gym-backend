@@ -4,9 +4,9 @@
 
 ## Current stage
 
-**Stage:** Stint 1 Phase 3 (client inbox + accept + DataGrants) shipped.
-Next: Phase 4 subscriptions Admin APIs. See
-[`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+**Stage:** Stint 1 Phase 4 core (subscription payment + start override + C10)
+shipped. Next: Phase 5 roster / offboard / block. See
+[`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b addon attach / renew deferred.
 
 | Area | Status |
 |------|--------|
@@ -26,8 +26,8 @@ Next: Phase 4 subscriptions Admin APIs. See
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
-| Memberships feature (`src/features/memberships`) | Phase 1–3 done — plan catalog, Admin invites, client inbox/accept + DataGrants; Phase 4 Admin subscription APIs + Phase 5 roster not started |
-| Other feature modules under `src/features/*` | Not started — Stint 1 Phases 4–5, then Stints 2–3 |
+| Memberships feature (`src/features/memberships`) | Phase 1–4 core done — plans, invites, accept/grants, Admin payment + start override, Client my-subscriptions; A8b attach/renew + Phase 5 roster not started |
+| Other feature modules under `src/features/*` | Not started — Stint 1 Phase 5, then Stints 2–3 |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
@@ -48,16 +48,17 @@ Next: Phase 4 subscriptions Admin APIs. See
 
 ## Next up
 
-1. **Stint 1 Phase 4 — Subscriptions Admin APIs** (roadmap 1.5): payment
-   status, start override, later addon attach (accept already snapshots lines).
-2. Then Phase 5 (roster / offboard / block).
+1. **Stint 1 Phase 5 — Roster** (roadmap 1.6): ACTIVE/INACTIVE roster, trainer
+   assign/reassign (addon-gated), offboard, block check-in.
+2. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
 3. Then Stint 2 (attendance, profile/progress, renewals), Stint 3 remainder.
 4. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
 5. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
 6. Manual Postman smoke deferred until end of Stint 1 phases (user choice);
-   when run: Admin → Plans BASE → invite → Client inbox/accept + grants.
+   when run: Admin → Plans BASE → invite → Client accept → payment/start +
+   my-subscriptions.
 
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
@@ -66,6 +67,52 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-09 — sync-postman skill: Docs + Examples every run
+
+- Updated [`.cursor/skills/sync-postman/SKILL.md`](../.cursor/skills/sync-postman/SKILL.md):
+  mandatory refresh of bullet-list property Docs + saved Examples on every
+  sync; no early exit on structure-only match; Postman tables forbidden.
+- Added `scripts/audit-docs-examples.mjs` (exit 1 on gaps) and
+  `add-subscriptions-folder.mjs`.
+- gym-backend-postman: `29aa1e6` (bullet docs) then `ca849e0` (**Subscriptions**
+  folder — list/payment/start-override/my-subscriptions + Examples).
+- Cloud putCollection async **successful**; Subscriptions verified under folder.
+
+### 2026-08-09 — Stint 1 Phase 4 core: subscription Admin APIs + C10
+
+- Extended `src/features/memberships/` for roadmap 1.5 core / PRD A8, A19, C10:
+  `GET .../clients/:clientUserId/subscriptions`,
+  `PATCH .../subscriptions/:id/payment`,
+  `POST .../subscriptions/:id/start-override`,
+  `GET .../my-subscriptions`.
+- Domain: `Subscription` entity (`setPayment`, `overrideStart` unstarted BASE
+  only); `CalendarDate`; CQRS ports; reuse `PlanAdminPolicy`.
+- No new migration — existing `subscriptions` CHECKs / exclusion (ADR-0004).
+- Vitest domain + UC + routes. Docs: `docs/subscriptions.md`; api/client-auth/
+  product-flows/roadmap/Orbit marked 1.5 core done.
+- Deferred: A8b addon attach, renew-as-new-row, Phase 5 roster, Postman smoke.
+
+### 2026-08-09 — Postman collection property docs
+
+- Synced per-property tables (enums + string examples) into Postman
+  **Gym Backend API** — all 39 requests’ Docs panels + query-param
+  descriptions where applicable.
+- Git export updated in sibling repo `gym-backend-postman`
+  (`Gym-Backend-API.postman_collection.json`, README).
+- Cloud workspace collection updated via Postman API
+  (`updateCollectionRequest`).
+
+### 2026-08-09 — Full API property docs
+
+- Added thin index [`docs/api.md`](api.md) linking all shipped endpoints.
+- Enriched [`docs/client-auth.md`](client-auth.md) and
+  [`docs/membership-invites.md`](membership-invites.md) with per-property
+  tables (request/query/path/response; enums + string examples).
+- New [`docs/leads.md`](leads.md) and [`docs/plans.md`](plans.md) for Admin
+  Mini-CRM and plan catalog (previously Postman-only).
+- Cross-links between api / client-auth / plans / membership-invites / leads.
+- No runtime or schema changes.
 
 ### 2026-08-08 — PRD showcase reading modals + deeper module detail
 

@@ -70,6 +70,9 @@ export function composeApp(config: AppConfig): AppDependencies {
       membershipsFeature.invitesRouter,
       membershipsFeature.inviteClientRouter,
       membershipsFeature.myDataGrantsRouter,
+      membershipsFeature.clientSubscriptionsRouter,
+      membershipsFeature.subscriptionsAdminRouter,
+      membershipsFeature.mySubscriptionsRouter,
     ),
   );
 

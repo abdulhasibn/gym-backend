@@ -11,6 +11,9 @@ export function createRouter(
   membershipInvitesRouter: RequestHandler,
   membershipInviteClientRouter: RequestHandler,
   myDataGrantsRouter: RequestHandler,
+  clientSubscriptionsRouter: RequestHandler,
+  subscriptionsAdminRouter: RequestHandler,
+  mySubscriptionsRouter: RequestHandler,
 ): Router {
   const router = Router();
 
@@ -23,6 +26,9 @@ export function createRouter(
   router.use('/gym-orgs/:gymOrgId/plans', membershipPlansRouter);
   router.use('/gym-orgs/:gymOrgId/membership-invites', membershipInvitesRouter);
   router.use('/gym-orgs/:gymOrgId/my-data-grants', myDataGrantsRouter);
+  router.use('/gym-orgs/:gymOrgId/clients/:clientUserId/subscriptions', clientSubscriptionsRouter);
+  router.use('/gym-orgs/:gymOrgId/subscriptions', subscriptionsAdminRouter);
+  router.use('/gym-orgs/:gymOrgId/my-subscriptions', mySubscriptionsRouter);
   router.use('/membership-invites', membershipInviteClientRouter);
 
   return router;

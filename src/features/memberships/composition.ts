@@ -9,14 +9,18 @@ import { CreateMembershipInviteUseCase } from './application/create-membership-i
 import { CreateMembershipPlanUseCase } from './application/create-membership-plan.use-case';
 import { GetMembershipPlanUseCase } from './application/get-membership-plan.use-case';
 import { GetMyDataGrantsUseCase } from './application/get-my-data-grants.use-case';
+import { ListClientSubscriptionsUseCase } from './application/list-client-subscriptions.use-case';
 import { ListMembershipInvitesUseCase } from './application/list-membership-invites.use-case';
 import { ListMembershipPlansUseCase } from './application/list-membership-plans.use-case';
 import { ListMyMembershipInviteInboxUseCase } from './application/list-my-membership-invite-inbox.use-case';
+import { ListMySubscriptionsUseCase } from './application/list-my-subscriptions.use-case';
+import { OverrideSubscriptionStartUseCase } from './application/override-subscription-start.use-case';
 import { PlanAdminPolicy } from './application/plan-admin.policy';
 import { RevokeMembershipInviteUseCase } from './application/revoke-membership-invite.use-case';
 import { SoftDeleteMembershipPlanUseCase } from './application/soft-delete-membership-plan.use-case';
 import { UpdateMembershipPlanUseCase } from './application/update-membership-plan.use-case';
 import { UpdateMyDataGrantsUseCase } from './application/update-my-data-grants.use-case';
+import { UpdateSubscriptionPaymentUseCase } from './application/update-subscription-payment.use-case';
 import type { LiveGymAdminPort } from './domain/live-gym-admin.port';
 import { SupabaseClientMembershipRepository } from './infrastructure/supabase-client-membership.repository';
 import { SupabaseClientUserLookup } from './infrastructure/supabase-client-user-lookup';
@@ -26,6 +30,8 @@ import { SupabaseMembershipInviteQueries } from './infrastructure/supabase-membe
 import { SupabaseMembershipInviteRepository } from './infrastructure/supabase-membership-invite.repository';
 import { SupabaseMembershipPlanQueries } from './infrastructure/supabase-membership-plan.queries';
 import { SupabaseMembershipPlanRepository } from './infrastructure/supabase-membership-plan.repository';
+import { SupabaseSubscriptionQueries } from './infrastructure/supabase-subscription.queries';
+import { SupabaseSubscriptionRepository } from './infrastructure/supabase-subscription.repository';
 import { MembershipInviteController } from './presentation/membership-invite.controller';
 import {
   createMembershipInviteClientRouter,
@@ -35,6 +41,12 @@ import {
 import { MembershipPlanController } from './presentation/membership-plan.controller';
 import { mapMembershipPlanError } from './presentation/membership-plan.error-mapper';
 import { createMembershipPlanRouter } from './presentation/membership-plan.routes';
+import { SubscriptionController } from './presentation/subscription.controller';
+import {
+  createClientSubscriptionsRouter,
+  createMySubscriptionsRouter,
+  createSubscriptionAdminRouter,
+} from './presentation/subscription.routes';
 
 export function composeMembershipsFeature(
   dataClient: SupabaseClient<Database>,
@@ -51,6 +63,8 @@ export function composeMembershipsFeature(
   const memberships = new SupabaseClientMembershipRepository(dataClient);
   const grantQueries = new SupabaseDataGrantQueries(dataClient);
   const grants = new SupabaseDataGrantRepository(dataClient);
+  const subscriptions = new SupabaseSubscriptionRepository(dataClient);
+  const subscriptionQueries = new SupabaseSubscriptionQueries(dataClient);
   const policy = new PlanAdminPolicy(liveGymAdmin);
 
   const planController = new MembershipPlanController(
@@ -71,11 +85,24 @@ export function composeMembershipsFeature(
     new UpdateMyDataGrantsUseCase(memberships, grants, clock),
   );
 
+  const subscriptionController = new SubscriptionController(
+    new ListClientSubscriptionsUseCase(policy, subscriptionQueries),
+    new ListMySubscriptionsUseCase(subscriptionQueries),
+    new UpdateSubscriptionPaymentUseCase(policy, subscriptions, memberships, clock),
+    new OverrideSubscriptionStartUseCase(policy, subscriptions, memberships, clock),
+  );
+
   return {
     plansRouter: createMembershipPlanRouter(planController, authenticate),
     invitesRouter: createMembershipInviteRouter(inviteController, authenticate),
     inviteClientRouter: createMembershipInviteClientRouter(inviteController, authenticate),
     myDataGrantsRouter: createMyDataGrantsRouter(inviteController, authenticate),
+    clientSubscriptionsRouter: createClientSubscriptionsRouter(
+      subscriptionController,
+      authenticate,
+    ),
+    subscriptionsAdminRouter: createSubscriptionAdminRouter(subscriptionController, authenticate),
+    mySubscriptionsRouter: createMySubscriptionsRouter(subscriptionController, authenticate),
     errorMapper: mapMembershipPlanError,
   };
 }

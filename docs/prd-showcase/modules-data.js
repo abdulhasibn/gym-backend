@@ -131,7 +131,7 @@ window.MODULES_DATA = [
       "Admin-named catalog: kind BASE | ADDON + capability — API live",
       "Base subscription required; Trainer addon optional — snapshot on accept live",
       "Price/duration snapshot on each subscription line — on accept",
-      "Payment status per line: paid / unpaid / partial — Admin APIs next (1.5)",
+      "Payment status per line: paid / unpaid / partial — Admin APIs live (1.5 core)",
       "Base start: first attendance | override; addon: attach day — next (1.5)",
       "Renewals: new row per period; T-2 for base + addon",
       "Daily Admin nudge for unpaid / partial lines",

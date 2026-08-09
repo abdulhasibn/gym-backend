@@ -7,7 +7,7 @@
 
 This document describes **what people do**, **what they see**, **what is blocked**, and **how screens connect**. It is organized by domain module (M1–M13). Cross-cutting rules that affect every screen appear first.
 
-**API delivery (backend):** Auth + gym-orgs + Mini-CRM A11–A13 + membership plan catalog + Admin membership invites + Client inbox/accept + DataGrants are **live**. Next: Admin subscription manage (1.5) then roster (1.6). See [`PROGRESS.md`](PROGRESS.md), [`client-auth.md`](client-auth.md), [`membership-invites.md`](membership-invites.md), Orbit at [gym-prd-visual.vercel.app/#orbit](https://gym-prd-visual.vercel.app/#orbit).
+**API delivery (backend):** Auth + gym-orgs + Mini-CRM A11–A13 + membership plan catalog + Admin membership invites + Client inbox/accept + DataGrants + subscription payment/start override + Client subscription list are **live**. Next: roster (1.6). See [`PROGRESS.md`](PROGRESS.md), [`client-auth.md`](client-auth.md), [`membership-invites.md`](membership-invites.md), [`subscriptions.md`](subscriptions.md), Orbit at [gym-prd-visual.vercel.app/#orbit](https://gym-prd-visual.vercel.app/#orbit).
 
 ---
 
@@ -317,7 +317,7 @@ C2, C2b, C2c, C3, A3, A4, A6, A15, A17, A18 · no shadow profiles · no open joi
 
 Catalog of BASE/ADDON plans; subscription lines with snapshotted price; renewals; payment status tracking (no gateway).
 
-**API status:** Plan catalog CRUD **shipped**. Accept already creates snapshotted subscription lines. Admin payment/start override APIs are **next** (roadmap 1.5). Renewals inbox / unpaid digest later.
+**API status:** Plan catalog CRUD **shipped**. Accept creates snapshotted lines. Admin payment/start override + Client list **shipped** (roadmap 1.5 core; A8b attach/renew deferred). Renewals inbox / unpaid digest later.
 
 ### Screens (Admin web)
 
