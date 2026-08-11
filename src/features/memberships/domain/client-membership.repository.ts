@@ -10,4 +10,6 @@ export interface ClientMembershipRepository {
     clientUserId: UserId,
     gymOrgId: GymOrgId,
   ): Promise<ClientMembership | null>;
+
+  save(membership: ClientMembership): Promise<void>;
 }

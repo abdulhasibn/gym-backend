@@ -7,7 +7,7 @@
 
 This document describes **what people do**, **what they see**, **what is blocked**, and **how screens connect**. It is organized by domain module (M1–M13). Cross-cutting rules that affect every screen appear first.
 
-**API delivery (backend):** Auth + gym-orgs + Mini-CRM A11–A13 + membership plan catalog + Admin membership invites + Client inbox/accept + DataGrants + subscription payment/start override + Client subscription list are **live**. Next: roster (1.6). See [`PROGRESS.md`](PROGRESS.md), [`client-auth.md`](client-auth.md), [`membership-invites.md`](membership-invites.md), [`subscriptions.md`](subscriptions.md), Orbit at [gym-prd-visual.vercel.app/#orbit](https://gym-prd-visual.vercel.app/#orbit).
+**API delivery (backend):** Auth + gym-orgs + Mini-CRM A11–A13 + membership plan catalog + Admin membership invites + Client inbox/accept + DataGrants + subscription payment/start override + Client subscription list + roster / assign / offboard / block are **live**. Next: Stint 2. See [`PROGRESS.md`](PROGRESS.md), [`client-auth.md`](client-auth.md), [`membership-invites.md`](membership-invites.md), [`subscriptions.md`](subscriptions.md), [`roster.md`](roster.md), Orbit at [gym-prd-visual.vercel.app/#orbit](https://gym-prd-visual.vercel.app/#orbit).
 
 ---
 
@@ -222,7 +222,7 @@ A1, A2, A2b · timezone for all calendar-day displays · single-gym UI.
 
 Invite → accept → ACTIVE membership; roster; trainer assignment; DataGrants; offboard; block check-in.
 
-**API status:** Admin invite create/list/revoke, Client inbox/accept, and Client `my-data-grants` GET/PUT are **shipped**. Roster, trainer assign, offboard, and block check-in are **not yet** (Stint 1.6). Integration: [`membership-invites.md`](membership-invites.md).
+**API status:** Admin invite create/list/revoke, Client inbox/accept, Client `my-data-grants`, and Phase 5 roster / assign / offboard / block are **shipped**. Integration: [`membership-invites.md`](membership-invites.md) · [`roster.md`](roster.md).
 
 ### Screens
 

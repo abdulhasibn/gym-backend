@@ -8,6 +8,7 @@ import { composeAuthFeature } from '../features/auth/composition';
 import { composeGymOrgFeature } from '../features/gym-orgs/composition';
 import { composeLeadsFeature } from '../features/leads/composition';
 import { composeMembershipsFeature } from '../features/memberships/composition';
+import { toTrainerProfileId } from '../features/memberships/domain/trainer-profile-id';
 import { createLogger } from '../infrastructure/logging/logger';
 import { createRequestLoggerMiddleware } from '../infrastructure/logging/request-logger.middleware';
 import type { Database } from '../infrastructure/supabase/database.types';
@@ -50,9 +51,19 @@ export function composeApp(config: AppConfig): AppDependencies {
   const leadsFeature = composeLeadsFeature(supabaseClient, authFeature.authenticate, {
     isLiveAdmin: gymOrgFeature.isLiveAdmin,
   });
-  const membershipsFeature = composeMembershipsFeature(supabaseClient, authFeature.authenticate, {
-    isLiveAdmin: gymOrgFeature.isLiveAdmin,
-  });
+  const membershipsFeature = composeMembershipsFeature(
+    supabaseClient,
+    authFeature.authenticate,
+    { isLiveAdmin: gymOrgFeature.isLiveAdmin },
+    {
+      findLiveProfileId: async (userId, gymOrgId) => {
+        const id = await gymOrgFeature.findLiveTrainerProfileId(userId, gymOrgId);
+        return id === null ? null : toTrainerProfileId(id);
+      },
+      isLiveAtGym: (trainerProfileId, gymOrgId) =>
+        gymOrgFeature.isLiveTrainerProfile(trainerProfileId, gymOrgId),
+    },
+  );
 
   const app = express();
 
@@ -73,6 +84,8 @@ export function composeApp(config: AppConfig): AppDependencies {
       membershipsFeature.clientSubscriptionsRouter,
       membershipsFeature.subscriptionsAdminRouter,
       membershipsFeature.mySubscriptionsRouter,
+      membershipsFeature.membersRouter,
+      membershipsFeature.myAssignedMembersRouter,
     ),
   );
 

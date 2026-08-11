@@ -161,6 +161,17 @@ export class Subscription {
     return this.data.deletedAt !== null;
   }
 
+  /** Inclusive calendar-day range; false when unstarted (null dates). */
+  isInDate(today: CalendarDate): boolean {
+    if (this.data.deletedAt !== null) {
+      return false;
+    }
+    if (this.data.startDate === null || this.data.endDate === null) {
+      return false;
+    }
+    return this.data.startDate.value <= today.value && today.value <= this.data.endDate.value;
+  }
+
   /**
    * Update payment fields. For `paid` / `unpaid`, amount is derived from snapshotted price.
    * For `partial`, `amountPaid` is required.

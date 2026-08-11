@@ -1751,6 +1751,33 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      offboard_client_membership: {
+        Args: {
+          p_gym_org_id: string;
+          p_membership_id: string;
+          p_now?: string;
+        };
+        Returns: {
+          assigned_trainer_id: string | null;
+          check_in_blocked: boolean;
+          client_user_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          gym_org_id: string;
+          id: string;
+          joined_at: string;
+          left_at: string | null;
+          source_invite_id: string | null;
+          status: Database['public']['Enums']['membership_status'];
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'client_memberships';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
     };
     Enums: {
       account_lane: 'CLIENT' | 'STAFF';

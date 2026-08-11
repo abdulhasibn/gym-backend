@@ -6,8 +6,10 @@ import { ClientMembership } from '../domain/client-membership.entity';
 import { toMembershipId } from '../domain/membership-id';
 import { toMembershipInviteId } from '../domain/membership-invite-id';
 import { isMembershipStatus, type MembershipStatus } from '../domain/membership-status';
+import { toTrainerProfileId } from '../domain/trainer-profile-id';
 
 type ClientMembershipRow = Database['public']['Tables']['client_memberships']['Row'];
+type ClientMembershipUpdate = Database['public']['Tables']['client_memberships']['Update'];
 
 export function toClientMembership(row: ClientMembershipRow): ClientMembership {
   try {
@@ -21,6 +23,8 @@ export function toClientMembership(row: ClientMembershipRow): ClientMembership {
       gymOrgId: toGymOrgId(row.gym_org_id),
       status: row.status as MembershipStatus,
       checkInBlocked: row.check_in_blocked,
+      assignedTrainerId:
+        row.assigned_trainer_id === null ? null : toTrainerProfileId(row.assigned_trainer_id),
       sourceInviteId:
         row.source_invite_id === null ? null : toMembershipInviteId(row.source_invite_id),
       joinedAt: toValidDate(row.joined_at),
@@ -32,6 +36,16 @@ export function toClientMembership(row: ClientMembershipRow): ClientMembership {
   } catch (error) {
     throw new DataIntegrityError('Stored client membership is invalid', { cause: error });
   }
+}
+
+export function toClientMembershipUpdate(membership: ClientMembership): ClientMembershipUpdate {
+  return {
+    status: membership.status,
+    check_in_blocked: membership.checkInBlocked,
+    assigned_trainer_id: membership.assignedTrainerId,
+    left_at: membership.leftAt?.toISOString() ?? null,
+    updated_at: membership.updatedAt.toISOString(),
+  };
 }
 
 function toValidDate(value: string): Date {

@@ -19,7 +19,7 @@ updating this file + Progress + Orbit `roadmap-data.js`.
 ```
 Foundation (shipped)
   → Pull-forward: Mini-CRM A11–A13 (shipped)
-  → Stint 1 Open the Floor — 1.1–1.5 core shipped; next 1.6
+  → Stint 1 Open the Floor — 1.1–1.6 shipped; next Stint 2
   → Stint 2 Run the Desk
   → Stint 3 Keep Them Coming (CRM remainder + rest)
 ```
@@ -68,7 +68,7 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 
 **Outcome:** Admin can sell a plan, invite a client, client can accept with grants; gym has a live roster.
 
-**Current:** 1.1–1.5 core shipped (payment + start override + C10). Next: **1.6** roster. A8b addon attach / renew deferred within 1.5.
+**Current:** 1.1–1.6 shipped (roster / offboard / block). Next: Stint 2. A8b addon attach / renew deferred within 1.5.
 
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
@@ -77,11 +77,11 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 | 1.3 | Client invite inbox + accept → ACTIVE membership | `memberships` | C2 | Gym-owned | Done |
 | 1.4 | DataGrants on accept (required DOB/HEIGHT/WEIGHT) + manage while ACTIVE | `memberships` | C2b, C2c | Client consent | Done |
 | 1.5 | Subscriptions: Admin payment status + start override + Client list. Accept already snapshots lines. Addon attach / renew deferred. | `memberships` | A8, A19, C10 (A8b later) | Gym-owned | Done (core) |
-| 1.6 | Roster + trainer assign/reassign (addon-gated) + offboard + block check-in | `memberships` | A3, A4, A15, A18, C3 | Gym-owned | Todo |
+| 1.6 | Roster + trainer assign/reassign (addon-gated) + offboard + block check-in | `memberships` | A3, A4, A15, A18, C3 | Gym-owned | Done |
 
 **Exit criteria:** Staff OTP → create org → create BASE plan → invite client → client accept + grants → roster shows ACTIVE; single-ACTIVE invariant enforced.
 
-**Client integration (shipped through 1.5 core):** [`client-auth.md`](client-auth.md) · [`membership-invites.md`](membership-invites.md) · [`subscriptions.md`](subscriptions.md)
+**Client integration (shipped through 1.6):** [`client-auth.md`](client-auth.md) · [`membership-invites.md`](membership-invites.md) · [`subscriptions.md`](subscriptions.md) · [`roster.md`](roster.md)
 
 ---
 

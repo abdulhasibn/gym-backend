@@ -27,7 +27,7 @@ Keep **cloud** and **git export** aligned. Every feature = one top-level folder.
 | Workspace | My Workspace `0d0a265c-cd52-4ef5-88f5-89836cf412d1` |
 | Git export | `../gym-backend-postman/Gym-Backend-API.postman_collection.json` |
 | MCP (working) | `user-postman_mcp_server` |
-| Backend guides | `docs/api.md`, `docs/client-auth.md`, `docs/plans.md`, `docs/membership-invites.md`, `docs/leads.md` |
+| Backend guides | `docs/api.md`, `docs/client-auth.md`, `docs/plans.md`, `docs/membership-invites.md`, `docs/subscriptions.md`, `docs/roster.md`, `docs/leads.md` |
 
 Do **not** use `plugin-postman-postman` for writes unless auth is confirmed (folder APIs often 403).
 

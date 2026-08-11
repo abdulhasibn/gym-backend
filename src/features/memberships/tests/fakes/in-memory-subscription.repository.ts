@@ -1,11 +1,12 @@
 import type { GymOrgId } from '../../../../domain/shared/gym-org-id';
 import type { UserId } from '../../../../domain/shared/user-id';
+import { toSubscriptionDto } from '../../application/subscription.dto';
+import type { CalendarDate } from '../../domain/calendar-date.value-object';
 import type { MembershipId } from '../../domain/membership-id';
 import type { Subscription } from '../../domain/subscription.entity';
 import type { SubscriptionId } from '../../domain/subscription-id';
 import type { SubscriptionQueries, SubscriptionSummary } from '../../domain/subscription.queries';
 import type { SubscriptionRepository } from '../../domain/subscription.repository';
-import { toSubscriptionDto } from '../../application/subscription.dto';
 
 export class InMemorySubscriptionStore implements SubscriptionRepository, SubscriptionQueries {
   private readonly byId = new Map<string, Subscription>();
@@ -31,6 +32,24 @@ export class InMemorySubscriptionStore implements SubscriptionRepository, Subscr
       return null;
     }
     return subscription;
+  }
+
+  async findInDateCoachingAddon(
+    gymOrgId: GymOrgId,
+    membershipId: MembershipId,
+    today: CalendarDate,
+  ): Promise<Subscription | null> {
+    return (
+      [...this.byId.values()].find(
+        (s) =>
+          s.gymOrgId === gymOrgId &&
+          s.clientMembershipId === membershipId &&
+          !s.isDeleted &&
+          s.kind === 'ADDON' &&
+          s.capability === 'TRAINER_COACHING' &&
+          s.isInDate(today),
+      ) ?? null
+    );
   }
 
   async save(subscription: Subscription): Promise<void> {

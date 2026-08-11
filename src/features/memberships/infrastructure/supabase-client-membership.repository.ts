@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { NotFoundError } from '../../../domain/errors/not-found.error';
 import { TransientDatabaseFailureError } from '../../../domain/errors/transient-database-failure.error';
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { UserId } from '../../../domain/shared/user-id';
@@ -7,7 +8,7 @@ import type { Database } from '../../../infrastructure/supabase/database.types';
 import type { ClientMembership } from '../domain/client-membership.entity';
 import type { ClientMembershipRepository } from '../domain/client-membership.repository';
 import type { MembershipId } from '../domain/membership-id';
-import { toClientMembership } from './client-membership.mapper';
+import { toClientMembership, toClientMembershipUpdate } from './client-membership.mapper';
 
 export class SupabaseClientMembershipRepository implements ClientMembershipRepository {
   constructor(private readonly client: SupabaseClient<Database>) {}
@@ -56,5 +57,25 @@ export class SupabaseClientMembershipRepository implements ClientMembershipRepos
     }
 
     return toClientMembership(data);
+  }
+
+  async save(membership: ClientMembership): Promise<void> {
+    const { data, error } = await this.client
+      .from('client_memberships')
+      .update(toClientMembershipUpdate(membership))
+      .eq('id', membership.id)
+      .eq('gym_org_id', membership.gymOrgId)
+      .is('deleted_at', null)
+      .select('id')
+      .maybeSingle();
+
+    if (error !== null) {
+      throw new TransientDatabaseFailureError('Unable to save client membership', {
+        cause: error,
+      });
+    }
+    if (data === null) {
+      throw new NotFoundError('Client membership not found');
+    }
   }
 }

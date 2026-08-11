@@ -11,6 +11,7 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | [`plans.md`](plans.md) | Membership plan catalog (Admin) |
 | [`membership-invites.md`](membership-invites.md) | Membership invites, accept, DataGrants |
 | [`subscriptions.md`](subscriptions.md) | Subscription payment, start override, Client list |
+| [`roster.md`](roster.md) | Roster, trainer assign, offboard, check-in block |
 | [`leads.md`](leads.md) | Mini-CRM leads |
 
 ---
@@ -98,6 +99,16 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | `POST` | `/gym-orgs/:gymOrgId/subscriptions/:subscriptionId/start-override` | [subscriptions § Start override](subscriptions.md#admin--start-override-a19) |
 | `GET` | `/gym-orgs/:gymOrgId/my-subscriptions` | [subscriptions § Client list](subscriptions.md#client--my-subscriptions-c10) |
 
+### Roster
+
+| Method | Path | Guide |
+|--------|------|-------|
+| `GET` | `/gym-orgs/:gymOrgId/members` | [roster § Admin list](roster.md#admin--list-gym-members) |
+| `GET` | `/gym-orgs/:gymOrgId/my-assigned-members` | [roster § Assigned](roster.md#trainer--assigned-members) |
+| `POST` | `/gym-orgs/:gymOrgId/members/:membershipId/assign-trainer` | [roster § Assign](roster.md#admin--assign--reassign-trainer) |
+| `POST` | `/gym-orgs/:gymOrgId/members/:membershipId/offboard` | [roster § Offboard](roster.md#admin--offboard) |
+| `PATCH` | `/gym-orgs/:gymOrgId/members/:membershipId/check-in-block` | [roster § Block](roster.md#admin--block--unblock-check-in) |
+
 ### Leads
 
 | Method | Path | Guide |
@@ -114,4 +125,4 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 
 ## Not shipped yet
 
-Admin subscription manage, roster / offboard / block, attendance, client profile/progress, renewals, coaching, calories, health sync, push — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
+Attendance, client profile/progress, renewals, coaching, calories, health sync, push, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).

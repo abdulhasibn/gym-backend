@@ -4,17 +4,17 @@
 
 ## Current stage
 
-**Stage:** Stint 1 Phase 4 core (subscription payment + start override + C10)
-shipped. Next: Phase 5 roster / offboard / block. See
-[`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b addon attach / renew deferred.
+**Stage:** Stint 1 Phase 5 (roster / assign / offboard / block check-in)
+shipped. Next: Stint 2. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+A8b addon attach / renew deferred within 1.5.
 
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
 | Domain glossary / PRD / architecture docs | Done |
 | DBML source of truth (`docs/schema.dbml`) | Done |
-| Supabase project + SQL migrations applied | Done — 17 local; remote includes `accept_staff_invite` + `accept_membership_invite` |
-| Generated `database.types.ts` | Done — includes `accept_staff_invite` + `accept_membership_invite` RPC |
+| Supabase project + SQL migrations applied | Done — 18 local; remote includes `offboard_client_membership` (MCP verified) |
+| Generated `database.types.ts` | Done — includes `offboard_client_membership` RPC |
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
 | Food catalog seed | Not started (`food_items` empty) |
@@ -26,12 +26,12 @@ shipped. Next: Phase 5 roster / offboard / block. See
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
-| Memberships feature (`src/features/memberships`) | Phase 1–4 core done — plans, invites, accept/grants, Admin payment + start override, Client my-subscriptions; A8b attach/renew + Phase 5 roster not started |
-| Other feature modules under `src/features/*` | Not started — Stint 1 Phase 5, then Stints 2–3 |
+| Memberships feature (`src/features/memberships`) | Phase 1–5 done — plans, invites, accept/grants, subscriptions core, roster/assign/offboard/block; A8b attach/renew deferred |
+| Other feature modules under `src/features/*` | Not started — Stint 2 (attendance, …) then Stint 3 |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders **Gym Orgs** + **Staff Invites** + **Leads** + **Plans** + **Membership Invites** |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Roster** (1.6) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -43,22 +43,22 @@ shipped. Next: Phase 5 roster / offboard / block. See
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | 32 in `public`, RLS enabled (no policies yet) |
-| Migrations applied | 17 (local file `20260808130426_accept_membership_invite.sql`; remote applied) |
+| Migrations applied | 18 — remote `20260811140712_offboard_client_membership` (function live; service_role EXECUTE) |
 | Live rows (spot check) | Clean slate — `roles` 4 · `role_permissions` 29 · all other public + `auth.users` 0 (`pnpm db:reset-data -- --yes`) |
 
 ## Next up
 
-1. **Stint 1 Phase 5 — Roster** (roadmap 1.6): ACTIVE/INACTIVE roster, trainer
-   assign/reassign (addon-gated), offboard, block check-in.
+1. **Stint 2** — attendance check-in / desk mark (uses `check_in_blocked`),
+   profile/progress, renewals due-list.
 2. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
-3. Then Stint 2 (attendance, profile/progress, renewals), Stint 3 remainder.
+3. Then Stint 3 remainder (coaching, calories, health sync, notifications).
 4. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
 5. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
-6. Manual Postman smoke deferred until end of Stint 1 phases (user choice);
-   when run: Admin → Plans BASE → invite → Client accept → payment/start +
-   my-subscriptions.
+6. Manual Postman smoke still optional (user choice); collection includes
+   Roster. Flow: Admin → Plans → invite → accept → payment/start → roster +
+   assign / offboard / block.
 
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
@@ -67,6 +67,27 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-11 — Postman: Roster folder (1.6)
+
+- gym-backend-postman `431dd36`: top-level **Roster** — List Gym Members,
+  List My Assigned Members, Assign Trainer, Offboard Member, Set Check-in
+  Block (bullet Docs + Examples); var `trainerProfileId`.
+- Audit `gapCount: 0`. Cloud putCollection async successful; Roster verified.
+
+### 2026-08-09 — Stint 1 Phase 5: roster / assign / offboard / block
+
+- Extended `src/features/memberships/` for roadmap 1.6 / PRD A3, A4, A15, A18,
+  C3: `GET .../members`, `GET .../my-assigned-members`,
+  `POST .../members/:id/assign-trainer`, `POST .../offboard`,
+  `PATCH .../check-in-block`.
+- Domain: `ClientMembership` transitions + `assignedTrainerId`;
+  `Subscription.isInDate` + coaching-addon command lookup; `LiveTrainerProfilePort`
+  wired from gym-orgs at composition-root.
+- Migration: `offboard_client_membership` RPC (INACTIVE + clear all grants).
+- Vitest domain + UC + routes. Docs: `docs/roster.md`; api / invites / roadmap.
+- Deferred: A8b attach/renew; attendance enforcement of block; push; Postman
+  roster folder. Remote `offboard_client_membership` verified via MCP.
 
 ### 2026-08-09 — sync-postman skill: Docs + Examples every run
 

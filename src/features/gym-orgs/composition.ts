@@ -22,6 +22,7 @@ import { SupabaseGymOrgRepository } from './infrastructure/supabase-gym-org.repo
 import { SupabaseStaffInviteQueries } from './infrastructure/supabase-staff-invite.queries';
 import { SupabaseStaffInviteRepository } from './infrastructure/supabase-staff-invite.repository';
 import { SupabaseStaffUserLookup } from './infrastructure/supabase-staff-user-lookup';
+import { SupabaseTrainerProfileDirectory } from './infrastructure/supabase-trainer-profile.directory';
 import { GymOrgController } from './presentation/gym-org.controller';
 import { mapGymOrgError } from './presentation/gym-org.error-mapper';
 import { createGymOrgRouter } from './presentation/gym-org.routes';
@@ -34,6 +35,7 @@ export function composeGymOrgFeature(
   const ids = new UuidIdGenerator();
   const gymOrgs = new SupabaseGymOrgRepository(dataClient);
   const gymOrgQueries = new SupabaseGymOrgQueries(dataClient);
+  const trainerProfiles = new SupabaseTrainerProfileDirectory(dataClient);
   const staffInvites = new SupabaseStaffInviteRepository(dataClient);
   const staffInviteQueries = new SupabaseStaffInviteQueries(dataClient);
   const staffUsers = new SupabaseStaffUserLookup(dataClient);
@@ -55,5 +57,9 @@ export function composeGymOrgFeature(
     router: createGymOrgRouter(controller, authenticate),
     errorMapper: mapGymOrgError,
     isLiveAdmin: (userId: UserId, gymOrgId: GymOrgId) => gymOrgs.isLiveAdmin(userId, gymOrgId),
+    findLiveTrainerProfileId: (userId: UserId, gymOrgId: GymOrgId) =>
+      trainerProfiles.findLiveTrainerProfileId(userId, gymOrgId),
+    isLiveTrainerProfile: (trainerProfileId: string, gymOrgId: GymOrgId) =>
+      trainerProfiles.isLiveTrainerProfile(trainerProfileId, gymOrgId),
   };
 }

@@ -1,8 +1,10 @@
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { UserId } from '../../../domain/shared/user-id';
+import { ClientMembershipInvalidTransitionError } from './client-membership-invalid-transition.error';
 import type { MembershipId } from './membership-id';
 import type { MembershipInviteId } from './membership-invite-id';
 import type { MembershipStatus } from './membership-status';
+import type { TrainerProfileId } from './trainer-profile-id';
 
 export interface ClientMembershipData {
   readonly id: MembershipId;
@@ -10,6 +12,7 @@ export interface ClientMembershipData {
   readonly gymOrgId: GymOrgId;
   readonly status: MembershipStatus;
   readonly checkInBlocked: boolean;
+  readonly assignedTrainerId: TrainerProfileId | null;
   readonly sourceInviteId: MembershipInviteId | null;
   readonly joinedAt: Date;
   readonly leftAt: Date | null;
@@ -36,6 +39,7 @@ export class ClientMembership {
       gymOrgId: input.gymOrgId,
       status: 'ACTIVE',
       checkInBlocked: false,
+      assignedTrainerId: null,
       sourceInviteId: input.sourceInviteId,
       joinedAt: input.now,
       leftAt: null,
@@ -69,6 +73,10 @@ export class ClientMembership {
     return this.data.checkInBlocked;
   }
 
+  get assignedTrainerId(): TrainerProfileId | null {
+    return this.data.assignedTrainerId;
+  }
+
   get sourceInviteId(): MembershipInviteId | null {
     return this.data.sourceInviteId;
   }
@@ -99,5 +107,57 @@ export class ClientMembership {
 
   get isActive(): boolean {
     return this.data.status === 'ACTIVE' && this.data.deletedAt === null;
+  }
+
+  offboard(now: Date): void {
+    this.requireActiveMutable('offboard');
+    this.data = {
+      ...this.data,
+      status: 'INACTIVE',
+      leftAt: now,
+      updatedAt: now,
+    };
+  }
+
+  assignTrainer(trainerProfileId: TrainerProfileId, now: Date): void {
+    this.requireActiveMutable('assign trainer');
+    this.data = {
+      ...this.data,
+      assignedTrainerId: trainerProfileId,
+      updatedAt: now,
+    };
+  }
+
+  blockCheckIn(now: Date): void {
+    this.requireActiveMutable('block check-in');
+    if (this.data.checkInBlocked) {
+      return;
+    }
+    this.data = {
+      ...this.data,
+      checkInBlocked: true,
+      updatedAt: now,
+    };
+  }
+
+  unblockCheckIn(now: Date): void {
+    this.requireActiveMutable('unblock check-in');
+    if (!this.data.checkInBlocked) {
+      return;
+    }
+    this.data = {
+      ...this.data,
+      checkInBlocked: false,
+      updatedAt: now,
+    };
+  }
+
+  private requireActiveMutable(action: string): void {
+    if (this.data.deletedAt !== null) {
+      throw new ClientMembershipInvalidTransitionError(`Cannot ${action} a deleted membership`);
+    }
+    if (this.data.status !== 'ACTIVE') {
+      throw new ClientMembershipInvalidTransitionError(`Cannot ${action} an inactive membership`);
+    }
   }
 }

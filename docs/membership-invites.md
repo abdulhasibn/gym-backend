@@ -420,7 +420,8 @@ Common codes: `AUTHENTICATION_FAILED` · `PLAN_FORBIDDEN` · `MEMBERSHIP_INVITE_
 
 ## Not in this slice
 
-- Admin subscription manage (payment/start override / later addon) — Phase 4  
-- Roster / offboard / block — Phase 5  
+- Addon attach / renew (A8b) — deferred within 1.5  
 - Invite email/push delivery; writing vitals into `client_profiles`  
-- Lead convert → prefilled invite (A14)
+- Lead convert → prefilled invite (A14)  
+
+Roster / offboard / block: [`roster.md`](roster.md).
