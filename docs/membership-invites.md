@@ -6,7 +6,7 @@ Brief guide for Admin/Client apps (and AI agents) integrating join + consent API
 **API index:** [`api.md`](api.md)  
 **Postman:** [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) → folder **Membership Invites** (request docs + Examples)  
 **Auth / CLIENT surface map:** [`client-auth.md`](client-auth.md) · **Plans (prereq):** [`plans.md`](plans.md) · **Leads:** [`leads.md`](leads.md)  
-**Status:** Stint 1.1–1.4 shipped; subscriptions manage in [`subscriptions.md`](subscriptions.md) ([`MVP_ROADMAP.md`](MVP_ROADMAP.md) · [`PROGRESS.md`](PROGRESS.md))
+**Status:** Stint 1.1–1.4 shipped (this guide). Subscriptions: [`subscriptions.md`](subscriptions.md). Roster: [`roster.md`](roster.md). ([`MVP_ROADMAP.md`](MVP_ROADMAP.md) · [`PROGRESS.md`](PROGRESS.md))
 
 Join is **Admin invite only** — no open gym codes. Accept creates an ACTIVE membership (+ subscription snapshots). DataGrants gate staff visibility of Client-owned profile/class data ([ADR-0002](adr/0002-client-owned-records-and-data-grants.md)).
 

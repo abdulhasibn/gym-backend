@@ -5,7 +5,7 @@ Brief guide for mobile/web (and AI agents) integrating with the gym Backend API.
 **Base URL:** `https://gym-backend-lovat-mu.vercel.app` (prod) or `http://localhost:3000` (local)  
 **API index:** [`api.md`](api.md)  
 **Postman:** [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) — request docs + Examples  
-**Plans:** [`plans.md`](plans.md) · **Membership join / grants:** [`membership-invites.md`](membership-invites.md) · **Subscriptions:** [`subscriptions.md`](subscriptions.md) · **Leads:** [`leads.md`](leads.md)  
+**Plans:** [`plans.md`](plans.md) · **Membership join / grants:** [`membership-invites.md`](membership-invites.md) · **Subscriptions:** [`subscriptions.md`](subscriptions.md) · **Roster (staff):** [`roster.md`](roster.md) · **Leads:** [`leads.md`](leads.md)  
 **Roadmap / status:** [`MVP_ROADMAP.md`](MVP_ROADMAP.md) · [`PROGRESS.md`](PROGRESS.md)
 
 There is **no separate sign-up**. First successful OTP verify or Google complete **creates** the app user. Later logins return the same user.
@@ -25,7 +25,7 @@ Use lane `CLIENT` on first provision. Staff-only routes (gym create, leads, plan
 | Subscriptions | `GET /gym-orgs/:gymOrgId/my-subscriptions` | Base + addon lines (C10); see [`subscriptions.md`](subscriptions.md) |
 | Health | `GET /health` | Liveness |
 
-**Not yet for CLIENT:** roster self-view, attendance check-in, profile/progress edit, renewals, coaching, calories, health sync, push — later stints ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
+**Not yet for CLIENT:** attendance check-in, profile/progress edit, renewals, coaching, calories, health sync, push — Stint 2+ ([Orbit](https://gym-prd-visual.vercel.app/#orbit)). Staff roster / assign / offboard / block are live in [`roster.md`](roster.md).
 
 ---
 

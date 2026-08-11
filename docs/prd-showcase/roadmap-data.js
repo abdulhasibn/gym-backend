@@ -156,10 +156,10 @@ export const ROADMAP = {
       orbit: 1,
       label: "Stint 1",
       title: "Open the Floor",
-      tagline: "Join + money · 1.1–1.4 shipped",
+      tagline: "Join + money · 1.1–1.6 shipped",
       outcome:
-        "Admin can sell a plan, invite a client, client can accept with grants; gym has a live roster.",
-      exit: "Staff OTP → create org → create BASE plan → invite client → client accept + grants → roster shows ACTIVE; single-ACTIVE invariant enforced.",
+        "Admin can sell a plan, invite a client, client can accept with grants; gym has a live roster with assign / offboard / block.",
+      exit: "Staff OTP → create org → create BASE plan → invite client → client accept + grants → roster shows ACTIVE; assign / offboard / block work; single-ACTIVE invariant enforced.",
       items: [
         {
           id: "1.1",
@@ -265,23 +265,23 @@ export const ROADMAP = {
           id: "1.6",
           num: "1.6",
           title: "Roster, trainer assign, offboard, block",
-          body: "ACTIVE/INACTIVE roster; trainer assign gated by addon; offboard clears grants; manual block check-in.",
+          body: "ACTIVE/INACTIVE roster; trainer assign gated by addon; offboard clears grants; manual block flag. Attendance enforcement is Stint 2.",
           paths: "src/features/memberships/",
           prd: "A3, A4, A15, A18, C3",
           ownership: "gym",
-          status: "todo",
+          status: "done",
           detail: {
             purpose: "Day-to-day member management after join.",
             howItWorks: [
               "Roster lists ACTIVE/INACTIVE memberships for the gym.",
               "Trainer assign requires in-date TRAINER_COACHING addon.",
               "Offboard → INACTIVE + clear grants; retain attendance/billing.",
-              "Block check-in is a manual safety valve.",
+              "Block check-in sets a manual flag; attendance module enforces it in 2.1.",
             ],
             acceptance: [
-              "Roster shows ACTIVE after accept; offboard clears grants; block prevents check-in.",
+              "Roster shows ACTIVE after accept; offboard clears grants; block flag set on membership.",
             ],
-            prdRefs: "A3, A4, A15, A18, C3 · PRD §5.4 · §5.12",
+            prdRefs: "A3, A4, A15, A18, C3 · PRD §5.4 · §5.12 · docs/roster.md",
           },
         },
       ],

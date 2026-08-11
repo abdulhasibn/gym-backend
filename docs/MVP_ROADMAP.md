@@ -57,7 +57,7 @@ returns follow-ups; duplicate open phone returns a soft warning payload (still s
 
 | Deferred | Until | Why |
 |----------|-------|-----|
-| A14 Convert lead → membership invite (pre-filled) | After Stint 1.2+ | Needs membership invites |
+| A14 Convert lead → membership invite (pre-filled) | Stint 3.4 | Invites exist; convert UX still deferred |
 | Push / in-app / web-inbox follow-up reminders | Stint 3.5 | Needs notifications + jobs |
 
 Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
@@ -79,7 +79,7 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 | 1.5 | Subscriptions: Admin payment status + start override + Client list. Accept already snapshots lines. Addon attach / renew deferred. | `memberships` | A8, A19, C10 (A8b later) | Gym-owned | Done (core) |
 | 1.6 | Roster + trainer assign/reassign (addon-gated) + offboard + block check-in | `memberships` | A3, A4, A15, A18, C3 | Gym-owned | Done |
 
-**Exit criteria:** Staff OTP → create org → create BASE plan → invite client → client accept + grants → roster shows ACTIVE; single-ACTIVE invariant enforced.
+**Exit criteria:** Staff OTP → create org → create BASE plan → invite client → client accept + grants → roster shows ACTIVE; assign / offboard / block work; single-ACTIVE invariant enforced.
 
 **Client integration (shipped through 1.6):** [`client-auth.md`](client-auth.md) · [`membership-invites.md`](membership-invites.md) · [`subscriptions.md`](subscriptions.md) · [`roster.md`](roster.md)
 

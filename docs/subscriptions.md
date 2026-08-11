@@ -93,5 +93,6 @@ Requires `CLIENT` lane + ACTIVE membership at gym.
 ## Deferred
 
 - Addon attach mid-cycle (A8b) / renew as new row (F4.4)
-- FIRST_ATTENDANCE start (needs attendance)
-- Roster / trainer assign (Phase 5 / 1.6)
+- FIRST_ATTENDANCE start (needs Stint 2 attendance)
+
+Roster / assign / offboard / block: [`roster.md`](roster.md).

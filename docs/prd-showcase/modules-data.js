@@ -79,7 +79,7 @@ window.MODULES_DATA = [
     name: "Members & Memberships",
     filters: ["admin", "client", "trainer"],
     tags: ["admin", "client"],
-    personas: "Admin invites and manages roster; Client accepts and manages grants; Trainer sees assigned clients later.",
+    personas: "Admin invites and manages roster; Client accepts and manages grants; Trainer sees assigned clients.",
     summary:
       "Invite-only join path. Accept creates an ACTIVE membership with snapshotted subscriptions and required DataGrants. One ACTIVE membership per client.",
     howItWorks: [
@@ -91,14 +91,14 @@ window.MODULES_DATA = [
     items: [
       "Invite accept → ACTIVE membership + base sub — API live",
       "DataGrants: profile attributes + class grants (no copy) — API live",
-      "Roster: ACTIVE / INACTIVE — next (1.6)",
-      "Trainer assignment (requires active Trainer addon) — next (1.6)",
-      "Offboard clears grants; attendance retained — next (1.6)",
-      "Block check-in (Admin safety valve) — next (1.6)",
+      "Roster: ACTIVE / INACTIVE — API live (1.6)",
+      "Trainer assignment (requires active Trainer addon) — API live (1.6)",
+      "Offboard clears grants; attendance retained — API live (1.6)",
+      "Block check-in flag (Admin safety valve) — API live (1.6); enforced in attendance 2.1",
     ],
     detail: {
       purpose:
-        "Turn Admin-issued invites into live members with consent grants; later manage roster, trainer links, offboard, and check-in blocks.",
+        "Turn Admin-issued invites into live members with consent grants; manage roster, trainer links, offboard, and check-in blocks.",
       howItWorks: [
         "No shadow profiles — roster shows pending invites until accept; membership row appears only after accept.",
         "Accept blocked if client already has ACTIVE membership elsewhere.",
@@ -132,9 +132,9 @@ window.MODULES_DATA = [
       "Base subscription required; Trainer addon optional — snapshot on accept live",
       "Price/duration snapshot on each subscription line — on accept",
       "Payment status per line: paid / unpaid / partial — Admin APIs live (1.5 core)",
-      "Base start: first attendance | override; addon: attach day — next (1.5)",
-      "Renewals: new row per period; T-2 for base + addon",
-      "Daily Admin nudge for unpaid / partial lines",
+      "Base start Admin override — API live (1.5); first attendance start — Stint 2; addon attach — deferred (A8b)",
+      "Renewals: new row per period; T-2 for base + addon — later",
+      "Daily Admin nudge for unpaid / partial lines — later",
     ],
     detail: {
       purpose:

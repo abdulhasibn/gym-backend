@@ -611,7 +611,7 @@ Admin desk pipeline for prospects before they are members.
 
 | In pull-forward (now) | Deferred |
 |---|---|
-| A11 capture + soft duplicate-phone warn | A14 convert → membership invite (needs Stint 1) |
+| A11 capture + soft duplicate-phone warn | A14 convert → membership invite (Stint 3.4 — invites exist) |
 | A12 status pipeline | A13 *delivery* of follow-up reminders (push/inbox — Stint 3.5) |
 | A13 store `follow_up_date` + Admin due-list query | |
 

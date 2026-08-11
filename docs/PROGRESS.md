@@ -4,8 +4,8 @@
 
 ## Current stage
 
-**Stage:** Stint 1 Phase 5 (roster / assign / offboard / block check-in)
-shipped. Next: Stint 2. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+**Stage:** Stint 1 complete (1.1–1.6). Docs + Orbit synced to shipped
+roster. Next: Stint 2. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 A8b addon attach / renew deferred within 1.5.
 
 | Area | Status |
@@ -67,6 +67,14 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-11 — Docs + Orbit sync for Stint 1 complete
+
+- Brought README, client-auth, subscriptions, membership-invites,
+  product-flows, MVP_ROADMAP into line with 1.1–1.6 shipped / next Stint 2.
+- Orbit: `prd-showcase` (+ `mvp-roadmap` mirror) marks **1.6 done**;
+  modules M3/M4 “API live”; Orbit lede → next is 2.1 attendance.
+- Redeployed `gym-prd-visual` from `docs/prd-showcase/`.
 
 ### 2026-08-11 — Postman: Roster folder (1.6)
 

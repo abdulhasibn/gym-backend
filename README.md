@@ -35,14 +35,16 @@ curl http://localhost:3000/health
 
 | Guide                                                        | Audience                                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| [`docs/client-auth.md`](./docs/client-auth.md)               | Auth + **CLIENT** surface map (inbox / accept / grants)                   |
+| [`docs/client-auth.md`](./docs/client-auth.md)               | Auth + **CLIENT** surface map (inbox / accept / grants / subs)            |
 | [`docs/membership-invites.md`](./docs/membership-invites.md) | Admin invites + Client accept + DataGrants                                |
+| [`docs/subscriptions.md`](./docs/subscriptions.md)           | Admin payment / start override + Client subscription list                 |
+| [`docs/roster.md`](./docs/roster.md)                         | Roster, trainer assign, offboard, check-in block                          |
 | [`docs/PROGRESS.md`](./docs/PROGRESS.md)                     | Current stage / next up                                                   |
 | [`docs/MVP_ROADMAP.md`](./docs/MVP_ROADMAP.md)               | Build order (Orbit tab visualizes this)                                   |
 | Postman                                                      | [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) |
 
-**Shipped for CLIENT apps:** OTP/Google auth, membership invite inbox, accept → ACTIVE membership, DataGrants GET/PUT.  
-**Next:** Admin subscription manage (1.5), then roster / offboard / block (1.6).
+**Shipped (Stint 1):** Auth, gym-orgs, Mini-CRM A11–A13, plans, invites/accept/grants, subscriptions core, roster / assign / offboard / block.  
+**Next:** Stint 2 — attendance, profile/progress, renewals due-list ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
 
 ## Scripts
 
