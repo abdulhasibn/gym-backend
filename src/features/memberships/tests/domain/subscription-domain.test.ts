@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { toGymOrgId } from '../../../../domain/shared/gym-org-id';
-import { CalendarDate } from '../../domain/calendar-date.value-object';
+import { CalendarDate } from '../../../../domain/shared/calendar-date.value-object';
 import { DurationDays } from '../../domain/duration-days.value-object';
 import { InvalidSubscriptionPaymentError } from '../../domain/invalid-subscription-payment.error';
 import { InvalidSubscriptionStartError } from '../../domain/invalid-subscription-start.error';
@@ -81,6 +81,14 @@ describe('Subscription domain', () => {
     expect(subscription.startDate?.value).toBe('2026-08-01');
     expect(subscription.endDate?.value).toBe('2026-08-30');
     expect(subscription.startSource).toBe('ADMIN_OVERRIDE');
+  });
+
+  it('starts unstarted BASE from first attendance', () => {
+    const subscription = unstartedBase({ durationDays: 30 });
+    subscription.startFromFirstAttendance(CalendarDate.create('2026-08-01'), now);
+    expect(subscription.startDate?.value).toBe('2026-08-01');
+    expect(subscription.endDate?.value).toBe('2026-08-30');
+    expect(subscription.startSource).toBe('FIRST_ATTENDANCE');
   });
 
   it('rejects start override on ADDON or already-started BASE', () => {

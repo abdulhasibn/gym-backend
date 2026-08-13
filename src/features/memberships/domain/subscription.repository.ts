@@ -1,11 +1,19 @@
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
-import type { CalendarDate } from './calendar-date.value-object';
+import type { CalendarDate } from '../../../domain/shared/calendar-date.value-object';
 import type { MembershipId } from './membership-id';
 import type { Subscription } from './subscription.entity';
 import type { SubscriptionId } from './subscription-id';
 
 export interface SubscriptionRepository {
   findById(gymOrgId: GymOrgId, subscriptionId: SubscriptionId): Promise<Subscription | null>;
+
+  /**
+   * Live BASE line for a membership (started or unstarted). Command-side lookup.
+   */
+  findBaseForMembership(
+    gymOrgId: GymOrgId,
+    membershipId: MembershipId,
+  ): Promise<Subscription | null>;
 
   /**
    * In-date TRAINER_COACHING ADDON for a membership (command-side lookup).

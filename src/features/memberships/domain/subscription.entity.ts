@@ -1,5 +1,5 @@
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
-import type { CalendarDate } from './calendar-date.value-object';
+import type { CalendarDate } from '../../../domain/shared/calendar-date.value-object';
 import type { DurationDays } from './duration-days.value-object';
 import { InvalidSubscriptionPaymentError } from './invalid-subscription-payment.error';
 import { InvalidSubscriptionStartError } from './invalid-subscription-start.error';
@@ -210,17 +210,31 @@ export class Subscription {
    * Sets end_date = start + duration_days - 1 and start_source = ADMIN_OVERRIDE.
    */
   overrideStart(startDate: CalendarDate, now: Date): void {
+    this.startUnstartedBase(startDate, now, 'ADMIN_OVERRIDE');
+  }
+
+  /**
+   * First attendance starts an unstarted BASE (F5.1).
+   * Sets end_date = start + duration_days - 1 and start_source = FIRST_ATTENDANCE.
+   */
+  startFromFirstAttendance(startDate: CalendarDate, now: Date): void {
+    this.startUnstartedBase(startDate, now, 'FIRST_ATTENDANCE');
+  }
+
+  private startUnstartedBase(
+    startDate: CalendarDate,
+    now: Date,
+    startSource: 'ADMIN_OVERRIDE' | 'FIRST_ATTENDANCE',
+  ): void {
     if (this.data.deletedAt !== null) {
-      throw new InvalidSubscriptionStartError('Cannot override start on a deleted subscription');
+      throw new InvalidSubscriptionStartError('Cannot start a deleted subscription');
     }
     if (this.data.kind !== 'BASE') {
-      throw new InvalidSubscriptionStartError(
-        'Start override is only allowed on BASE subscriptions',
-      );
+      throw new InvalidSubscriptionStartError('Start is only allowed on BASE subscriptions');
     }
     if (this.data.startDate !== null) {
       throw new InvalidSubscriptionStartError(
-        'Start override is only allowed on unstarted BASE subscriptions',
+        'Start is only allowed on unstarted BASE subscriptions',
       );
     }
 
@@ -230,7 +244,7 @@ export class Subscription {
       ...this.data,
       startDate,
       endDate,
-      startSource: 'ADMIN_OVERRIDE',
+      startSource,
       updatedAt: now,
     };
   }

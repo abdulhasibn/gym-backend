@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { CalendarDate } from '../domain/calendar-date.value-object';
+import { CalendarDate } from '../../../domain/shared/calendar-date.value-object';
 import { PAYMENT_STATUSES } from '../domain/payment-status';
 import { PlanPrice } from '../domain/plan-price.value-object';
 
@@ -57,4 +57,17 @@ export const updateSubscriptionPaymentSchema = z
 
 export const overrideSubscriptionStartSchema = z.object({
   startDate: calendarDateSchema,
+});
+
+export const renewalsDueQuerySchema = z.object({
+  onOrBefore: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  onOrAfter: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
 });

@@ -12,7 +12,7 @@ import { PlanAdminPolicy } from '../../application/plan-admin.policy';
 import { PlanForbiddenError } from '../../application/plan-forbidden.error';
 import { SubscriptionForbiddenError } from '../../application/subscription-forbidden.error';
 import { UpdateSubscriptionPaymentUseCase } from '../../application/update-subscription-payment.use-case';
-import { CalendarDate } from '../../domain/calendar-date.value-object';
+import { CalendarDate } from '../../../../domain/shared/calendar-date.value-object';
 import { DurationDays } from '../../domain/duration-days.value-object';
 import { toMembershipPlanId } from '../../domain/membership-plan-id';
 import { PlanPrice } from '../../domain/plan-price.value-object';

@@ -28,6 +28,7 @@ export function createSubscriptionAdminRouter(
   const router = Router({ mergeParams: true });
 
   router.use(authenticate);
+  router.get('/renewals-due', controller.listRenewals);
   router.patch('/:subscriptionId/payment', controller.updatePaymentHandler);
   router.post('/:subscriptionId/start-override', controller.overrideStartHandler);
 

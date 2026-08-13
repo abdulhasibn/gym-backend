@@ -17,6 +17,7 @@ import { ListMembershipPlansUseCase } from './application/list-membership-plans.
 import { ListMyAssignedMembersUseCase } from './application/list-my-assigned-members.use-case';
 import { ListMyMembershipInviteInboxUseCase } from './application/list-my-membership-invite-inbox.use-case';
 import { ListMySubscriptionsUseCase } from './application/list-my-subscriptions.use-case';
+import { ListRenewalsDueUseCase } from './application/list-renewals-due.use-case';
 import { OffboardClientUseCase } from './application/offboard-client.use-case';
 import { OverrideSubscriptionStartUseCase } from './application/override-subscription-start.use-case';
 import { PlanAdminPolicy } from './application/plan-admin.policy';
@@ -105,6 +106,7 @@ export function composeMembershipsFeature(
     new ListMySubscriptionsUseCase(subscriptionQueries),
     new UpdateSubscriptionPaymentUseCase(policy, subscriptions, memberships, clock),
     new OverrideSubscriptionStartUseCase(policy, subscriptions, memberships, clock),
+    new ListRenewalsDueUseCase(policy, subscriptionQueries),
   );
 
   const rosterController = new RosterController(
@@ -129,5 +131,9 @@ export function composeMembershipsFeature(
     membersRouter: createMembersRouter(rosterController, authenticate),
     myAssignedMembersRouter: createMyAssignedMembersRouter(rosterController, authenticate),
     errorMapper: mapMembershipPlanError,
+    /** Cross-feature command ports for attendance / users composition-root adapters. */
+    clientMemberships: memberships,
+    subscriptions,
+    dataGrantQueries: grantQueries,
   };
 }

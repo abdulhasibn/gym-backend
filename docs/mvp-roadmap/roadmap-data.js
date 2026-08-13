@@ -304,7 +304,7 @@ export const ROADMAP = {
           paths: "src/features/attendance/",
           prd: "C4, A5",
           ownership: "gym",
-          status: "todo",
+          status: "done",
           detail: {
             purpose: "Record presence for ops and optional base-subscription start.",
             howItWorks: [
@@ -324,7 +324,7 @@ export const ROADMAP = {
           paths: "users / progress slice",
           prd: "C7, C8, C14",
           ownership: "client",
-          status: "todo",
+          status: "done",
           detail: {
             purpose: "Member-owned body metrics without gym ownership of the rows.",
             howItWorks: [
@@ -343,7 +343,7 @@ export const ROADMAP = {
           paths: "policies on query use cases",
           prd: "T4, A17",
           ownership: "client",
-          status: "todo",
+          status: "done",
           detail: {
             purpose: "Enforce ADR-0002 on every staff read of Client-owned data.",
             howItWorks: [
@@ -362,7 +362,7 @@ export const ROADMAP = {
           paths: "memberships queries",
           prd: "A9",
           ownership: "gym",
-          status: "todo",
+          status: "done",
           detail: {
             purpose: "Admin inbox read model before scheduled T-2 push jobs.",
             howItWorks: [

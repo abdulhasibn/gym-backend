@@ -4,11 +4,24 @@ import helmet from 'helmet';
 
 import { JSON_BODY_LIMIT } from '../config/constants';
 import type { AppConfig } from '../config/environment';
+import { NotFoundError } from '../domain/errors/not-found.error';
+import type { CalendarDate } from '../domain/shared/calendar-date.value-object';
+import type { GymOrgId } from '../domain/shared/gym-org-id';
+import type { UserId } from '../domain/shared/user-id';
+import { composeAttendanceFeature } from '../features/attendance/composition';
+import type { BaseSubscriptionStarter } from '../features/attendance/domain/base-subscription-starter.port';
+import type {
+  CheckInMembershipGate,
+  CheckInMembershipSnapshot,
+} from '../features/attendance/domain/check-in-membership.gate';
+import { GymOrgLocalClock } from '../features/attendance/infrastructure/gym-org-local-clock.adapter';
 import { composeAuthFeature } from '../features/auth/composition';
 import { composeGymOrgFeature } from '../features/gym-orgs/composition';
 import { composeLeadsFeature } from '../features/leads/composition';
 import { composeMembershipsFeature } from '../features/memberships/composition';
+import { toSubscriptionId } from '../features/memberships/domain/subscription-id';
 import { toTrainerProfileId } from '../features/memberships/domain/trainer-profile-id';
+import { composeUsersFeature } from '../features/users/composition';
 import { createLogger } from '../infrastructure/logging/logger';
 import { createRequestLoggerMiddleware } from '../infrastructure/logging/request-logger.middleware';
 import type { Database } from '../infrastructure/supabase/database.types';
@@ -65,6 +78,90 @@ export function composeApp(config: AppConfig): AppDependencies {
     },
   );
 
+  const checkInGate: CheckInMembershipGate = {
+    async loadActive(
+      clientUserId: UserId,
+      gymOrgId: GymOrgId,
+    ): Promise<CheckInMembershipSnapshot | null> {
+      const membership = await membershipsFeature.clientMemberships.findActiveByClientAtGym(
+        clientUserId,
+        gymOrgId,
+      );
+      if (membership === null) {
+        return null;
+      }
+      const base = await membershipsFeature.subscriptions.findBaseForMembership(
+        gymOrgId,
+        membership.id,
+      );
+      return {
+        membershipId: membership.id,
+        checkInBlocked: membership.checkInBlocked,
+        base:
+          base === null
+            ? null
+            : {
+                subscriptionId: base.id,
+                startDate: base.startDate,
+                endDate: base.endDate,
+              },
+      };
+    },
+  };
+
+  const baseStarter: BaseSubscriptionStarter = {
+    async startFromFirstAttendance(
+      gymOrgId: GymOrgId,
+      subscriptionId: string,
+      today: CalendarDate,
+      now: Date,
+    ): Promise<void> {
+      const subscription = await membershipsFeature.subscriptions.findById(
+        gymOrgId,
+        toSubscriptionId(subscriptionId),
+      );
+      if (subscription === null) {
+        throw new NotFoundError('BASE subscription not found');
+      }
+      subscription.startFromFirstAttendance(today, now);
+      await membershipsFeature.subscriptions.save(subscription);
+    },
+  };
+
+  const attendanceFeature = composeAttendanceFeature(supabaseClient, authFeature.authenticate, {
+    liveGymAdmin: { isLiveAdmin: gymOrgFeature.isLiveAdmin },
+    liveTrainer: {
+      isLiveTrainer: async (userId, gymOrgId) =>
+        (await gymOrgFeature.findLiveTrainerProfileId(userId, gymOrgId)) !== null,
+    },
+    checkInGate,
+    baseStarter,
+    gymLocalClock: new GymOrgLocalClock({ findTimezone: gymOrgFeature.findTimezone }),
+  });
+
+  const usersFeature = composeUsersFeature(supabaseClient, authFeature.authenticate, {
+    liveGymAdmin: { isLiveAdmin: gymOrgFeature.isLiveAdmin },
+    liveTrainer: {
+      isLiveTrainer: async (userId, gymOrgId) =>
+        (await gymOrgFeature.findLiveTrainerProfileId(userId, gymOrgId)) !== null,
+    },
+    dataGrantGate: {
+      async loadForActiveMembership(clientUserId, gymOrgId) {
+        const snapshot = await membershipsFeature.dataGrantQueries.listForActiveMembership(
+          clientUserId,
+          gymOrgId,
+        );
+        if (snapshot === null) {
+          return null;
+        }
+        return {
+          profileAttributes: [...snapshot.profileAttributes],
+          classGrants: [...snapshot.classGrants],
+        };
+      },
+    },
+  });
+
   const app = express();
 
   app.use(helmet());
@@ -86,6 +183,10 @@ export function composeApp(config: AppConfig): AppDependencies {
       membershipsFeature.mySubscriptionsRouter,
       membershipsFeature.membersRouter,
       membershipsFeature.myAssignedMembersRouter,
+      attendanceFeature.router,
+      attendanceFeature.myAttendancesRouter,
+      usersFeature.meRouter,
+      usersFeature.staffClientRouter,
     ),
   );
 
@@ -96,6 +197,8 @@ export function composeApp(config: AppConfig): AppDependencies {
       gymOrgFeature.errorMapper,
       leadsFeature.errorMapper,
       membershipsFeature.errorMapper,
+      attendanceFeature.errorMapper,
+      usersFeature.errorMapper,
     ]),
   );
 

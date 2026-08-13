@@ -4,9 +4,10 @@
 
 ## Current stage
 
-**Stage:** Stint 1 complete (1.1–1.6). Docs + Orbit synced to shipped
-roster. Next: Stint 2. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
-A8b addon attach / renew deferred within 1.5.
+**Stage:** Stint 2 complete (2.1–2.4). Attendance, users profile/progress
+(with grant-gated staff reads), renewals due-list shipped. Next: Stint 3.
+See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b addon attach / renew still
+deferred within 1.5.
 
 | Area | Status |
 |------|--------|
@@ -26,12 +27,14 @@ A8b addon attach / renew deferred within 1.5.
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
-| Memberships feature (`src/features/memberships`) | Phase 1–5 done — plans, invites, accept/grants, subscriptions core, roster/assign/offboard/block; A8b attach/renew deferred |
-| Other feature modules under `src/features/*` | Not started — Stint 2 (attendance, …) then Stint 3 |
+| Memberships feature (`src/features/memberships`) | Phase 1–5 + 2.4 renewals due-list done — plans, invites, accept/grants, subscriptions, roster/assign/offboard/block, `GET .../subscriptions/renewals-due`; A8b attach/renew deferred |
+| Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
+| Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
+| Other feature modules under `src/features/*` | Not started — Stint 3 (coaching, nutrition, health-sync, notifications) |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Roster** (1.6) |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Attendance** + **Profile & Progress** + renewals-due (Stint 2) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -48,17 +51,15 @@ A8b addon attach / renew deferred within 1.5.
 
 ## Next up
 
-1. **Stint 2** — attendance check-in / desk mark (uses `check_in_blocked`),
-   profile/progress, renewals due-list.
+1. **Stint 3** — coaching, food catalog + calories, health sync, CRM convert
+   (A14), notifications/jobs, audit trail writes.
 2. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
-3. Then Stint 3 remainder (coaching, calories, health sync, notifications).
-4. Feature-scoped RLS — not needed while the API uses service-role only;
+3. Feature-scoped RLS — not needed while the API uses service-role only;
    revisit if clients ever hit PostgREST/`authenticated` directly.
-5. Extra Auth provider/failure-path tests — only when a concrete gap blocks
+4. Extra Auth provider/failure-path tests — only when a concrete gap blocks
    shipping or a regression is found (avoid coverage spam).
-6. Manual Postman smoke still optional (user choice); collection includes
-   Roster. Flow: Admin → Plans → invite → accept → payment/start → roster +
-   assign / offboard / block.
+5. Manual Postman smoke optional (user choice). Collection includes Stint 2
+   Attendance + Profile & Progress + renewals-due.
 
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
@@ -67,6 +68,28 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-11 — Postman: Attendance + Profile & Progress (Stint 2)
+
+- gym-backend-postman `91d4aba`: top-level **Attendance** (5) + **Profile & Progress**
+  (6); **List Renewals Due** under Subscriptions. Docs + Examples; audit
+  `gapCount: 0`. Pushed; cloud `putCollection` async task
+  `91e11015-551c-46b5-89e3-33dc50147475` successful — folders verified live.
+
+### 2026-08-11 — Stint 2 complete (2.1–2.4)
+
+- **2.1 Attendance** (`src/features/attendance/`): self check-in, Admin desk
+  mark, gym-day / per-client / my history. Eligibility: ACTIVE +
+  `!checkInBlocked` + unstarted-or-in-date BASE. First check-in starts BASE
+  via `Subscription.startFromFirstAttendance` (composition-root port).
+  Promoted `CalendarDate` to `src/domain/shared/`.
+- **2.2–2.3 Users** (`src/features/users/`): `/me/profile` + progress logs +
+  BMI; staff grant-gated profile/progress at
+  `/gym-orgs/:gymOrgId/clients/:clientUserId/{profile,progress-logs}`.
+- **2.4 Renewals**: `GET .../subscriptions/renewals-due` on memberships
+  (Admin; BASE+ADDON labeled).
+- Vitest: 179 tests green. Deferred: A8b, audit (3.6), push/jobs (3.5),
+  Orbit redeploy (Postman Stint 2 synced separately).
 
 ### 2026-08-11 — Docs + Orbit sync for Stint 1 complete
 

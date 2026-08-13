@@ -1,5 +1,6 @@
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { UserId } from '../../../domain/shared/user-id';
+import type { Page, Pagination } from '../../../shared/pagination/pagination';
 import type { MembershipId } from './membership-id';
 import type { PaymentStatus } from './payment-status';
 import type { PlanCapability } from './plan-capability';
@@ -24,6 +25,18 @@ export interface SubscriptionSummary {
   readonly updatedAt: string;
 }
 
+export interface RenewalDueSummary extends SubscriptionSummary {
+  readonly clientUserId: string;
+}
+
+export interface ListExpiringSoonCriteria {
+  readonly gymOrgId: GymOrgId;
+  /** Inclusive upper bound on end_date (YYYY-MM-DD). */
+  readonly onOrBefore: string;
+  /** Inclusive lower bound on end_date (YYYY-MM-DD). Optional. */
+  readonly onOrAfter?: string;
+}
+
 export interface SubscriptionQueries {
   listForMembership(
     gymOrgId: GymOrgId,
@@ -38,4 +51,12 @@ export interface SubscriptionQueries {
     gymOrgId: GymOrgId,
     clientUserId: UserId,
   ): Promise<readonly SubscriptionSummary[] | null>;
+
+  /**
+   * Admin renewals due-list: live BASE + ADDON lines with end_date in window.
+   */
+  listExpiringSoon(
+    criteria: ListExpiringSoonCriteria,
+    page: Pagination,
+  ): Promise<Page<RenewalDueSummary>>;
 }

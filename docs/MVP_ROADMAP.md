@@ -19,8 +19,8 @@ updating this file + Progress + Orbit `roadmap-data.js`.
 ```
 Foundation (shipped)
   → Pull-forward: Mini-CRM A11–A13 (shipped)
-  → Stint 1 Open the Floor — 1.1–1.6 shipped; next Stint 2
-  → Stint 2 Run the Desk
+  → Stint 1 Open the Floor — 1.1–1.6 shipped
+  → Stint 2 Run the Desk — 2.1–2.4 shipped; next Stint 3
   → Stint 3 Keep Them Coming (CRM remainder + rest)
 ```
 
@@ -68,7 +68,7 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 
 **Outcome:** Admin can sell a plan, invite a client, client can accept with grants; gym has a live roster.
 
-**Current:** 1.1–1.6 shipped (roster / offboard / block). Next: Stint 2. A8b addon attach / renew deferred within 1.5.
+**Current:** 2.1–2.4 shipped (attendance, profile/progress, renewals due-list). Next: Stint 3. A8b addon attach / renew deferred within 1.5.
 
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
@@ -91,10 +91,10 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
-| 2.1 | Client self check-in + Admin desk mark + logs | `src/features/attendance/` | C4, A5 | Gym-owned | Todo |
-| 2.2 | Client profile edit + ProgressLog + BMI | `users` / progress slice | C7, C8, C14 | Client-owned | Todo |
-| 2.3 | Grant-gated staff reads of profile/progress | policies on query use cases | T4, A17 | Client-owned (gated) | Todo |
-| 2.4 | Renewals due-list / expiring-soon Admin query (read model; no push yet) | `memberships` queries | A9 | Gym-owned | Todo |
+| 2.1 | Client self check-in + Admin desk mark + logs | `src/features/attendance/` | C4, A5 | Gym-owned | Done |
+| 2.2 | Client profile edit + ProgressLog + BMI | `users` / progress slice | C7, C8, C14 | Client-owned | Done |
+| 2.3 | Grant-gated staff reads of profile/progress | policies on query use cases | T4, A17 | Client-owned (gated) | Done |
+| 2.4 | Renewals due-list / expiring-soon Admin query (read model; no push yet) | `memberships` queries | A9 | Gym-owned | Done |
 
 **Exit criteria:** ACTIVE member with in-date base can check in; Admin can desk-mark and list renewals; staff see Client-owned fields only when granted.
 

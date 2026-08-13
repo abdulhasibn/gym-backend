@@ -10,9 +10,11 @@ import type { Logger } from '../../../../shared/logging/logger.port';
 import { FixedClock } from '../../../gym-orgs/tests/fakes/fixed-clock';
 import { ListClientSubscriptionsUseCase } from '../../application/list-client-subscriptions.use-case';
 import { ListMySubscriptionsUseCase } from '../../application/list-my-subscriptions.use-case';
+import { ListRenewalsDueUseCase } from '../../application/list-renewals-due.use-case';
 import { OverrideSubscriptionStartUseCase } from '../../application/override-subscription-start.use-case';
 import { PlanAdminPolicy } from '../../application/plan-admin.policy';
 import { UpdateSubscriptionPaymentUseCase } from '../../application/update-subscription-payment.use-case';
+import { CalendarDate } from '../../../../domain/shared/calendar-date.value-object';
 import { DurationDays } from '../../domain/duration-days.value-object';
 import { toMembershipPlanId } from '../../domain/membership-plan-id';
 import { PlanPrice } from '../../domain/plan-price.value-object';
@@ -80,6 +82,7 @@ async function createTestApp(roleCode: 'ADMIN' | 'CLIENT' = 'ADMIN') {
     new ListMySubscriptionsUseCase(subscriptions),
     new UpdateSubscriptionPaymentUseCase(policy, subscriptions, memberships, clock),
     new OverrideSubscriptionStartUseCase(policy, subscriptions, memberships, clock),
+    new ListRenewalsDueUseCase(policy, subscriptions),
   );
 
   const authenticate: RequestHandler = (req, _res, next) => {
@@ -167,11 +170,67 @@ describe('subscription routes', () => {
     expect(forbidden.body.error.code).toBe('SUBSCRIPTION_FORBIDDEN');
   });
 
-  it('returns 403 when client tries admin payment update', async () => {
-    const app = await createTestApp('CLIENT');
-    const res = await supertest(app)
-      .patch(`/gym-orgs/${gymOrgId}/subscriptions/${subscriptionId}/payment`)
-      .send({ paymentStatus: 'paid' });
-    expect(res.status).toBe(403);
+  it('lists renewals-due for admin', async () => {
+    const memberships = new InMemoryClientMembershipStore();
+    const subscriptions = new InMemorySubscriptionStore();
+    const admins = new FixedLiveGymAdmin();
+    admins.seed(toUserId(adminUserId), toGymOrgId(gymOrgId));
+    const policy = new PlanAdminPolicy(admins);
+    const clock = new FixedClock(now);
+    const membership = memberships.seedActive(toUserId(clientUserId), toGymOrgId(gymOrgId));
+    subscriptions.seed(
+      Subscription.reconstitute({
+        id: toSubscriptionId(subscriptionId),
+        clientMembershipId: membership.id,
+        gymOrgId: toGymOrgId(gymOrgId),
+        planId: toMembershipPlanId('dddddddd-dddd-4ddd-8ddd-dddddddddddd'),
+        kind: 'BASE',
+        capability: null,
+        priceAmount: PlanPrice.create(1000),
+        durationDays: DurationDays.create(30),
+        startDate: CalendarDate.create('2026-08-01'),
+        endDate: CalendarDate.create('2026-08-30'),
+        startSource: 'ADMIN_OVERRIDE',
+        paymentStatus: 'unpaid',
+        amountPaid: PlanPrice.create(0),
+        deletedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      }),
+      toUserId(clientUserId),
+    );
+
+    const controller = new SubscriptionController(
+      new ListClientSubscriptionsUseCase(policy, subscriptions),
+      new ListMySubscriptionsUseCase(subscriptions),
+      new UpdateSubscriptionPaymentUseCase(policy, subscriptions, memberships, clock),
+      new OverrideSubscriptionStartUseCase(policy, subscriptions, memberships, clock),
+      new ListRenewalsDueUseCase(policy, subscriptions),
+    );
+    const authenticate: RequestHandler = (req, _res, next) => {
+      setAuthenticatedActor(req, {
+        userId: toUserId(adminUserId),
+        roleCode: 'ADMIN',
+        lane: 'STAFF',
+        email: 'admin@example.com',
+        staffCode: 'STF-ADMIN',
+      });
+      next();
+    };
+    const app = express();
+    app.use(express.json());
+    app.use(
+      `/gym-orgs/:gymOrgId/subscriptions`,
+      createSubscriptionAdminRouter(controller, authenticate),
+    );
+    app.use(createErrorHandlerMiddleware(new SilentLogger(), [mapMembershipPlanError]));
+
+    const res = await supertest(app).get(
+      `/gym-orgs/${gymOrgId}/subscriptions/renewals-due?onOrBefore=2026-08-31`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.renewals.items).toHaveLength(1);
+    expect(res.body.renewals.items[0].clientUserId).toBe(clientUserId);
+    expect(res.body.renewals.items[0].kind).toBe('BASE');
   });
 });

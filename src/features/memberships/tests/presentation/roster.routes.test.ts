@@ -15,7 +15,7 @@ import { OffboardClientUseCase } from '../../application/offboard-client.use-cas
 import { PlanAdminPolicy } from '../../application/plan-admin.policy';
 import { SetCheckInBlockedUseCase } from '../../application/set-check-in-blocked.use-case';
 import { TrainerRosterPolicy } from '../../application/trainer-roster.policy';
-import { CalendarDate } from '../../domain/calendar-date.value-object';
+import { CalendarDate } from '../../../../domain/shared/calendar-date.value-object';
 import { DurationDays } from '../../domain/duration-days.value-object';
 import { toMembershipPlanId } from '../../domain/membership-plan-id';
 import { PlanPrice } from '../../domain/plan-price.value-object';

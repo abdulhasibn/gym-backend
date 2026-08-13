@@ -1,7 +1,7 @@
 import { DataIntegrityError } from '../../../domain/errors/data-integrity.error';
 import { toGymOrgId } from '../../../domain/shared/gym-org-id';
 import type { Database } from '../../../infrastructure/supabase/database.types';
-import { CalendarDate } from '../domain/calendar-date.value-object';
+import { CalendarDate } from '../../../domain/shared/calendar-date.value-object';
 import { DurationDays } from '../domain/duration-days.value-object';
 import { toMembershipId } from '../domain/membership-id';
 import { toMembershipPlanId } from '../domain/membership-plan-id';

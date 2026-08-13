@@ -6,7 +6,7 @@ import { TransientDatabaseFailureError } from '../../../domain/errors/transient-
 import { UniqueViolationError } from '../../../domain/errors/unique-violation.error';
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { Database } from '../../../infrastructure/supabase/database.types';
-import type { CalendarDate } from '../domain/calendar-date.value-object';
+import type { CalendarDate } from '../../../domain/shared/calendar-date.value-object';
 import type { MembershipId } from '../domain/membership-id';
 import type { Subscription } from '../domain/subscription.entity';
 import type { SubscriptionId } from '../domain/subscription-id';
@@ -27,6 +27,30 @@ export class SupabaseSubscriptionRepository implements SubscriptionRepository {
 
     if (error !== null) {
       throw new TransientDatabaseFailureError('Unable to read subscription', { cause: error });
+    }
+    if (data === null) {
+      return null;
+    }
+
+    return toSubscription(data);
+  }
+
+  async findBaseForMembership(
+    gymOrgId: GymOrgId,
+    membershipId: MembershipId,
+  ): Promise<Subscription | null> {
+    const { data, error } = await this.client
+      .from('subscriptions')
+      .select('*')
+      .eq('gym_org_id', gymOrgId)
+      .eq('client_membership_id', membershipId)
+      .eq('kind', 'BASE')
+      .is('deleted_at', null)
+      .limit(1)
+      .maybeSingle();
+
+    if (error !== null) {
+      throw new TransientDatabaseFailureError('Unable to read BASE subscription', { cause: error });
     }
     if (data === null) {
       return null;

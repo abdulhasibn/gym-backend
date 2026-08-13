@@ -6,7 +6,7 @@ import { ClientMembership } from '../../domain/client-membership.entity';
 import { ClientMembershipInvalidTransitionError } from '../../domain/client-membership-invalid-transition.error';
 import { toMembershipId } from '../../domain/membership-id';
 import { toMembershipInviteId } from '../../domain/membership-invite-id';
-import { CalendarDate } from '../../domain/calendar-date.value-object';
+import { CalendarDate } from '../../../../domain/shared/calendar-date.value-object';
 import { DurationDays } from '../../domain/duration-days.value-object';
 import { toMembershipPlanId } from '../../domain/membership-plan-id';
 import { PlanPrice } from '../../domain/plan-price.value-object';

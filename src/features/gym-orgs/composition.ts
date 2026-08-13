@@ -61,5 +61,9 @@ export function composeGymOrgFeature(
       trainerProfiles.findLiveTrainerProfileId(userId, gymOrgId),
     isLiveTrainerProfile: (trainerProfileId: string, gymOrgId: GymOrgId) =>
       trainerProfiles.isLiveTrainerProfile(trainerProfileId, gymOrgId),
+    findTimezone: async (gymOrgId: GymOrgId): Promise<string | null> => {
+      const gym = await gymOrgs.findById(gymOrgId);
+      return gym === null ? null : gym.timezone.value;
+    },
   };
 }

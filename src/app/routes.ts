@@ -16,6 +16,10 @@ export function createRouter(
   mySubscriptionsRouter: RequestHandler,
   membersRouter: RequestHandler,
   myAssignedMembersRouter: RequestHandler,
+  attendanceRouter: RequestHandler,
+  myAttendancesRouter: RequestHandler,
+  meUsersRouter: RequestHandler,
+  staffClientUsersRouter: RequestHandler,
 ): Router {
   const router = Router();
 
@@ -33,6 +37,10 @@ export function createRouter(
   router.use('/gym-orgs/:gymOrgId/my-subscriptions', mySubscriptionsRouter);
   router.use('/gym-orgs/:gymOrgId/members', membersRouter);
   router.use('/gym-orgs/:gymOrgId/my-assigned-members', myAssignedMembersRouter);
+  router.use('/gym-orgs/:gymOrgId/attendances', attendanceRouter);
+  router.use('/gym-orgs/:gymOrgId/my-attendances', myAttendancesRouter);
+  router.use('/me', meUsersRouter);
+  router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientUsersRouter);
   router.use('/membership-invites', membershipInviteClientRouter);
 
   return router;

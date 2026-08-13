@@ -15,7 +15,7 @@ import { PlanForbiddenError } from '../../application/plan-forbidden.error';
 import { RosterForbiddenError } from '../../application/roster-forbidden.error';
 import { SetCheckInBlockedUseCase } from '../../application/set-check-in-blocked.use-case';
 import { TrainerRosterPolicy } from '../../application/trainer-roster.policy';
-import { CalendarDate } from '../../domain/calendar-date.value-object';
+import { CalendarDate } from '../../../../domain/shared/calendar-date.value-object';
 import { DurationDays } from '../../domain/duration-days.value-object';
 import { toMembershipPlanId } from '../../domain/membership-plan-id';
 import { PlanPrice } from '../../domain/plan-price.value-object';

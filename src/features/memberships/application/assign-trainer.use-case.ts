@@ -2,7 +2,7 @@ import { NotFoundError } from '../../../domain/errors/not-found.error';
 import type { AuthenticatedActor } from '../../../domain/shared/authenticated-actor';
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { Clock } from '../../../shared/clock/clock';
-import { CalendarDate } from '../domain/calendar-date.value-object';
+import { CalendarDate } from '../../../domain/shared/calendar-date.value-object';
 import type { ClientMembershipRepository } from '../domain/client-membership.repository';
 import type { LiveTrainerProfilePort } from '../domain/live-trainer-profile.port';
 import type { MembershipId } from '../domain/membership-id';
