@@ -5,7 +5,7 @@ Gym member roster, trainer assign/reassign, offboard, and manual check-in block.
 **Base URL:** `https://gym-backend-lovat-mu.vercel.app` (prod) or `http://localhost:3000` (local)  
 **API index:** [`api.md`](api.md)  
 **Prereq:** Client has accepted a membership invite — [`membership-invites.md`](membership-invites.md)  
-**Status:** Stint 1.6 shipped (A3, A4, A15, A18, C3). Attendance check-in enforcement is Stint 2.
+**Status:** Stint 1.6 shipped (A3, A4, A15, A18, C3). Check-in block is enforced on attendance (2.1).
 
 Auth: `Authorization: Bearer <accessToken>`. Errors: `{ "error": { "code", "message" } }`.
 
@@ -105,7 +105,7 @@ Sets membership `INACTIVE`, `left_at`, and soft-deletes **all** DataGrants for `
 { "blocked": true }
 ```
 
-Manual safety valve — not tied to payment status. Enforcement of the flag on attendance is Stint 2.
+Manual safety valve — not tied to payment status. Attendance (2.1) rejects check-in while blocked.
 
 **200:** `{ "membership": { ... } }`  
 **404** · **422** inactive membership

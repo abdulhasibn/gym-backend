@@ -265,7 +265,7 @@ export const ROADMAP = {
           id: "1.6",
           num: "1.6",
           title: "Roster, trainer assign, offboard, block",
-          body: "ACTIVE/INACTIVE roster; trainer assign gated by addon; offboard clears grants; manual block flag. Attendance enforcement is Stint 2.",
+          body: "ACTIVE/INACTIVE roster; trainer assign gated by addon; offboard clears grants; manual block flag. Attendance enforcement shipped in 2.1.",
           paths: "src/features/memberships/",
           prd: "A3, A4, A15, A18, C3",
           ownership: "gym",
@@ -276,7 +276,7 @@ export const ROADMAP = {
               "Roster lists ACTIVE/INACTIVE memberships for the gym.",
               "Trainer assign requires in-date TRAINER_COACHING addon.",
               "Offboard → INACTIVE + clear grants; retain attendance/billing.",
-              "Block check-in sets a manual flag; attendance module enforces it in 2.1.",
+              "Block check-in sets a manual flag; attendance module enforces it (2.1 shipped).",
             ],
             acceptance: [
               "Roster shows ACTIVE after accept; offboard clears grants; block flag set on membership.",
@@ -291,7 +291,7 @@ export const ROADMAP = {
       orbit: 2,
       label: "Stint 2",
       title: "Run the Desk",
-      tagline: "Daily ops",
+      tagline: "Daily ops · 2.1–2.4 shipped",
       outcome:
         "Desk and Client can run a normal gym day without coaching (CRM may already exist via pull-forward).",
       exit: "ACTIVE member with in-date base can check in; Admin can desk-mark and list renewals; staff see Client-owned fields only when granted.",

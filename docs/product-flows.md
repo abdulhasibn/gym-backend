@@ -7,7 +7,7 @@
 
 This document describes **what people do**, **what they see**, **what is blocked**, and **how screens connect**. It is organized by domain module (M1–M13). Cross-cutting rules that affect every screen appear first.
 
-**API delivery (backend):** Auth + gym-orgs + Mini-CRM A11–A13 + membership plan catalog + Admin membership invites + Client inbox/accept + DataGrants + subscription payment/start override + Client subscription list + roster / assign / offboard / block are **live**. Next: Stint 2. See [`PROGRESS.md`](PROGRESS.md), [`client-auth.md`](client-auth.md), [`membership-invites.md`](membership-invites.md), [`subscriptions.md`](subscriptions.md), [`roster.md`](roster.md), Orbit at [gym-prd-visual.vercel.app/#orbit](https://gym-prd-visual.vercel.app/#orbit).
+**API delivery (backend):** Auth + gym-orgs + Mini-CRM A11–A13 + membership plan catalog + Admin membership invites + Client inbox/accept + DataGrants + subscription payment/start override + Client subscription list + roster / assign / offboard / block + attendance + profile/progress + renewals due-list are **live**. Next: Stint 3. See [`PROGRESS.md`](PROGRESS.md), [`client-auth.md`](client-auth.md), [`membership-invites.md`](membership-invites.md), [`subscriptions.md`](subscriptions.md), [`roster.md`](roster.md), [`api.md`](api.md), Orbit at [gym-prd-visual.vercel.app/#orbit](https://gym-prd-visual.vercel.app/#orbit).
 
 ---
 
@@ -317,7 +317,7 @@ C2, C2b, C2c, C3, A3, A4, A6, A15, A17, A18 · no shadow profiles · no open joi
 
 Catalog of BASE/ADDON plans; subscription lines with snapshotted price; renewals; payment status tracking (no gateway).
 
-**API status:** Plan catalog CRUD **shipped**. Accept creates snapshotted lines. Admin payment/start override + Client list **shipped** (roadmap 1.5 core; A8b attach/renew deferred). Renewals inbox / unpaid digest later.
+**API status:** Plan catalog CRUD **shipped**. Accept creates snapshotted lines. Admin payment/start override + Client list **shipped** (roadmap 1.5 core; A8b attach/renew deferred). Admin renewals due-list **shipped** (2.4). T-2 push / unpaid digest later.
 
 ### Screens (Admin web)
 
@@ -364,6 +364,8 @@ A7, A8, A8b, A9, A10, A10b, A19, C10, C11 · non-overlap · snapshot · unpaid n
 ### Purpose
 
 Record presence; optionally start base subscription on first check-in; gym-owned history retained after leave.
+
+**API status:** Self check-in, Admin desk mark, gym-day / per-client / my history **shipped** (2.1). Enforces `check_in_blocked`. Integration: [`api.md`](api.md) · [`client-auth.md`](client-auth.md).
 
 ### Screens
 
@@ -484,6 +486,8 @@ C6, T6, T7 (P1), T8 (grant).
 ### Purpose
 
 Client-owned weight history and BMI; staff see progress only with `PROGRESS` grant. Attendance history widget is gym-owned (view rules differ).
+
+**API status:** Client `/me/profile` + progress logs **shipped** (2.2); staff grant-gated reads **shipped** (2.3). Integration: [`api.md`](api.md) · [`client-auth.md`](client-auth.md).
 
 ### Canonical weight rule (UI must obey)
 

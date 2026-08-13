@@ -82,15 +82,20 @@ Postman Docs **does not reliably render Markdown tables**. Use **bullet lists on
 
 For each request, cover:
 
-- One-line method + path + purpose
-- Auth / path / query / body as applicable
-- **Every property**: required/optional, type, short meaning, full enum list or string example
-- Success status + response fields (nested objects listed)
-- Important error codes
+1. **`**Story:**` blurb** (mandatory first lines) — 1–2 plain-English sentences:
+   actor + action + outcome. No jargon, schemas, or status codes. Functional
+   only (who does what and why). Blank line after the story before technical docs.
+2. One-line method + path + purpose
+3. Auth / path / query / body as applicable
+4. **Every property**: required/optional, type, short meaning, full enum list or string example
+5. Success status + response fields (nested objects listed)
+6. Important error codes
 
 **Format (canonical):**
 
 ```markdown
+**Story:** A gym admin moves a lead through the sales pipeline so the team knows where the prospect stands.
+
 PATCH /gym-orgs/:gymOrgId/leads/:leadId/status — move pipeline stage.
 
 **Auth:** Bearer ADMIN  
@@ -105,11 +110,12 @@ PATCH /gym-orgs/:gymOrgId/leads/:leadId/status — move pipeline stage.
 
 Rules:
 
+- Every request description **must** start with `**Story:** …` then a blank line
+- Story is functional only — keep technical detail in the bullets below
 - Enums: comma-separated Values (`paid`, `unpaid`, `partial`) — **never** `|` inside a table cell
 - No `|---|` / pipe tables in Postman descriptions
 - Body-less endpoints: skip body bullets; still document path/query + response
 - Prefer linking to gym-backend `docs/<guide>.md` for deep guides
-
 ### Examples (saved responses under each request)
 
 Every request must have at least one saved **Example**. Prefer:

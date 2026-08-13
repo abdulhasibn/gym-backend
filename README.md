@@ -39,12 +39,13 @@ curl http://localhost:3000/health
 | [`docs/membership-invites.md`](./docs/membership-invites.md) | Admin invites + Client accept + DataGrants                                |
 | [`docs/subscriptions.md`](./docs/subscriptions.md)           | Admin payment / start override + Client subscription list                 |
 | [`docs/roster.md`](./docs/roster.md)                         | Roster, trainer assign, offboard, check-in block                          |
+| [`docs/api.md`](./docs/api.md)                               | Endpoint catalogue (attendance, profile/progress, renewals-due)           |
 | [`docs/PROGRESS.md`](./docs/PROGRESS.md)                     | Current stage / next up                                                   |
 | [`docs/MVP_ROADMAP.md`](./docs/MVP_ROADMAP.md)               | Build order (Orbit tab visualizes this)                                   |
 | Postman                                                      | [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) |
 
-**Shipped (Stint 1):** Auth, gym-orgs, Mini-CRM A11–A13, plans, invites/accept/grants, subscriptions core, roster / assign / offboard / block.  
-**Next:** Stint 2 — attendance, profile/progress, renewals due-list ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
+**Shipped (Stint 1–2):** Auth, gym-orgs, Mini-CRM A11–A13, plans, invites/accept/grants, subscriptions core, roster / assign / offboard / block, attendance, profile/progress, renewals due-list.  
+**Next:** Stint 3 — coaching, calories, health sync, CRM convert, notifications ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
 
 ## Scripts
 

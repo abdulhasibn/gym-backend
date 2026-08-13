@@ -34,7 +34,7 @@ deferred within 1.5.
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Attendance** + **Profile & Progress** + renewals-due (Stint 2) |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Attendance** + **Profile & Progress** + renewals-due (Stint 2); every request Docs opens with `**Story:**` functional blurb |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -68,6 +68,25 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.”
 
 ## Log
+
+### 2026-08-13 — Postman: functional Story blurbs on all requests
+
+- Prepended `**Story:**` (1–2 sentence actor/action/outcome) to all 60
+  request descriptions in gym-backend-postman `e01816b`; technical bullet
+  Docs unchanged beneath.
+- sync-postman skill + `audit-docs-examples.mjs` now require Story at
+  description start. Audit `gapCount: 0`.
+- Cloud `putCollection` async task `1a14e760-a5e9-4acb-87ab-aed04cce31c5`
+  successful — spot-checked Create Lead, Self Check-in, Assign Trainer.
+
+### 2026-08-13 — Docs + Orbit sync for Stint 2 complete
+
+- Brought README, client-auth, api, subscriptions, roster, product-flows into
+  line with 2.1–2.4 shipped / next Stint 3 (3.1 coaching).
+- Orbit: `prd-showcase` (+ `mvp-roadmap` mirror) Stint 2 tagline **2.1–2.4
+  shipped**; modules M4/M5/M8 “API live”; lede → next is 3.1.
+- Redeployed `gym-prd-visual` from `docs/prd-showcase/` (CLI session; auth.json
+  token lacked team access) → https://gym-prd-visual.vercel.app
 
 ### 2026-08-11 — Postman: Attendance + Profile & Progress (Stint 2)
 

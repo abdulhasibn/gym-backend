@@ -5,7 +5,7 @@ Admin payment status / start override and Client subscription reads after invite
 **Base URL:** `https://gym-backend-lovat-mu.vercel.app` (prod) or `http://localhost:3000` (local)  
 **API index:** [`api.md`](api.md)  
 **Prereq:** Accept already creates snapshotted lines — [`membership-invites.md`](membership-invites.md)  
-**Status:** Stint 1.5 **core** shipped (payment + start override + C10). Addon attach / renew deferred ([`MVP_ROADMAP.md`](MVP_ROADMAP.md)).
+**Status:** Stint 1.5 **core** + 2.4 renewals due-list shipped. FIRST_ATTENDANCE start is live with attendance (2.1). Addon attach / renew deferred ([`MVP_ROADMAP.md`](MVP_ROADMAP.md)).
 
 Auth: `Authorization: Bearer <accessToken>`. Errors: `{ "error": { "code", "message" } }`.
 
@@ -90,9 +90,18 @@ Requires `CLIENT` lane + ACTIVE membership at gym.
 
 ---
 
+## Admin — renewals due (2.4)
+
+`GET /gym-orgs/:gymOrgId/subscriptions/renewals-due`
+
+Query: `onOrBefore` (default today, gym-local calendar), optional `onOrAfter`, `limit` / `offset`.
+
+**200:** `{ "renewals": { "items": [ ... ], "total", "limit", "offset" } }` — BASE + ADDON lines labeled; each item includes `clientUserId`. Push/T-2 jobs remain Stint 3.5.
+
+---
+
 ## Deferred
 
 - Addon attach mid-cycle (A8b) / renew as new row (F4.4)
-- FIRST_ATTENDANCE start (needs Stint 2 attendance)
 
 Roster / assign / offboard / block: [`roster.md`](roster.md).

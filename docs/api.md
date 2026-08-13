@@ -12,6 +12,8 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | [`membership-invites.md`](membership-invites.md) | Membership invites, accept, DataGrants |
 | [`subscriptions.md`](subscriptions.md) | Subscription payment, start override, Client list |
 | [`roster.md`](roster.md) | Roster, trainer assign, offboard, check-in block |
+| [`subscriptions.md`](subscriptions.md#admin--renewals-due-24) | Admin renewals due-list (2.4) |
+| [`client-auth.md`](client-auth.md#client-surface-available-now) | Client attendance + profile/progress (2.1–2.2) |
 | [`leads.md`](leads.md) | Mini-CRM leads |
 
 ---
@@ -98,6 +100,28 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | `PATCH` | `/gym-orgs/:gymOrgId/subscriptions/:subscriptionId/payment` | [subscriptions § Payment](subscriptions.md#admin--update-payment) |
 | `POST` | `/gym-orgs/:gymOrgId/subscriptions/:subscriptionId/start-override` | [subscriptions § Start override](subscriptions.md#admin--start-override-a19) |
 | `GET` | `/gym-orgs/:gymOrgId/my-subscriptions` | [subscriptions § Client list](subscriptions.md#client--my-subscriptions-c10) |
+| `GET` | `/gym-orgs/:gymOrgId/subscriptions/renewals-due` | [subscriptions § Renewals due](subscriptions.md#admin--renewals-due-24) |
+
+### Attendance
+
+| Method | Path | Guide |
+|--------|------|-------|
+| `POST` | `/gym-orgs/:gymOrgId/attendances/check-in` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |
+| `POST` | `/gym-orgs/:gymOrgId/attendances/desk-mark` | Admin desk mark (2.1) |
+| `GET` | `/gym-orgs/:gymOrgId/attendances` | Gym-day list (2.1) |
+| `GET` | `/gym-orgs/:gymOrgId/attendances/clients/:clientUserId` | Per-client history (2.1) |
+| `GET` | `/gym-orgs/:gymOrgId/my-attendances` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |
+
+### Profile & progress
+
+| Method | Path | Guide |
+|--------|------|-------|
+| `GET` | `/me/profile` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |
+| `PATCH` | `/me/profile` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |
+| `GET` | `/me/progress-logs` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |
+| `PUT` | `/me/progress-logs` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |
+| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/profile` | Staff grant-gated (2.3) |
+| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/progress-logs` | Staff grant-gated (2.3) |
 
 ### Roster
 
@@ -125,4 +149,4 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 
 ## Not shipped yet
 
-Attendance, client profile/progress, renewals, coaching, calories, health sync, push, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
+Coaching, calories, health sync, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).

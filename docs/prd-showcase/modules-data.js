@@ -94,7 +94,7 @@ window.MODULES_DATA = [
       "Roster: ACTIVE / INACTIVE — API live (1.6)",
       "Trainer assignment (requires active Trainer addon) — API live (1.6)",
       "Offboard clears grants; attendance retained — API live (1.6)",
-      "Block check-in flag (Admin safety valve) — API live (1.6); enforced in attendance 2.1",
+      "Block check-in flag (Admin safety valve) — API live (1.6); enforced on check-in (2.1)",
     ],
     detail: {
       purpose:
@@ -132,8 +132,8 @@ window.MODULES_DATA = [
       "Base subscription required; Trainer addon optional — snapshot on accept live",
       "Price/duration snapshot on each subscription line — on accept",
       "Payment status per line: paid / unpaid / partial — Admin APIs live (1.5 core)",
-      "Base start Admin override — API live (1.5); first attendance start — Stint 2; addon attach — deferred (A8b)",
-      "Renewals: new row per period; T-2 for base + addon — later",
+      "Base start Admin override — API live (1.5); first attendance start — API live (2.1); addon attach — deferred (A8b)",
+      "Renewals due-list (Admin read) — API live (2.4); new row per period + T-2 push — later",
       "Daily Admin nudge for unpaid / partial lines — later",
     ],
     detail: {
@@ -167,9 +167,9 @@ window.MODULES_DATA = [
       "Trainer cannot log attendance in MVP.",
     ],
     items: [
-      "Client self check-in",
-      "Admin desk mark",
-      "Per-client / per-day / gym-wide logs",
+      "Client self check-in — API live (2.1)",
+      "Admin desk mark — API live (2.1)",
+      "Per-client / per-day / gym-wide logs — API live (2.1)",
       { text: "Trainer log, QR, geofence", out: true },
     ],
     detail: {
@@ -261,11 +261,11 @@ window.MODULES_DATA = [
       "Plan adherence % needs matching class grants.",
     ],
     items: [
-      "Client-owned ProgressLog (canonical weight)",
-      "BMI from profile height + current weight",
-      "Attendance history (gym-owned)",
+      "Client-owned ProgressLog (canonical weight) — API live (2.2)",
+      "BMI from profile height + current weight — API live (2.2)",
+      "Attendance history (gym-owned) — API live (2.1)",
       "Plan adherence % (staff needs class grant)",
-      "Profile: height, DOB, gender, medical notes",
+      "Profile: height, DOB, gender, medical notes — API live (2.2); staff reads grant-gated (2.3)",
     ],
     detail: {
       purpose: "Give members a personal progress surface and staff a grant-gated view — never a gym-owned copy of body data.",

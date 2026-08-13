@@ -39,6 +39,12 @@ function walk(items, folder = '') {
 
     if (!desc.trim()) {
       gaps.push({ path, kind: 'docs', detail: 'empty description' });
+    } else if (!desc.startsWith('**Story:**')) {
+      gaps.push({
+        path,
+        kind: 'docs',
+        detail: 'missing **Story:** blurb at start of description',
+      });
     } else if (desc.includes('|---|') || desc.includes('| --- |')) {
       gaps.push({ path, kind: 'docs', detail: 'markdown table (|---|) — use bullet lists' });
     } else if (desc.length < 40) {
