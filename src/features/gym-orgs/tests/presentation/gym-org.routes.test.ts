@@ -13,10 +13,12 @@ import { CreateStaffInviteUseCase } from '../../application/create-staff-invite.
 import { GetGymOrgUseCase } from '../../application/get-gym-org.use-case';
 import { GymOrgAdminPolicy } from '../../application/gym-org-admin.policy';
 import { ListGymStaffInvitesUseCase } from '../../application/list-gym-staff-invites.use-case';
+import { ListGymTrainersUseCase } from '../../application/list-gym-trainers.use-case';
 import { ListMyGymOrgsUseCase } from '../../application/list-my-gym-orgs.use-case';
 import { ListMyStaffInviteInboxUseCase } from '../../application/list-my-staff-invite-inbox.use-case';
 import { RevokeStaffInviteUseCase } from '../../application/revoke-staff-invite.use-case';
 import { UpdateGymOrgUseCase } from '../../application/update-gym-org.use-case';
+import { toGymOrgId } from '../../domain/gym-org-id';
 import { GymOrgName } from '../../domain/gym-org-name.value-object';
 import { IanaTimezone } from '../../domain/iana-timezone.value-object';
 import { StaffCode } from '../../domain/staff-code.value-object';
@@ -27,6 +29,7 @@ import { FixedClock } from '../fakes/fixed-clock';
 import { InMemoryGymOrgRepository } from '../fakes/in-memory-gym-org.repository';
 import { InMemoryStaffInviteRepository } from '../fakes/in-memory-staff-invite.repository';
 import { InMemoryStaffUserLookup } from '../fakes/in-memory-staff-user-lookup';
+import { InMemoryTrainerProfileQueries } from '../fakes/in-memory-trainer-profile.queries';
 
 class SilentLogger implements Logger {
   info(): void {}
@@ -43,6 +46,7 @@ function createTestApp(
   const gymOrgs = new InMemoryGymOrgRepository();
   const staffInvites = new InMemoryStaffInviteRepository();
   const staffUsers = new InMemoryStaffUserLookup();
+  const trainers = new InMemoryTrainerProfileQueries();
   const clock = new FixedClock(new Date('2026-08-04T00:00:00.000Z'));
   const policy = new GymOrgAdminPolicy(gymOrgs);
   let idCounter = 0;
@@ -65,6 +69,7 @@ function createTestApp(
       },
     }),
     new ListGymStaffInvitesUseCase(policy, staffInvites),
+    new ListGymTrainersUseCase(policy, trainers),
     new ListMyStaffInviteInboxUseCase(staffInvites),
     new AcceptStaffInviteUseCase(staffInvites, clock),
     new RevokeStaffInviteUseCase(policy, staffInvites, clock),
@@ -86,7 +91,7 @@ function createTestApp(
   app.use('/gym-orgs', createGymOrgRouter(controller, authenticate));
   app.use(createErrorHandlerMiddleware(new SilentLogger(), [mapGymOrgError]));
 
-  return { app, gymOrgs, staffInvites, staffUsers, clock };
+  return { app, gymOrgs, staffInvites, staffUsers, trainers, clock };
 }
 
 describe('gym-org routes', () => {
@@ -227,6 +232,87 @@ describe('gym-org routes', () => {
     expect(revoked.body.staffInvite.status).toBe('REVOKED');
   });
 
+  it('lists gym trainers for an admin', async () => {
+    const { app, trainers } = createTestApp('ADMIN');
+    const create = await supertest(app)
+      .post('/gym-orgs')
+      .send({ name: 'North Star Fitness' })
+      .expect(201);
+    const gymOrgId = create.body.gymOrg.id as string;
+
+    trainers.seed({
+      trainerProfileId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      userId: toUserId('11111111-1111-4111-8111-111111111111'),
+      gymOrgId: toGymOrgId(gymOrgId),
+      name: 'Owner Admin',
+      email: 'owner@example.com',
+      staffCode: 'STF-OWNER',
+      bio: null,
+      isAdmin: true,
+      createdAt: '2026-08-04T00:00:00.000Z',
+    });
+    trainers.seed({
+      trainerProfileId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      userId: toUserId('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+      gymOrgId: toGymOrgId(gymOrgId),
+      name: 'Ada Trainer',
+      email: 'trainer@example.com',
+      staffCode: 'STF-TRAINER01',
+      bio: 'PT',
+      isAdmin: false,
+      createdAt: '2026-08-05T00:00:00.000Z',
+    });
+
+    const list = await supertest(app).get(`/gym-orgs/${gymOrgId}/trainers`).expect(200);
+
+    expect(list.body.trainers).toMatchObject({
+      total: 2,
+      limit: 20,
+      offset: 0,
+    });
+    expect(list.body.trainers.items).toEqual([
+      {
+        trainerProfileId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        userId: '11111111-1111-4111-8111-111111111111',
+        gymOrgId,
+        name: 'Owner Admin',
+        email: 'owner@example.com',
+        staffCode: 'STF-OWNER',
+        bio: null,
+        isAdmin: true,
+        createdAt: '2026-08-04T00:00:00.000Z',
+      },
+      {
+        trainerProfileId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        gymOrgId,
+        name: 'Ada Trainer',
+        email: 'trainer@example.com',
+        staffCode: 'STF-TRAINER01',
+        bio: 'PT',
+        isAdmin: false,
+        createdAt: '2026-08-05T00:00:00.000Z',
+      },
+    ]);
+  });
+
+  it('rejects listing trainers when the actor is not an admin', async () => {
+    const { app, gymOrgs } = createTestApp('TRAINER');
+    const created = await gymOrgs.createOwnedGymOrg({
+      ownerUserId: toUserId('11111111-1111-4111-8111-111111111111'),
+      name: GymOrgName.create('Gym'),
+      address: null,
+      contactPhone: null,
+      contactEmail: null,
+      logoUrl: null,
+      timezone: IanaTimezone.create('Asia/Kolkata'),
+    });
+
+    const response = await supertest(app).get(`/gym-orgs/${created.id}/trainers`).expect(403);
+
+    expect(response.body.error.code).toBe('GYM_ORG_ADMIN_FORBIDDEN');
+  });
+
   it('rejects staff invite creation when actor is not an admin', async () => {
     const { app, gymOrgs } = createTestApp('TRAINER');
     const created = await gymOrgs.createOwnedGymOrg({
@@ -308,6 +394,7 @@ describe('gym-org routes', () => {
         generate: () => 'cccccccc-cccc-4ccc-8ccc-cccccccccccd',
       }),
       new ListGymStaffInvitesUseCase(policy, staffInvites),
+      new ListGymTrainersUseCase(policy, new InMemoryTrainerProfileQueries()),
       new ListMyStaffInviteInboxUseCase(staffInvites),
       new AcceptStaffInviteUseCase(staffInvites, clock),
       new RevokeStaffInviteUseCase(policy, staffInvites, clock),

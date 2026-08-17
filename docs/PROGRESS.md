@@ -26,7 +26,7 @@ within 1.5.
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
-| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied |
+| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (Admin picker for assign) |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
 | Memberships feature (`src/features/memberships`) | Phase 1–5 + 2.4 renewals due-list done — plans, invites, accept/grants, subscriptions, roster/assign/offboard/block, `GET .../subscriptions/renewals-due`; A8b attach/renew deferred |
 | Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
@@ -37,7 +37,7 @@ within 1.5.
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet + templates) |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet + templates); **Gym Orgs** List Gym Trainers |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -69,6 +69,28 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-17 — Sync-docs + Postman after trainer list
+
+- README + Orbit `modules-data.js`: Admin gym trainer list marked live
+  (A4 picker). Roadmap/Orbit lede unchanged — next remains **3.2**.
+- Prod https://gym-prd-visual.vercel.app (modules-data deploy).
+- Postman audit pass (`gapCount` 0). Git `gym-backend-postman` `ddffe43`
+  already on origin. Cloud `putCollection` async
+  `40791026-fdcd-4759-9227-92b0bc4848f6` — List Gym Trainers under Gym Orgs
+  (not root); `updatedAt` `2026-08-17T11:49:17Z`.
+
+### 2026-08-17 — Admin list gym trainers
+
+- Detour before 3.2: `GET /gym-orgs/:gymOrgId/trainers` so Admin can
+  pick `trainerProfileId` for assign (A4). Paginated; live
+  `trainer_profiles` + user name/email/`staffCode`/`isAdmin`.
+- gym-orgs query port + `ListGymTrainersUseCase`; Admin-only
+  (`GYM_ORG_ADMIN_FORBIDDEN`). Tests: use case + routes.
+- Docs: `api.md`, `client-auth.md`, `roster.md`, F3.4. Postman **Gym Orgs**
+  — List Gym Trainers (200 + 403 Examples). Git `../gym-backend-postman`
+  `ddffe43`; cloud folder-scoped create (not root). 3.2 workout APIs still
+  next.
 
 ### 2026-08-17 — Sync-docs + Postman after T7
 

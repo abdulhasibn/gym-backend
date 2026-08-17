@@ -290,6 +290,7 @@ Call after cold start to restore UI from a stored token. On `401` from a protect
 ## Gym orgs (STAFF after login)
 
 Requires Bearer. Create only if `roleCode` is `STAFF_UNASSIGNED` or `ADMIN`.
+List trainers at a gym is **ADMIN** only (picker for assign-trainer).
 
 ### Create gym org
 
@@ -372,6 +373,68 @@ Body same shape as [create](#create-gym-org) (`name` + optionals + `timezone`).
 **200** `{ "gymOrg": { … } }`
 
 Errors: **403** `GYM_ORG_WRITE_FORBIDDEN` · **404** `NOT_FOUND` · **422** `VALIDATION_ERROR`
+
+### List gym trainers
+
+`GET /gym-orgs/:gymOrgId/trainers` — Bearer ADMIN at that gym
+
+Live `trainer_profiles` at the gym (Trainer invites accepted + Admin-as-Trainer). Use `trainerProfileId` on [assign trainer](roster.md#admin--assign--reassign-trainer). Not the same as staff invites (`invitedUserId` is `users.id`).
+
+**Path params**
+
+| Property | Required | Type | Description | Values / example |
+|----------|----------|------|-------------|------------------|
+| `gymOrgId` | yes | string (uuid) | Gym | `"33333333-3333-4333-8333-333333333333"` |
+
+**Query**
+
+| Property | Required | Type | Description | Values / example |
+|----------|----------|------|-------------|------------------|
+| `limit` | no | integer | Page size 1–100, default **20** | `20` |
+| `offset` | no | integer | Skip, default **0** | `0` |
+
+**200**
+
+```json
+{
+  "trainers": {
+    "items": [
+      {
+        "trainerProfileId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "userId": "22222222-2222-4222-8222-222222222222",
+        "gymOrgId": "33333333-3333-4333-8333-333333333333",
+        "name": "Owner Admin",
+        "email": "owner@example.com",
+        "staffCode": "STAFF-AB12",
+        "bio": null,
+        "isAdmin": true,
+        "createdAt": "2026-08-08T12:00:00.000Z"
+      }
+    ],
+    "total": 1,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+**`trainers.items[]`**
+
+| Property | Type | Description | Values / example |
+|----------|------|-------------|------------------|
+| `trainerProfileId` | string (uuid) | `trainer_profiles.id` — pass to assign-trainer | `"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"` |
+| `userId` | string (uuid) | Staff user id | `"22222222-2222-4222-8222-222222222222"` |
+| `gymOrgId` | string (uuid) | Gym | `"33333333-3333-4333-8333-333333333333"` |
+| `name` | string | Display name | `"Owner Admin"` |
+| `email` | string | Email | `"owner@example.com"` |
+| `staffCode` | string \| null | Staff lookup code | `"STAFF-AB12"` |
+| `bio` | string \| null | Optional bio | `null` |
+| `isAdmin` | boolean | Live `gym_admins` at this gym (Admin-as-Trainer) | `true` |
+| `createdAt` | string (ISO) | Profile created | `"2026-08-08T12:00:00.000Z"` |
+
+Ordered by `createdAt` ascending. Soft-deleted profiles and users are omitted.
+
+Errors: **403** `GYM_ORG_ADMIN_FORBIDDEN` · **401** `AUTHENTICATION_FAILED` · **422** `VALIDATION_ERROR`
 
 ---
 

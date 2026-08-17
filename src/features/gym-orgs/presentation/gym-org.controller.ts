@@ -5,6 +5,7 @@ import type { CreateGymOrgUseCase } from '../application/create-gym-org.use-case
 import type { CreateStaffInviteUseCase } from '../application/create-staff-invite.use-case';
 import type { GetGymOrgUseCase } from '../application/get-gym-org.use-case';
 import type { ListGymStaffInvitesUseCase } from '../application/list-gym-staff-invites.use-case';
+import type { ListGymTrainersUseCase } from '../application/list-gym-trainers.use-case';
 import type { ListMyGymOrgsUseCase } from '../application/list-my-gym-orgs.use-case';
 import type { ListMyStaffInviteInboxUseCase } from '../application/list-my-staff-invite-inbox.use-case';
 import type { RevokeStaffInviteUseCase } from '../application/revoke-staff-invite.use-case';
@@ -29,6 +30,7 @@ export class GymOrgController {
     private readonly updateGymOrg: UpdateGymOrgUseCase,
     private readonly createStaffInvite: CreateStaffInviteUseCase,
     private readonly listGymStaffInvites: ListGymStaffInvitesUseCase,
+    private readonly listGymTrainers: ListGymTrainersUseCase,
     private readonly listMyStaffInviteInbox: ListMyStaffInviteInboxUseCase,
     private readonly acceptStaffInvite: AcceptStaffInviteUseCase,
     private readonly revokeStaffInvite: RevokeStaffInviteUseCase,
@@ -106,6 +108,21 @@ export class GymOrgController {
         page,
       );
       res.status(200).json({ staffInvites });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  listTrainers: RequestHandler = async (req, res, next) => {
+    try {
+      const { gymOrgId } = gymOrgIdParamSchema.parse(req.params);
+      const page = paginationQuerySchema.parse(req.query);
+      const trainers = await this.listGymTrainers.execute(
+        requireAuthenticatedActor(req),
+        toGymOrgId(gymOrgId),
+        page,
+      );
+      res.status(200).json({ trainers });
     } catch (error) {
       next(error);
     }

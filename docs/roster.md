@@ -78,7 +78,7 @@ Requires a live `trainer_profiles` row at the gym (Trainer or Admin-as-Trainer).
 { "trainerProfileId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" }
 ```
 
-Requires live Admin. Membership must be **ACTIVE**. Client must have an **in-date** `TRAINER_COACHING` ADDON (payment ignored). Trainer profile must be live at the gym. Admin may assign to self via their own `trainer_profiles.id`.
+Requires live Admin. Membership must be **ACTIVE**. Client must have an **in-date** `TRAINER_COACHING` ADDON (payment ignored). Trainer profile must be live at the gym. Admin may assign to self via their own `trainer_profiles.id`. Obtain ids from [`GET /gym-orgs/:gymOrgId/trainers`](client-auth.md#list-gym-trainers).
 
 **200:** `{ "membership": { ... } }`  
 **404** membership / trainer not found  

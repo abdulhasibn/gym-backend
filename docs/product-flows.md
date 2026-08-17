@@ -222,7 +222,7 @@ A1, A2, A2b · timezone for all calendar-day displays · single-gym UI.
 
 Invite → accept → ACTIVE membership; roster; trainer assignment; DataGrants; offboard; block check-in.
 
-**API status:** Admin invite create/list/revoke, Client inbox/accept, Client `my-data-grants`, and Phase 5 roster / assign / offboard / block are **shipped**. Integration: [`membership-invites.md`](membership-invites.md) · [`roster.md`](roster.md).
+**API status:** Admin invite create/list/revoke, Client inbox/accept, Client `my-data-grants`, Phase 5 roster / assign / offboard / block, and Admin gym trainer list (`GET .../trainers`) are **shipped**. Integration: [`membership-invites.md`](membership-invites.md) · [`roster.md`](roster.md) · [`client-auth.md`](client-auth.md#list-gym-trainers).
 
 ### Screens
 
@@ -282,7 +282,7 @@ Invite → accept → ACTIVE membership; roster; trainer assignment; DataGrants;
 **F3.4 Trainer assign (Admin)**
 
 1. Only enabled when client has in-date TRAINER_COACHING addon.
-2. Pick trainer (or self if Admin-as-Trainer).
+2. Admin lists live trainers (`GET /gym-orgs/:gymOrgId/trainers`) and picks one (or self if Admin-as-Trainer).
 3. Notify Client + Trainer.
 4. Reassign keeps prior plan history for that gym provenance.
 

@@ -60,6 +60,7 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | `GET` | `/gym-orgs` | [client-auth § List gyms](client-auth.md#list-gym-orgs) |
 | `GET` | `/gym-orgs/:gymOrgId` | [client-auth § Get gym](client-auth.md#get-gym-org) |
 | `PATCH` | `/gym-orgs/:gymOrgId` | [client-auth § Patch gym](client-auth.md#update-gym-org) |
+| `GET` | `/gym-orgs/:gymOrgId/trainers` | [client-auth § List trainers](client-auth.md#list-gym-trainers) |
 
 ### Staff invites
 

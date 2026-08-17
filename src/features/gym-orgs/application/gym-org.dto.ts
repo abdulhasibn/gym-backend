@@ -1,5 +1,6 @@
 import type { GymOrg } from '../domain/gym-org.entity';
 import type { GymOrgSummary } from '../domain/gym-org.queries';
+import type { GymTrainerSummary } from '../domain/trainer-profile.queries';
 
 export interface GymOrgDto {
   readonly id: string;
@@ -19,6 +20,18 @@ export interface GymOrgSummaryDto {
   readonly name: string;
   readonly timezone: string;
   readonly isOwner: boolean;
+}
+
+export interface GymTrainerDto {
+  readonly trainerProfileId: string;
+  readonly userId: string;
+  readonly gymOrgId: string;
+  readonly name: string;
+  readonly email: string;
+  readonly staffCode: string | null;
+  readonly bio: string | null;
+  readonly isAdmin: boolean;
+  readonly createdAt: string;
 }
 
 export interface StaffInviteDto {
@@ -60,6 +73,20 @@ export function toGymOrgDto(gymOrg: GymOrg): GymOrgDto {
     ownerUserId: gymOrg.ownerUserId,
     createdAt: gymOrg.createdAt.toISOString(),
     updatedAt: gymOrg.updatedAt.toISOString(),
+  };
+}
+
+export function toGymTrainerDto(summary: GymTrainerSummary): GymTrainerDto {
+  return {
+    trainerProfileId: summary.trainerProfileId,
+    userId: summary.userId,
+    gymOrgId: summary.gymOrgId,
+    name: summary.name,
+    email: summary.email,
+    staffCode: summary.staffCode,
+    bio: summary.bio,
+    isAdmin: summary.isAdmin,
+    createdAt: summary.createdAt,
   };
 }
 

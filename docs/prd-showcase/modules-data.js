@@ -93,6 +93,7 @@ window.MODULES_DATA = [
       "DataGrants: profile attributes + class grants (no copy) — API live",
       "Roster: ACTIVE / INACTIVE — API live (1.6)",
       "Trainer assignment (requires active Trainer addon) — API live (1.6)",
+      "Admin gym trainer list (assign picker) — API live",
       "Offboard clears grants; attendance retained — API live (1.6)",
       "Block check-in flag (Admin safety valve) — API live (1.6); enforced on check-in (2.1)",
     ],

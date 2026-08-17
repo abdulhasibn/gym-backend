@@ -13,6 +13,7 @@ import { CreateStaffInviteUseCase } from './application/create-staff-invite.use-
 import { GetGymOrgUseCase } from './application/get-gym-org.use-case';
 import { GymOrgAdminPolicy } from './application/gym-org-admin.policy';
 import { ListGymStaffInvitesUseCase } from './application/list-gym-staff-invites.use-case';
+import { ListGymTrainersUseCase } from './application/list-gym-trainers.use-case';
 import { ListMyGymOrgsUseCase } from './application/list-my-gym-orgs.use-case';
 import { ListMyStaffInviteInboxUseCase } from './application/list-my-staff-invite-inbox.use-case';
 import { RevokeStaffInviteUseCase } from './application/revoke-staff-invite.use-case';
@@ -23,6 +24,7 @@ import { SupabaseStaffInviteQueries } from './infrastructure/supabase-staff-invi
 import { SupabaseStaffInviteRepository } from './infrastructure/supabase-staff-invite.repository';
 import { SupabaseStaffUserLookup } from './infrastructure/supabase-staff-user-lookup';
 import { SupabaseTrainerProfileDirectory } from './infrastructure/supabase-trainer-profile.directory';
+import { SupabaseTrainerProfileQueries } from './infrastructure/supabase-trainer-profile.queries';
 import { GymOrgController } from './presentation/gym-org.controller';
 import { mapGymOrgError } from './presentation/gym-org.error-mapper';
 import { createGymOrgRouter } from './presentation/gym-org.routes';
@@ -36,6 +38,7 @@ export function composeGymOrgFeature(
   const gymOrgs = new SupabaseGymOrgRepository(dataClient);
   const gymOrgQueries = new SupabaseGymOrgQueries(dataClient);
   const trainerProfiles = new SupabaseTrainerProfileDirectory(dataClient);
+  const trainerProfileQueries = new SupabaseTrainerProfileQueries(dataClient);
   const staffInvites = new SupabaseStaffInviteRepository(dataClient);
   const staffInviteQueries = new SupabaseStaffInviteQueries(dataClient);
   const staffUsers = new SupabaseStaffUserLookup(dataClient);
@@ -48,6 +51,7 @@ export function composeGymOrgFeature(
     new UpdateGymOrgUseCase(gymOrgs, adminPolicy, clock),
     new CreateStaffInviteUseCase(adminPolicy, staffInvites, staffUsers, clock, ids),
     new ListGymStaffInvitesUseCase(adminPolicy, staffInviteQueries),
+    new ListGymTrainersUseCase(adminPolicy, trainerProfileQueries),
     new ListMyStaffInviteInboxUseCase(staffInviteQueries),
     new AcceptStaffInviteUseCase(staffInvites, clock),
     new RevokeStaffInviteUseCase(adminPolicy, staffInvites, clock),
