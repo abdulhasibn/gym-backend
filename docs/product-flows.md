@@ -1,6 +1,6 @@
 # Gym SaaS — Product Flows & UI Requirements Brief
 
-**Source of truth:** PRD v2.3 · `CONTEXT.md` · ADRs 0002–0005  
+**Source of truth:** PRD v2.3 · `CONTEXT.md` · ADRs 0002–0007   
 **Audience:** Product/design/implementation of Client mobile, Trainer mobile, and Admin web  
 **Geography / language:** India-first · English UI only  
 **Stack surfaces:** React Native (Client + Trainer; light Admin) · Next.js (Admin-primary)
@@ -62,7 +62,7 @@ Staff never get a **copy** of Client-owned data. They read the Client’s rows w
 ### Time
 
 - Instants stored UTC; **calendar days** for gym ops use the gym’s timezone (default `Asia/Kolkata`).
-- Plan completion “days” use the **assigning gym’s** timezone.
+- Plan / extra food “days” use the **assigning gym’s** timezone (extras with no coaching gym: `Asia/Kolkata`).
 - UI copy for dates should be local to gym timezone for Admin desk and renewal lists.
 
 ### Explicitly out of MVP (do not design)
@@ -89,7 +89,7 @@ Open join codes · shadow profiles · payment gateway · WhatsApp/SMS reminders 
 2. See invite in Invitation list (and/or open email link).
 3. Accept → required vitals grants + optional sharing checklist → ACTIVE membership.
 4. Check in; view base (± addon) subscription; edit profile; log calories; connect health apps.
-5. If PT addon active: see diet/workout, mark completions per day; manage who at the gym can see progress/plans/etc.
+5. If PT addon active: see diet/workout; complete diet items into today’s diary (and log extras); manage who at the gym can see progress/plans/etc.
 
 ### Journey C — Trainer coaches
 
@@ -403,11 +403,13 @@ C4, A5 · Trainer cannot log · block check-in interaction with M3.
 
 ### Purpose
 
-Structured diet plans assigned to a Client; daily completions; grant-gated adherence for staff.
+Structured diet plans assigned from the **same food catalog** as the calorie diary; completing an item logs it; grant-gated adherence for staff.
+
+**API status:** Search / assign / client complete into diary **shipped** (3.1). CustomFood and clone/template UI later. Integration: [`nutrition.md`](nutrition.md).
 
 ### Entitlement gate
 
-Client must have **in-date TRAINER_COACHING** addon for new assigns and active editing. After expiry: Client + staff see **read-only** prior plans.
+Client must have **in-date TRAINER_COACHING** addon for new assigns and active editing. After expiry: Client + staff see **read-only** prior plans. Extra diary logging (M9) still works on base membership.
 
 ### Screens
 
@@ -416,47 +418,48 @@ Client must have **in-date TRAINER_COACHING** addon for new assigns and active e
 | Screen | Contents |
 |---|---|
 | Client → Diet | ACTIVE plan + archive list |
-| Plan builder | Title, notes, meals/slots, items (food or custom), targets (cal/macros), sort order |
+| Plan builder | Title, notes, MealSlots, catalog search → FoodItem × serving × qty, targets, sort order |
 | Assign / replace | Assigning archives previous ACTIVE |
-| Adherence | Per-day completion % — **only if DIET_PLANS grant**; else “Not shared” |
+| Adherence | Prescribed vs eaten — **only if DIET_PLANS grant**; else “Not shared” |
 
 **Client**
 
 | Screen | Contents |
 |---|---|
-| My diet | Today’s slots/items; mark complete for **today** (gym TZ of assigning gym) |
-| History / other days | Completions by date |
-| Frozen empty | If no addon: empty or upsell state; if expired: read-only |
+| My diet | Today’s slots/items; mark complete for **today** (writes diary); add extra food (M9) on the same slots |
+| History / other days | Diary for that date (prescribed + extras) |
+| Frozen empty | If no addon: empty or upsell for **assign**; extras still loggable |
 
 ### Flows
 
 **F6.1 Assign diet**
 
 1. Confirm client has in-date Trainer addon + assigned trainer (or Admin-as-Trainer).
-2. Build structure → save ACTIVE (prior ACTIVE → ARCHIVED).
+2. Search catalog (seed + this gym’s CustomFood) → servings → save ACTIVE (prior ACTIVE → ARCHIVED).
 3. Notify Client. **No** auto-grant of DIET_PLANS.
 4. Assigning trainer can reopen and edit definition without DIET_PLANS grant.
 
 **F6.2 Client mark complete**
 
-1. Toggle item complete for a calendar day → creates/updates PlanCompletion for that day.
+1. Toggle item complete for a calendar day → inserts (or soft-deletes) a **plan-linked** `CalorieLogItem` for that day. Same catalog food as the prescription.
 2. Completing Monday does **not** mark Tuesday.
-3. Adherence charts count distinct day completions.
+3. Adherence counts distinct days with prescribed items logged.
 
 **F6.3 Staff view adherence**
 
-- With DIET_PLANS: show % and day grid.
-- Without: hide numbers; optional CTA copy “Ask member to share diet progress.”
+- With DIET_PLANS: show prescribed vs eaten.
+- With CALORIES: show extras and day totals.
+- Without: hide numbers; optional CTA “Ask member to share diet progress.”
 
 **F6.4 Clone / template (P1)** — duplicate plan structure onto another client (still needs addon on target).
 
 ### Out of module
 
-- PDF upload as plan · AI auto-generate plan.
+- PDF upload as plan · AI auto-generate plan · free-text food names.
 
 ### Requirements
 
-C5, T5, T7 (P1), T8 (grant), A4 coupling · PlanCompletion model.
+C5, T5, T7 (P1), T8 (grant), A4 coupling · ADR-0006 (unified diary).
 
 ---
 
@@ -464,20 +467,26 @@ C5, T5, T7 (P1), T8 (grant), A4 coupling · PlanCompletion model.
 
 ### Purpose
 
-Same pattern as diet: days → exercises → sets/reps/notes; per-day completions; `WORKOUT_PLANS` grant for adherence.
+Same pattern as diet for **structure**: search catalog `ExerciseItem` (not typed names); days → prescribed sets/reps/notes; per-day `PlanCompletion`; `WORKOUT_PLANS` grant for adherence. Not a Hevy session log (ADR-0007).
+
+**API status:** Catalog seed **live** (30 movements, ADR-0007). Assign / complete APIs **not shipped** (3.2).
 
 ### Screens & flows
 
 Mirror M6 with workout vocabulary:
 
-- Plan builder: days, exercises, sets, reps, notes.
+- Plan builder: search exercise catalog, days, sets, reps, notes.
 - Client: mark exercise/session complete **per day**.
 - Staff adherence needs `WORKOUT_PLANS`.
 - Assign/edit definition by assigning trainer without grant; freeze on addon expiry.
 
+### Out of module
+
+- PDF upload as plan · AI auto-generate · free-text exercise names · Hevy-style set logs.
+
 ### Requirements
 
-C6, T6, T7 (P1), T8 (grant).
+C6, T6, T7 (P1), T8 (grant) · ADR-0007 (exercise catalog).
 
 ---
 
@@ -529,43 +538,49 @@ C7, C8, C14, T4, A17 · Client-owned · no gym_org ownership on logs.
 
 ---
 
-## M9 — Nutrition (Calorie log)
+## M9 — Nutrition (Calorie diary)
 
 ### Purpose
 
-Client-owned daily food diary via owned Indian food catalog + NL parser; manual fallback; staff need `CALORIES` grant.
+Client-owned eaten-today diary against an owned Indian catalog + servings; staff need `CALORIES` for extras/totals. Completing a diet plan item (M6) writes this same diary.
+
+**API status:** Seed search + extras diary + staff CALORIES read **shipped** (3.1). CustomFood APIs later. Integration: [`nutrition.md`](nutrition.md).
 
 ### Screens (Client mobile — primary)
 
 | Screen | Contents |
 |---|---|
-| Today’s log | Totals (cal/macros) + items |
-| Add meal | Text field for phrase (“2 idlis, 1 omelette”) and/or search catalog |
-| Confirm parse results | Editable matched items before save |
-| Manual entry | Description + calories/macros when parse/search fails |
+| Today’s log | Totals (cal/macros) per MealSlot + items (prescribed vs extra) |
+| Add extra | Search catalog / recent foods → serving × qty → save |
+| Complete assigned | From My diet (M6) — not a second food picker |
+| CustomFood | Name + serving grams + nutrients when search misses |
 | Day picker | Other log dates |
 
-**Staff:** read-only day view only with CALORIES grant; otherwise “Not shared.”
+**Staff:** day view with CALORIES (diary) and/or DIET_PLANS (plan vs eaten); otherwise “Not shared.”
 
 ### Flows
 
-**F9.1 NL log**
+**F9.1 Search and log extra**
 
-1. Type phrase → server returns matched foods + qty + macros.
-2. Client confirms/edits → save entry + items; update day totals.
-3. Partial miss → keep matched rows + offer manual lines.
+1. Search seed (+ own CustomFood) → pick serving × qty → confirm.
+2. Save `CalorieLogItem` with `diet_plan_meal_item_id` null.
+3. Day totals update.
 
-**F9.2 Search catalog** — pick staple → qty/unit → save.  
-**F9.3 Manual only** — always available; no barcode scanner UI.
+**F9.2 Recent foods** — pick from this Client’s prior diary items.  
+**F9.3 CustomFood** — structured create, then log that food. No free-text calorie row.
 
 ### Targets
 
-- If diet plan meal targets exist (PT addon), show “vs target” when useful.
-- Base-only clients may lack meal targets — still allow free logging (totals without plan targets).
+- Diet plan slot targets (`TRAINER_COACHING`): show eaten vs target on those slots.
+- Base-only clients: diary without prescribed items.
+
+### Out of module
+
+- Barcode · third-party nutrition APIs · photo Snap · NL parser as a store.
 
 ### Requirements
 
-C9 · no third-party nutrition API · no barcode · Client-owned.
+C9 · C5 coupling · no third-party nutrition API · no barcode · Client-owned · ADR-0006.
 
 ---
 
@@ -761,7 +776,7 @@ Not a user-facing “module,” but UI must respect:
 
 ## Priority legend for build order (UI)
 
-**P0 — ship first:** Auth, create gym, plans catalog, membership invite/accept + grants checklist, roster, check-in + desk mark, subscriptions/renewals/unpaid badges, trainer assign, diet/workout assign + client daily complete, progress/profile/BMI, calorie log, health connect, notifications for invites/renewals/assign, offboard, block check-in, privacy management.
+**P0 — ship first:** Auth, create gym, plans catalog, membership invite/accept + grants checklist, roster, check-in + desk mark, subscriptions/renewals/unpaid badges, trainer assign, catalog foods + diet assign + diary (complete + extras), workout assign + complete, progress/profile/BMI, health connect, notifications for invites/renewals/assign, offboard, block check-in, privacy management.
 
 **P1 — next:** Dashboard widgets, lead → invite convert, plan clone/template, adherence % for staff, account erasure UX, richer unpaid digest layout.
 

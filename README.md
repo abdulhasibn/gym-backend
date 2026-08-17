@@ -44,8 +44,8 @@ curl http://localhost:3000/health
 | [`docs/MVP_ROADMAP.md`](./docs/MVP_ROADMAP.md)               | Build order (Orbit tab visualizes this)                                   |
 | Postman                                                      | [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman) |
 
-**Shipped (Stint 1–2):** Auth, gym-orgs, Mini-CRM A11–A13, plans, invites/accept/grants, subscriptions core, roster / assign / offboard / block, attendance, profile/progress, renewals due-list.  
-**Next:** Stint 3 — coaching, calories, health sync, CRM convert, notifications ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
+**Shipped (Stint 1–3.1):** Auth, gym-orgs, Mini-CRM A11–A13, plans, invites/accept/grants, subscriptions core, roster / assign / offboard / block, attendance, profile/progress, renewals due-list, food catalog + diet + calorie diary, 30-exercise catalog seed.  
+**Next:** Stint 3.2 — workout assign + per-day complete APIs, then health sync, CRM convert, notifications ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
 
 ## Scripts
 

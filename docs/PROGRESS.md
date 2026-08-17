@@ -4,22 +4,22 @@
 
 ## Current stage
 
-**Stage:** Stint 2 complete (2.1–2.4). Attendance, users profile/progress
-(with grant-gated staff reads), renewals due-list shipped. Next: Stint 3.
-See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b addon attach / renew still
-deferred within 1.5.
+**Stage:** Stint **3.1** shipped. ADR-0007 exercise catalog **applied**
+(30 seed rows live). Workout **APIs** are **3.2**. See
+[`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b still deferred within 1.5.
 
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
-| Domain glossary / PRD / architecture docs | Done |
-| DBML source of truth (`docs/schema.dbml`) | Done |
-| Supabase project + SQL migrations applied | Done — 18 local; remote includes `offboard_client_membership` (MCP verified) |
-| Generated `database.types.ts` | Done — includes `offboard_client_membership` RPC |
+| Domain glossary / PRD / architecture docs | Done — ADR-0006 food diary · ADR-0007 exercise catalog |
+| DBML source of truth (`docs/schema.dbml`) | Done — `exercise_items`; plan line is `exercise_item_id` |
+| Supabase project + SQL migrations applied | Done — 22 local + remote; through `20260817121500_seed_exercise_catalog_v1` |
+| Generated `database.types.ts` | Done — `exercise_items` + muscle/equipment/measurement enums |
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
-| Food catalog seed | Not started (`food_items` empty) |
-| Feature RLS policies (beyond deny-all) | Not started — 32 public tables RLS on, no policies |
+| Food catalog seed | Done — 20 foods × 8 units (160 servings), `source=seed` |
+| Exercise catalog seed | Done — 30 movements, `source=seed` (ADR-0007) |
+| Feature RLS policies (beyond deny-all) | Not started — 33 public tables RLS on, no policies |
 | Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me` |
 | Auth automated tests | Partial — refresh use-case + route coverage added; provider integration and remaining failure-path coverage still deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
@@ -30,8 +30,10 @@ deferred within 1.5.
 | Memberships feature (`src/features/memberships`) | Phase 1–5 + 2.4 renewals due-list done — plans, invites, accept/grants, subscriptions, roster/assign/offboard/block, `GET .../subscriptions/renewals-due`; A8b attach/renew deferred |
 | Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
-| Other feature modules under `src/features/*` | Not started — Stint 3 (coaching, nutrition, health-sync, notifications) |
-| MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); pull-forward documented |
+| Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
+| Coaching diet (`src/features/coaching`) | Done — assign/get/complete into diary; freeze on expired addon |
+| Other feature modules under `src/features/*` | Next **3.2** workout APIs (search/assign/complete); then health-sync, notifications |
+| MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
 | Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Attendance** + **Profile & Progress** + renewals-due (Stint 2); every request Docs opens with `**Story:**` functional blurb |
@@ -45,29 +47,112 @@ deferred within 1.5.
 | Ref | `igcmptpjmagzwoccxcnw` |
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
-| Tables | 32 in `public`, RLS enabled (no policies yet) |
-| Migrations applied | 18 — remote `20260811140712_offboard_client_membership` (function live; service_role EXECUTE) |
-| Live rows (spot check) | Clean slate — `roles` 4 · `role_permissions` 29 · all other public + `auth.users` 0 (`pnpm db:reset-data -- --yes`) |
+| Tables | 33 in `public`; RLS enabled (no policies) |
+| Migrations applied | 22 — remote through `20260817121500_seed_exercise_catalog_v1` |
+| Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 30 |
 
 ## Next up
 
-1. **Stint 3** — coaching, food catalog + calories, health sync, CRM convert
-   (A14), notifications/jobs, audit trail writes.
-2. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
-3. Feature-scoped RLS — not needed while the API uses service-role only;
-   revisit if clients ever hit PostgREST/`authenticated` directly.
-4. Extra Auth provider/failure-path tests — only when a concrete gap blocks
-   shipping or a regression is found (avoid coverage spam).
-5. Manual Postman smoke optional (user choice). Collection includes Stint 2
-   Attendance + Profile & Progress + renewals-due.
-
+1. **Stint 3.2 APIs** — search exercise catalog, assign workout, per-day
+   completions (not set logs; not CustomExercise).
+2. Then 3.3 health-sync; CRM convert (A14); notifications; audit.
+3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs;
+   Postman folders for 3.1.
+4. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
+5. Feature-scoped RLS — not needed while the API uses service-role only.
+6. Extra Auth provider/failure-path tests — only when a concrete gap blocks
+   shipping. Manual Postman smoke optional.
 
 **Deferred longer-term:** verified domain + transactional SMTP off personal
 Gmail; App Password rotation (OTP working; rotation skipped for now); push
 notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
-“Out of orbit.”
+“Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-17 — Apply ADR-0007 + sync-docs (Orbit local)
+
+- Applied `20260817120000_catalog_exercise` +
+  `20260817121500_seed_exercise_catalog_v1` on `igcmptpjmagzwoccxcnw`
+  (Management API SQL + `schema_migrations` history). Live:
+  `exercise_items` 30, public tables 33, `workout_plan_exercises.name`
+  dropped, `exercise_item_id` required, RLS on. Types regenerated;
+  `tsc --noEmit` pass.
+- Docs: 3.1 → Done on MVP_ROADMAP + Orbit `roadmap-data.js`; README /
+  client-auth / api.md / product-flows API-status; modules M6/M9 live,
+  M7 seed-live/APIs-next; lede next=3.2. Mirror copied to
+  `docs/mvp-roadmap/roadmap-data.js`.
+- Live Orbit deploy **not** updated: Vercel CLI `--token` from
+  `auth.json` rejected; default `vercel --prod` returned Not authorized.
+  Re-login then `npx vercel --prod --yes` from `docs/prd-showcase/`.
+
+### 2026-08-17 — ADR-0007 catalog exercise + 30-seed (spec)
+
+- Decision: no free-text exercise names; plan lines are `ExerciseItem`
+  (movement × equipment + frozen muscle/equipment/measurement). Completions
+  stay `PlanCompletion` — not Hevy set logs. CustomExercise columns exist;
+  APIs deferred. Do not import Hevy/wger.
+- Docs: `docs/adr/0007-catalog-exercise.md`, CONTEXT, PRD C6/T6/§5.5,
+  product-flows M7, architecture §7/§12, MVP_ROADMAP + Orbit data.
+- Schema: `exercise_items`; drop `workout_plan_exercises.name`; required
+  `exercise_item_id`. Migrations written, **not applied**:
+  `20260817120000_catalog_exercise.sql`,
+  `20260817121500_seed_exercise_catalog_v1.sql` (30 rows).
+- `pnpm db:reset-data` SQL/mjs now restore 30 exercises after truncate
+  (requires the catalog migration applied first).
+
+### 2026-08-17 — Hevy catalog research (primary sources)
+
+- Wrote `docs/research-hevy-exercise-catalog.md` from Hevy API OpenAPI
+  `0.0.1` (`api.hevyapp.com/docs`) + hevyapp.com feature/legal/help
+  pages. Catalog vs Routine vs Workout vs Set; official muscle /
+  equipment / `CustomExerciseType` enums; custom exercises =
+  `is_custom` templates. Exact built-in count unknown (“400+” only).
+- Explicit: do not scrape/copy Hevy titles or images. 3.2 still
+  PlanCompletion + free-text `workout_plan_exercises.name`; a later
+  `ExerciseItem` analog to `FoodItem` is research only.
+
+### 2026-08-17 — Stint 3.1 nutrition + diet (20-food bootstrap)
+
+- Applied `20260817101500_seed_food_catalog_v1` on `igcmptpjmagzwoccxcnw`
+  (Management API): `food_serving_unit` enum, live unique `(food_item_id,
+  unit)`, 20 seed foods × 8 units (160 servings). Types regenerated.
+  `pnpm db:reset-data` now restores the catalog after truncate.
+- Shared branded types: `FoodItemId`, `FoodServingId`, `FoodServingUnit`,
+  `MealSlot`, `DietPlanMealItemId`, `ServingQuantity`.
+- `src/features/nutrition/` — search seed only, extras diary, staff CALORIES
+  read, `LogPrescribedFood` command port. No CustomFood / user macros.
+- `src/features/coaching/` — diet assign/get + complete/uncomplete into the
+  diary; assigned trainer / Admin-as-Trainer; freeze on expired
+  `TRAINER_COACHING` addon. HTTP in [`docs/nutrition.md`](nutrition.md).
+- Deferred: hundreds-row catalog, CustomFood, workout 3.2, NL/barcode/Snap,
+  T8 adherence %, Postman sync, audit 3.6.
+
+### 2026-08-17 — Apply ADR-0006 catalog/diary migration
+
+- Applied `20260817094500_catalog_food_and_unified_diary` on
+  `igcmptpjmagzwoccxcnw` via Management API SQL (CLI `db push` blocked:
+  login-role Forbidden, no `SUPABASE_DB_PASSWORD`). History row version
+  matches the local filename.
+- Verified: `meal_slot` enum, `food_item_servings` (RLS on), diet
+  completions table gone, serving-match triggers, `food_items` still 0.
+  Public table count remains 32.
+- Regenerated `src/infrastructure/supabase/database.types.ts` (`gen types
+  --project-id`); Prettier + `tsc --noEmit` pass.
+- **Not done:** food catalog seed. That is the next 3.1 step.
+
+### 2026-08-17 — ADR-0006 catalog food + unified diary (spec)
+
+- Decision: no free-text meal names; one catalog + one eaten-today diary;
+  completing a diet item writes a plan-linked `CalorieLogItem`. CustomFood
+  (structured) is the miss path. 3.1 = seed + diet + diary; 3.2 = workout.
+- Docs: `docs/adr/0006-catalog-food-and-unified-calorie-diary.md`, CONTEXT,
+  PRD C5/C9/§5.5/§5.10, product-flows M6/M9, architecture §7/§12,
+  MVP_ROADMAP + Orbit `roadmap-data.js`.
+- Schema: servings, `meal_slot` enum, required `food_item_id`/`serving_id`,
+  drop `diet_plan_item_completions` / `custom_name` / `manual_description`.
+  Migration `supabase/migrations/20260817094500_catalog_food_and_unified_diary.sql`
+  written, not applied.
 
 ### 2026-08-13 — Postman: functional Story blurbs on all requests
 

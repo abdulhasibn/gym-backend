@@ -8,7 +8,10 @@ import { NotFoundError } from '../domain/errors/not-found.error';
 import type { CalendarDate } from '../domain/shared/calendar-date.value-object';
 import type { GymOrgId } from '../domain/shared/gym-org-id';
 import type { UserId } from '../domain/shared/user-id';
+import { toTrainerProfileId as toCoachingTrainerProfileId } from '../features/coaching/domain/trainer-profile-id';
+import { composeCoachingFeature } from '../features/coaching/composition';
 import { composeAttendanceFeature } from '../features/attendance/composition';
+import { composeNutritionFeature } from '../features/nutrition/composition';
 import type { BaseSubscriptionStarter } from '../features/attendance/domain/base-subscription-starter.port';
 import type {
   CheckInMembershipGate,
@@ -128,6 +131,8 @@ export function composeApp(config: AppConfig): AppDependencies {
     },
   };
 
+  const gymLocalClock = new GymOrgLocalClock({ findTimezone: gymOrgFeature.findTimezone });
+
   const attendanceFeature = composeAttendanceFeature(supabaseClient, authFeature.authenticate, {
     liveGymAdmin: { isLiveAdmin: gymOrgFeature.isLiveAdmin },
     liveTrainer: {
@@ -136,7 +141,84 @@ export function composeApp(config: AppConfig): AppDependencies {
     },
     checkInGate,
     baseStarter,
-    gymLocalClock: new GymOrgLocalClock({ findTimezone: gymOrgFeature.findTimezone }),
+    gymLocalClock,
+  });
+
+  const nutritionFeature = composeNutritionFeature(supabaseClient, authFeature.authenticate, {
+    liveGymAdmin: { isLiveAdmin: gymOrgFeature.isLiveAdmin },
+    liveTrainer: {
+      isLiveTrainer: async (userId, gymOrgId) =>
+        (await gymOrgFeature.findLiveTrainerProfileId(userId, gymOrgId)) !== null,
+    },
+    dataGrantGate: {
+      async loadForActiveMembership(clientUserId, gymOrgId) {
+        const snapshot = await membershipsFeature.dataGrantQueries.listForActiveMembership(
+          clientUserId,
+          gymOrgId,
+        );
+        if (snapshot === null) {
+          return null;
+        }
+        return {
+          classGrants: [...snapshot.classGrants],
+        };
+      },
+    },
+  });
+
+  const coachingFeature = composeCoachingFeature(supabaseClient, authFeature.authenticate, {
+    liveGymAdmin: { isLiveAdmin: gymOrgFeature.isLiveAdmin },
+    liveTrainerProfile: {
+      async findLiveProfileId(userId, gymOrgId) {
+        const id = await gymOrgFeature.findLiveTrainerProfileId(userId, gymOrgId);
+        return id === null ? null : toCoachingTrainerProfileId(id);
+      },
+    },
+    entitlement: {
+      async findActiveMembership(clientUserId, gymOrgId) {
+        const membership = await membershipsFeature.clientMemberships.findActiveByClientAtGym(
+          clientUserId,
+          gymOrgId,
+        );
+        if (membership === null) {
+          return null;
+        }
+        return { assignedTrainerId: membership.assignedTrainerId };
+      },
+      async hasInDateCoachingAddon(clientUserId, gymOrgId, today) {
+        const membership = await membershipsFeature.clientMemberships.findActiveByClientAtGym(
+          clientUserId,
+          gymOrgId,
+        );
+        if (membership === null) {
+          return false;
+        }
+        const addon = await membershipsFeature.subscriptions.findInDateCoachingAddon(
+          gymOrgId,
+          membership.id,
+          today,
+        );
+        return addon !== null;
+      },
+    },
+    gymLocalClock: {
+      today: (gymOrgId, now) => gymLocalClock.today(gymOrgId, now),
+    },
+    logPrescribedFood: nutritionFeature.logPrescribedFood,
+    prescribedDiary: {
+      findLoggedItemIds: (clientUserId, logDate, dietPlanMealItemIds) =>
+        nutritionFeature.calorieLogQueries.findLoggedPrescribedItemIds(
+          clientUserId,
+          logDate,
+          dietPlanMealItemIds,
+        ),
+    },
+    seedCatalog: {
+      async hasLiveSeedServing(foodItemId, servingId) {
+        const serving = await nutritionFeature.catalog.findLiveSeedServing(foodItemId, servingId);
+        return serving !== null;
+      },
+    },
   });
 
   const usersFeature = composeUsersFeature(supabaseClient, authFeature.authenticate, {
@@ -187,6 +269,11 @@ export function composeApp(config: AppConfig): AppDependencies {
       attendanceFeature.myAttendancesRouter,
       usersFeature.meRouter,
       usersFeature.staffClientRouter,
+      nutritionFeature.foodsRouter,
+      nutritionFeature.meCalorieLogRouter,
+      nutritionFeature.staffClientCalorieLogRouter,
+      coachingFeature.staffDietPlanRouter,
+      coachingFeature.myDietPlanRouter,
     ),
   );
 
@@ -199,6 +286,8 @@ export function composeApp(config: AppConfig): AppDependencies {
       membershipsFeature.errorMapper,
       attendanceFeature.errorMapper,
       usersFeature.errorMapper,
+      nutritionFeature.errorMapper,
+      coachingFeature.errorMapper,
     ]),
   );
 

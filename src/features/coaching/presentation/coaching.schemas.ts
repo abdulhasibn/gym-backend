@@ -1,0 +1,74 @@
+import { z } from 'zod';
+
+import { MEAL_SLOTS, parseMealSlot } from '../../../domain/shared/meal-slot';
+import { DietPlanTitle } from '../domain/diet-plan-title.value-object';
+import { ServingQuantity } from '../../../domain/shared/serving-quantity.value-object';
+
+const titleSchema = z.string().transform((value, context) => {
+  try {
+    return DietPlanTitle.create(value).value;
+  } catch (error) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: error instanceof Error ? error.message : 'Title is invalid',
+    });
+    return z.NEVER;
+  }
+});
+
+const quantitySchema = z.number().transform((value, context) => {
+  try {
+    return ServingQuantity.create(value).value;
+  } catch (error) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: error instanceof Error ? error.message : 'Quantity is invalid',
+    });
+    return z.NEVER;
+  }
+});
+
+const mealSlotSchema = z.enum(MEAL_SLOTS).transform((value, context) => {
+  try {
+    return parseMealSlot(value);
+  } catch (error) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: error instanceof Error ? error.message : 'Meal slot is invalid',
+    });
+    return z.NEVER;
+  }
+});
+
+export const gymOrgIdParamSchema = z.object({
+  gymOrgId: z.string().uuid(),
+});
+
+export const gymAndClientUserIdParamSchema = gymOrgIdParamSchema.extend({
+  clientUserId: z.string().uuid(),
+});
+
+export const dietItemParamSchema = gymOrgIdParamSchema.extend({
+  itemId: z.string().uuid(),
+});
+
+export const assignDietPlanSchema = z.object({
+  title: titleSchema,
+  notes: z.string().max(5000).nullable().optional(),
+  meals: z
+    .array(
+      z.object({
+        mealSlot: mealSlotSchema,
+        items: z
+          .array(
+            z.object({
+              foodItemId: z.string().uuid(),
+              servingId: z.string().uuid(),
+              quantity: quantitySchema,
+            }),
+          )
+          .min(1),
+      }),
+    )
+    .min(1),
+});

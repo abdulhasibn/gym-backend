@@ -29,7 +29,7 @@ Use lane `CLIENT` on first provision. Staff-only routes (gym create, leads, plan
 | Progress | `GET` / `PUT /me/progress-logs` | Weight history + BMI |
 | Health | `GET /health` | Liveness |
 
-**Not yet for CLIENT:** coaching, calories, health sync, push — Stint 3 ([Orbit](https://gym-prd-visual.vercel.app/#orbit)). Staff roster / assign / offboard / block: [`roster.md`](roster.md). Staff attendance + grant-gated profile/progress: [`api.md`](api.md).
+**Not yet for CLIENT:** workout plans (3.2), health sync, push. Calories + diet plan APIs are live — [`nutrition.md`](nutrition.md). Staff roster / assign / offboard / block: [`roster.md`](roster.md). Staff attendance + grant-gated profile/progress: [`api.md`](api.md).
 
 ---
 

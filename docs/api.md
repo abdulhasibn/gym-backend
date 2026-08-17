@@ -15,6 +15,7 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | [`subscriptions.md`](subscriptions.md#admin--renewals-due-24) | Admin renewals due-list (2.4) |
 | [`client-auth.md`](client-auth.md#client-surface-available-now) | Client attendance + profile/progress (2.1–2.2) |
 | [`leads.md`](leads.md) | Mini-CRM leads |
+| [`nutrition.md`](nutrition.md) | Food search, calorie diary, diet assign / complete (3.1) |
 
 ---
 
@@ -145,8 +146,23 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | `PATCH` | `/gym-orgs/:gymOrgId/leads/:leadId/status` | [leads § Change status](leads.md#change-lead-status) |
 | `DELETE` | `/gym-orgs/:gymOrgId/leads/:leadId` | [leads § Soft-delete](leads.md#soft-delete-lead) |
 
+### Nutrition & diet (3.1)
+
+| Method | Path | Guide |
+|--------|------|-------|
+| `GET` | `/foods/search` | [nutrition § Search](nutrition.md#search-catalog) |
+| `GET` | `/me/calorie-logs` | [nutrition § Client diary](nutrition.md#client-diary) |
+| `POST` | `/me/calorie-logs/items` | [nutrition § Log extra](nutrition.md#log-extra) |
+| `DELETE` | `/me/calorie-logs/items/:itemId` | [nutrition § Unlog extra](nutrition.md#unlog-extra) |
+| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/calorie-logs` | [nutrition § Staff diary](nutrition.md#staff-diary-calories-grant) |
+| `POST` | `/gym-orgs/:gymOrgId/clients/:clientUserId/diet-plans` | [nutrition § Assign](nutrition.md#assign) |
+| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/diet-plans` | [nutrition § Staff get](nutrition.md#staff-get-definition) |
+| `GET` | `/gym-orgs/:gymOrgId/my-diet-plan` | [nutrition § Client my plan](nutrition.md#client-my-plan) |
+| `POST` | `/gym-orgs/:gymOrgId/my-diet-plan/items/:itemId/complete` | [nutrition § Complete](nutrition.md#complete--uncomplete) |
+| `DELETE` | `/gym-orgs/:gymOrgId/my-diet-plan/items/:itemId/complete` | [nutrition § Complete](nutrition.md#complete--uncomplete) |
+
 ---
 
 ## Not shipped yet
 
-Coaching, calories, health sync, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
+Workout assign/complete APIs (3.2; exercise catalog seed is live), broader food catalog, CustomFood / CustomExercise APIs, health sync, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).

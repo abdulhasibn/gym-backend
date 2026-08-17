@@ -68,7 +68,7 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 
 **Outcome:** Admin can sell a plan, invite a client, client can accept with grants; gym has a live roster.
 
-**Current:** 2.1–2.4 shipped (attendance, profile/progress, renewals due-list). Next: Stint 3. A8b addon attach / renew deferred within 1.5.
+**Current:** 3.1 shipped (food catalog + diet + diary). Exercise catalog seed live (ADR-0007). Next: 3.2 workout assign/complete APIs. A8b addon attach / renew deferred within 1.5.
 
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
@@ -106,8 +106,8 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
-| 3.1 | Coaching: diet + workout assign + per-day completions | `src/features/coaching/` | C5–C6, T5–T6 | Client-owned plans | Todo |
-| 3.2 | Food catalog seed + calorie log (+ NL/qty parser) | `src/features/nutrition/` | C9 | Client-owned (+ catalog seed) | Todo |
+| 3.1 | Catalog seed + diet assign + unified diary (complete prescribed + extras) | `nutrition/` + `coaching/` (diet) | C5, C9, T5 | Client-owned diary; Client-owned plans | Done |
+| 3.2 | Exercise catalog seed + workout assign + per-day completions | `src/features/coaching/` (workout) | C6, T6 | Client-owned plans; platform catalog | Todo (seed live) |
 | 3.3 | Health sync ingest/read APIs (provider adapters) | `src/features/health-sync/` | C12 | Client-owned | Todo |
 | 3.4 | CRM remainder: A14 convert lead → membership invite; follow-up *delivery* via 3.5 | `leads` + invites | A14 (+ A13 push) | Gym-owned / platform | Todo |
 | 3.5 | Notifications + scheduled jobs (T-2 renewals, unpaid digest, lead follow-ups) | `src/features/notifications/` + jobs | C11, A10, A10b, M12 | Platform | Todo |
@@ -132,6 +132,8 @@ Not in these three stints — do not pull forward unless a concrete blocker appe
 - QR / geofence check-in
 - DPDP erasure UX
 - Open join codes / maps directory
+- Barcode, photo Snap, NL parser-as-store (catalog search + CustomFood; ADR-0006)
+- Hevy/wger/ExerciseDB as the exercise store; workout set-by-set load history (ADR-0007)
 
 ---
 

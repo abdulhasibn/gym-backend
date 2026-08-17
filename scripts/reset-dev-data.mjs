@@ -70,6 +70,9 @@ UNION ALL SELECT 'public.gym_orgs', count(*)::int FROM public.gym_orgs
 UNION ALL SELECT 'public.client_profiles', count(*)::int FROM public.client_profiles
 UNION ALL SELECT 'public.roles', count(*)::int FROM public.roles
 UNION ALL SELECT 'public.role_permissions', count(*)::int FROM public.role_permissions
+UNION ALL SELECT 'public.food_items', count(*)::int FROM public.food_items
+UNION ALL SELECT 'public.food_item_servings', count(*)::int FROM public.food_item_servings
+UNION ALL SELECT 'public.exercise_items', count(*)::int FROM public.exercise_items
 ORDER BY 1;
 `;
 
@@ -110,10 +113,22 @@ printCounts('After', after);
 const roles = after?.find((r) => r.src === 'public.roles')?.n;
 const perms = after?.find((r) => r.src === 'public.role_permissions')?.n;
 const authUsers = after?.find((r) => r.src === 'auth.users')?.n;
+const foods = after?.find((r) => r.src === 'public.food_items')?.n;
+const servings = after?.find((r) => r.src === 'public.food_item_servings')?.n;
+const exercises = after?.find((r) => r.src === 'public.exercise_items')?.n;
 
-if (authUsers !== 0 || roles !== 4 || perms !== 29) {
+if (
+  authUsers !== 0 ||
+  roles !== 4 ||
+  perms !== 29 ||
+  foods !== 20 ||
+  servings !== 160 ||
+  exercises !== 30
+) {
   console.error('\nReset finished but counts look unexpected. Check the After table.');
   process.exit(1);
 }
 
-console.log('\nClean slate ready — roles 4 · permissions 29 · auth.users 0');
+console.log(
+  '\nClean slate ready — roles 4 · permissions 29 · foods 20 · servings 160 · exercises 30 · auth.users 0',
+);

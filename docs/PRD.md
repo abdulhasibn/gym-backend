@@ -90,10 +90,10 @@ gym-saas
 │   └── (Out: Trainer log, QR, geofence)
 │
 ├── M6  Coaching — Diet
-│   ├── Structured meals / slots / targets
+│   ├── Structured meals / MealSlots / targets from catalog foods
 │   ├── Free-text notes
 │   ├── Assign to client (requires active Trainer addon)
-│   ├── Per-day PlanCompletion; staff adherence needs DIET_PLANS grant
+│   ├── Complete item → diary write; staff adherence needs DIET_PLANS grant
 │   └── Clone / template (P1 UI)
 │
 ├── M7  Coaching — Workout
@@ -110,10 +110,10 @@ gym-saas
 │   └── Profile (height, DOB, gender, medical notes)
 │
 ├── M9  Nutrition (Client-owned)
-│   ├── Owned Indian FoodItem catalog
-│   ├── NL / qty parser (“2 idlis, 1 omelette”)
-│   ├── Daily calorie / macro log vs target
-│   └── Manual entry fallback
+│   ├── Owned Indian FoodItem catalog + FoodServings
+│   ├── Search catalog (no free-text meal names)
+│   ├── Daily diary: complete prescribed + log extras
+│   └── Structured CustomFood on miss
 │
 ├── M10 Health Sync (Client-owned)
 │   ├── Apple Health (HealthKit)
@@ -233,11 +233,11 @@ Signup sets **lane** via frozen role (`CLIENT` vs `STAFF_UNASSIGNED`). Gym power
 | C2c | Manage DataGrants for each gym (grant/revoke classes and optional profile attributes) while membership is ACTIVE | P0 |
 | C3 | Get assigned to a trainer (by Admin) when an active Trainer addon exists | P0 |
 | C4 | Log attendance (self check-in) | P0 |
-| C5 | View assigned diet plan; mark meals/items complete **per calendar day** — only with active Trainer addon; prior plans read-only after addon expires | P0 |
-| C6 | View assigned workout plan; mark exercises/sessions complete **per calendar day** — same entitlement rules as C5 | P0 |
+| C5 | View assigned diet plan; mark meals/items complete **per calendar day** (writes catalog foods into today’s diary) — extras via C9 on the same diary; only with active Trainer addon; prior plans read-only after addon expires | P0 |
+| C6 | View assigned workout plan (catalog `ExerciseItem`s); mark exercises/sessions complete **per calendar day** — same entitlement rules as C5 | P0 |
 | C7 | View own progress (attendance history, weight trend, plan adherence) | P0 |
 | C8 | BMI from profile height + current weight (current weight maintained from ProgressLog) | P0 |
-| C9 | Calorie counter — natural-language / common-food entry against **own Indian food API** (e.g. “2 idlis, 1 omelette”); manual calorie entry always available; **no barcode** | P0 |
+| C9 | Calorie diary — search owned Indian food catalog (serving × qty); log extra food or complete prescribed items; structured CustomFood on miss; **no free-text names**; **no barcode** | P0 |
 | C10 | View base subscription + any addons (status, renewal due dates) | P0 |
 | C11 | Receive renewal reminder (T-2 days) for base and addon lines — push + in-app | P0 |
 | C12 | Connect **Apple Health / Google Health Connect / Samsung Health** — live read sync of steps, workouts, active calories, weight | P0 |
@@ -252,8 +252,8 @@ Signup sets **lane** via frozen role (`CLIENT` vs `STAFF_UNASSIGNED`). Gym power
 | T2 | Accept **staff invite** into a Gym Org (→ `TRAINER`) | P0 |
 | T3 | View list of assigned clients | P0 |
 | T4 | View a client's granted profile fields, BMI (if height+weight granted), progress (if `PROGRESS`), and attendance (gym-owned) | P0 |
-| T5 | Create and assign a diet plan (structured + notes) — active `TRAINER_COACHING` addon; assign/edit definition does **not** require `DIET_PLANS` grant | P0 |
-| T6 | Create and assign a workout plan (structured + notes) — same entitlement as T5 (`WORKOUT_PLANS` grant not required to assign/edit definition) | P0 |
+| T5 | Create and assign a diet plan from catalog foods (structured + notes) — active `TRAINER_COACHING` addon; assign/edit definition does **not** require `DIET_PLANS` grant | P0 |
+| T6 | Create and assign a workout plan from the exercise catalog (structured + notes) — same entitlement as T5 (`WORKOUT_PLANS` grant not required to assign/edit definition) | P0 |
 | T7 | Reuse/duplicate a plan as a template for another client | P1 |
 | T8 | View client plan adherence / completion % — requires matching `DIET_PLANS` / `WORKOUT_PLANS` class grant | P1 |
 
@@ -320,10 +320,12 @@ Allowed only while the client has an **ACTIVE** `TRAINER_COACHING` addon (in-dat
 
 Requires an **ACTIVE** `TRAINER_COACHING` addon. Trainer or Admin-as-Trainer opens client → creates/assigns **hybrid** plan:
 
-- **Diet:** structured meals/slots + items + calorie/macro targets + free-text notes.
-- **Workout:** days → exercises → sets/reps/schedule + free-text notes.
+- **Diet:** `MealSlot`s → catalog `FoodItem` × `FoodServing` × qty + calorie/macro targets + free-text notes. No typed food names.
+- **Workout:** days → catalog `ExerciseItem` (movement × equipment) × sets/reps prescription + free-text notes. No typed exercise names.
 
-Client sees immediately and can mark items complete **per calendar day** (`PlanCompletion`); adherence feeds Trainer/Admin views only when the matching class grant exists. Assigning Trainer may view/edit the plan definition without that grant. No PDF-upload-as-plan in MVP. Data model supports clone/template (UI may be P1). Without an active Trainer addon: Client has **no coaching surface** (or empty state); if prior plans exist after expiry, they are **read-only history**.
+Client sees immediately. Completing a diet item **writes that food into today’s `CalorieLog`** (plan-linked); extra food uses the same diary and catalog (C9). Workout still uses per-day `PlanCompletion` (not logged sets). Adherence feeds Trainer/Admin views only when the matching class grant exists (`DIET_PLANS` for prescribed vs eaten; `CALORIES` for extras / day totals; `WORKOUT_PLANS` for exercise ticks). Assigning Trainer may view/edit the plan definition without that grant. No PDF-upload-as-plan in MVP. Data model supports clone/template (UI may be P1). Without an active Trainer addon: Client has **no coaching surface** (or empty state); if prior plans exist after expiry, they are **read-only history**. Extra calorie logging (C9) still works on base membership.
+
+See ADR-0006 (diet/diary) and ADR-0007 (exercise catalog).
 
 ### 5.6 Attendance
 
@@ -349,13 +351,15 @@ Admin logs lead → follow-up reminder → status updates → on convert, create
 
 `unpaid` / `partial` on an **in-date** line does **not** revoke entitlements for that line. Base unpaid → still check-in / calories / health sync. Trainer addon unpaid but in-date → still coaching. Admin sees payment badges; daily unpaid nudge (§5.7b). Check-in lockout remains manual via **block check-in**. Coaching hard-stop is **addon date expiry** (or Admin ending the addon), not payment status.
 
-### 5.10 Calorie logging (Indian food API)
+### 5.10 Calorie logging (owned catalog + diary)
 
-1. Client types a meal phrase (e.g. `2 idlis, 1 omelette`) or picks from search.
-2. Backend parses qty + food against **owned FoodItem catalog** (AI-bootstrapped, human-vetted Indian staples; English names; aliases allowed internally).
-3. Returns calories/macros per matched items; client confirms and saves `CalorieLogEntry`.
-4. If miss: **manual calorie/macro entry** always available.
-5. No barcode flow. No third-party nutrition API in MVP.
+1. Client **searches** the owned `FoodItem` catalog (or picks recent foods from their diary) and confirms a `FoodServing` × quantity.
+2. Completing an assigned diet item inserts the same shape, tagged to that plan item for that calendar day (gym timezone).
+3. Extra / off-plan food is the same insert with no plan link, on a `MealSlot`.
+4. Catalog miss: structured **CustomFood** (name + serving grams + nutrients) — then log that food. No free-text meal line, no “manual calories only” row.
+5. No barcode flow. No third-party nutrition API in MVP. Phrase-parse as a convenience **on top of catalog search** is out of this stint.
+
+See ADR-0006.
 
 ### 5.11 Health app sync
 
@@ -398,7 +402,7 @@ Illustrative entities (see `docs/schema.dbml` for full shape; soft-delete `delet
 - **ProfileAttributeGrant** — per-attribute consent (DOB/HEIGHT/WEIGHT required on accept).
 - **DataGrant** — class grants: `PROGRESS`, `CALORIES`, `WEARABLES`, `DIET_PLANS`, `WORKOUT_PLANS`.
 - **ProgressLog** / **CalorieLog*** / **WearableConnection** / **WearableDailyMetric** — User-owned.
-- **DietPlan** / **WorkoutPlan** — Client-owned instances; `gym_org_id` + trainer = assigning provenance. **PlanCompletion** = per-day completion child (not `completed_at` on templates).
+- **DietPlan** / **WorkoutPlan** — Client-owned instances; `gym_org_id` + trainer = assigning provenance. Diet adherence = plan-linked `CalorieLogItem`. Workout **PlanCompletion** = per-day completion child (not `completed_at` on templates).
 
 **Also:**
 
@@ -409,7 +413,8 @@ Illustrative entities (see `docs/schema.dbml` for full shape; soft-delete `delet
 - **StaffInvite** / **MembershipInvite** / **ClientMembership** — as before; at most one `ACTIVE` membership per client.
 - **MembershipPlan** / **Subscription** — snapshot price/duration on subscription; DB non-overlap (ADR-0004).
 - **Attendance** — gym-owned; retained after leave; no per-day unique in MVP.
-- **FoodItem** — platform catalog.
+- **FoodItem** / **FoodServing** — platform seed catalog; `manual` = structured CustomFood (ADR-0006).
+- **ExerciseItem** — platform seed catalog; `manual` = structured CustomExercise (ADR-0007). APIs for custom deferred in 3.2.
 - **Lead** — gym-owned; phone not unique; soft duplicate warning.
 - **Notification** / **AuditLog** — audit_logs append-only (no soft delete).
 
@@ -441,9 +446,9 @@ Read-only: steps, workouts, active calories, weight.
 
 **Owned FoodItem API** in Express/Supabase — no Nutritionix/Edamam/USDA-as-primary, no barcode.
 
-- Seed ~200–500 Indian staples via AI bootstrap + human vetting.
-- Parser: multi-item strings with quantities.
-- Manual entry fallback mandatory.
+- Seed a human-vetted cooked-staple catalog with Indian servings (katori / piece / g). IFCT raw foods are not the log UX.
+- Search + serving × qty; completeness via CustomFood, not free-text lines.
+- Completing a diet plan item writes the diary (ADR-0006).
 
 ### 7.4 Notifications
 
@@ -509,7 +514,7 @@ Read-only: steps, workouts, active calories, weight.
 - % of assigned diet/workout plans interacted with weekly (adherence).
 - % of expiring subscriptions renewed after T-2 reminder (retention signal).
 - Lead → converted-client rate via mini-CRM.
-- Food log success rate: % of meal entries resolved from FoodItem DB vs manual fallback (catalog quality).
+- Food log success rate: % of diary items from seed vs CustomFood (catalog quality).
 
 ---
 
@@ -547,16 +552,16 @@ Read-only: steps, workouts, active calories, weight.
 | Staff onboarding | Existing STAFF account + `staff_code`/QR → `staff_invites` |
 | Data share | Grants only (no copy); required DOB/HEIGHT/WEIGHT; class grants optional |
 | Personal data ownership | User owns profile/progress/calories/wearables/plan instances |
-| Food | Own Indian Food API; NL-style entry; no barcode |
+| Food | Own Indian Food API; search + servings; CustomFood on miss; no barcode |
 | Admins per gym | Owner + staff-invited Admins (capped) |
 | Multi-location | DB yes; UI single-gym |
-| Plans (coaching) | Hybrid; ACTIVE\|ARCHIVED; per-day PlanCompletion |
+| Plans (coaching) | Hybrid; ACTIVE\|ARCHIVED; diet adherence via diary (ADR-0006); workout catalog + PlanCompletion (ADR-0007) |
 | Billing | Base + addons; snapshot price; DB non-overlap |
 | Soft delete | `deleted_at` on mutable entities |
 | Time | UTC storage; gym timezone for calendar-day gym rules |
 | Reminders | T-2 base + addon; WhatsApp later |
 | Stack | RN · Next.js · Express · Supabase |
-| ADRs | 0002 ownership/grants · 0003 erasure · 0004 subscription · 0005 deleted_at |
+| ADRs | 0002 ownership/grants · 0003 erasure · 0004 subscription · 0005 deleted_at · 0006 catalog+diary · 0007 exercise catalog |
 
 ---
 

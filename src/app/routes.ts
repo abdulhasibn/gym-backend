@@ -20,6 +20,11 @@ export function createRouter(
   myAttendancesRouter: RequestHandler,
   meUsersRouter: RequestHandler,
   staffClientUsersRouter: RequestHandler,
+  foodsRouter: RequestHandler,
+  meCalorieLogRouter: RequestHandler,
+  staffClientCalorieLogRouter: RequestHandler,
+  staffDietPlanRouter: RequestHandler,
+  myDietPlanRouter: RequestHandler,
 ): Router {
   const router = Router();
 
@@ -40,7 +45,12 @@ export function createRouter(
   router.use('/gym-orgs/:gymOrgId/attendances', attendanceRouter);
   router.use('/gym-orgs/:gymOrgId/my-attendances', myAttendancesRouter);
   router.use('/me', meUsersRouter);
+  router.use('/me', meCalorieLogRouter);
+  router.use('/foods', foodsRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientUsersRouter);
+  router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientCalorieLogRouter);
+  router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffDietPlanRouter);
+  router.use('/gym-orgs/:gymOrgId', myDietPlanRouter);
   router.use('/membership-invites', membershipInviteClientRouter);
 
   return router;

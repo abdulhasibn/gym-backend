@@ -118,7 +118,6 @@ export type Database = {
           deleted_at: string | null;
           id: string;
           log_date: string;
-          raw_input: string | null;
           total_calories: number;
           total_carbs_g: number;
           total_fat_g: number;
@@ -130,7 +129,6 @@ export type Database = {
           deleted_at?: string | null;
           id?: string;
           log_date: string;
-          raw_input?: string | null;
           total_calories?: number;
           total_carbs_g?: number;
           total_fat_g?: number;
@@ -142,7 +140,6 @@ export type Database = {
           deleted_at?: string | null;
           id?: string;
           log_date?: string;
-          raw_input?: string | null;
           total_calories?: number;
           total_carbs_g?: number;
           total_fat_g?: number;
@@ -164,39 +161,42 @@ export type Database = {
           calories: number;
           carbs_g: number | null;
           deleted_at: string | null;
+          diet_plan_meal_item_id: string | null;
           fat_g: number | null;
-          food_item_id: string | null;
+          food_item_id: string;
           id: string;
-          manual_description: string | null;
+          meal_slot: Database['public']['Enums']['meal_slot'];
           protein_g: number | null;
           quantity: number;
-          unit: string | null;
+          serving_id: string;
         };
         Insert: {
           calorie_log_entry_id: string;
           calories: number;
           carbs_g?: number | null;
           deleted_at?: string | null;
+          diet_plan_meal_item_id?: string | null;
           fat_g?: number | null;
-          food_item_id?: string | null;
+          food_item_id: string;
           id?: string;
-          manual_description?: string | null;
+          meal_slot: Database['public']['Enums']['meal_slot'];
           protein_g?: number | null;
           quantity: number;
-          unit?: string | null;
+          serving_id: string;
         };
         Update: {
           calorie_log_entry_id?: string;
           calories?: number;
           carbs_g?: number | null;
           deleted_at?: string | null;
+          diet_plan_meal_item_id?: string | null;
           fat_g?: number | null;
-          food_item_id?: string | null;
+          food_item_id?: string;
           id?: string;
-          manual_description?: string | null;
+          meal_slot?: Database['public']['Enums']['meal_slot'];
           protein_g?: number | null;
           quantity?: number;
-          unit?: string | null;
+          serving_id?: string;
         };
         Relationships: [
           {
@@ -207,10 +207,24 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'calorie_log_items_diet_plan_meal_item_id_fkey';
+            columns: ['diet_plan_meal_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'diet_plan_meal_items';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'calorie_log_items_food_item_id_fkey';
             columns: ['food_item_id'];
             isOneToOne: false;
             referencedRelation: 'food_items';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'calorie_log_items_serving_id_fkey';
+            columns: ['serving_id'];
+            isOneToOne: false;
+            referencedRelation: 'food_item_servings';
             referencedColumns: ['id'];
           },
         ];
@@ -375,72 +389,30 @@ export type Database = {
           },
         ];
       };
-      diet_plan_item_completions: {
-        Row: {
-          client_user_id: string;
-          completed_on: string;
-          created_at: string;
-          diet_plan_meal_item_id: string;
-          id: string;
-        };
-        Insert: {
-          client_user_id: string;
-          completed_on: string;
-          created_at?: string;
-          diet_plan_meal_item_id: string;
-          id?: string;
-        };
-        Update: {
-          client_user_id?: string;
-          completed_on?: string;
-          created_at?: string;
-          diet_plan_meal_item_id?: string;
-          id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'diet_plan_item_completions_client_user_id_fkey';
-            columns: ['client_user_id'];
-            isOneToOne: false;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'diet_plan_item_completions_diet_plan_meal_item_id_fkey';
-            columns: ['diet_plan_meal_item_id'];
-            isOneToOne: false;
-            referencedRelation: 'diet_plan_meal_items';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
       diet_plan_meal_items: {
         Row: {
-          custom_name: string | null;
           deleted_at: string | null;
           diet_plan_meal_id: string;
-          food_item_id: string | null;
+          food_item_id: string;
           id: string;
           quantity: number;
-          unit: string;
+          serving_id: string;
         };
         Insert: {
-          custom_name?: string | null;
           deleted_at?: string | null;
           diet_plan_meal_id: string;
-          food_item_id?: string | null;
+          food_item_id: string;
           id?: string;
           quantity: number;
-          unit: string;
+          serving_id: string;
         };
         Update: {
-          custom_name?: string | null;
           deleted_at?: string | null;
           diet_plan_meal_id?: string;
-          food_item_id?: string | null;
+          food_item_id?: string;
           id?: string;
           quantity?: number;
-          unit?: string;
+          serving_id?: string;
         };
         Relationships: [
           {
@@ -457,6 +429,13 @@ export type Database = {
             referencedRelation: 'food_items';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'diet_plan_meal_items_serving_id_fkey';
+            columns: ['serving_id'];
+            isOneToOne: false;
+            referencedRelation: 'food_item_servings';
+            referencedColumns: ['id'];
+          },
         ];
       };
       diet_plan_meals: {
@@ -465,7 +444,7 @@ export type Database = {
           deleted_at: string | null;
           diet_plan_id: string;
           id: string;
-          slot_name: string;
+          meal_slot: Database['public']['Enums']['meal_slot'];
           sort_order: number;
           target_calories: number | null;
           target_carbs_g: number | null;
@@ -478,7 +457,7 @@ export type Database = {
           deleted_at?: string | null;
           diet_plan_id: string;
           id?: string;
-          slot_name: string;
+          meal_slot: Database['public']['Enums']['meal_slot'];
           sort_order?: number;
           target_calories?: number | null;
           target_carbs_g?: number | null;
@@ -491,7 +470,7 @@ export type Database = {
           deleted_at?: string | null;
           diet_plan_id?: string;
           id?: string;
-          slot_name?: string;
+          meal_slot?: Database['public']['Enums']['meal_slot'];
           sort_order?: number;
           target_calories?: number | null;
           target_carbs_g?: number | null;
@@ -580,6 +559,116 @@ export type Database = {
           },
         ];
       };
+      exercise_items: {
+        Row: {
+          active: boolean;
+          aliases: string[] | null;
+          created_at: string;
+          created_by_user_id: string | null;
+          deleted_at: string | null;
+          equipment: Database['public']['Enums']['exercise_equipment'];
+          gym_org_id: string | null;
+          id: string;
+          measurement: Database['public']['Enums']['exercise_measurement'];
+          name: string;
+          primary_muscle: Database['public']['Enums']['exercise_muscle'];
+          source: Database['public']['Enums']['exercise_source'];
+          updated_at: string;
+        };
+        Insert: {
+          active?: boolean;
+          aliases?: string[] | null;
+          created_at?: string;
+          created_by_user_id?: string | null;
+          deleted_at?: string | null;
+          equipment: Database['public']['Enums']['exercise_equipment'];
+          gym_org_id?: string | null;
+          id?: string;
+          measurement: Database['public']['Enums']['exercise_measurement'];
+          name: string;
+          primary_muscle: Database['public']['Enums']['exercise_muscle'];
+          source?: Database['public']['Enums']['exercise_source'];
+          updated_at?: string;
+        };
+        Update: {
+          active?: boolean;
+          aliases?: string[] | null;
+          created_at?: string;
+          created_by_user_id?: string | null;
+          deleted_at?: string | null;
+          equipment?: Database['public']['Enums']['exercise_equipment'];
+          gym_org_id?: string | null;
+          id?: string;
+          measurement?: Database['public']['Enums']['exercise_measurement'];
+          name?: string;
+          primary_muscle?: Database['public']['Enums']['exercise_muscle'];
+          source?: Database['public']['Enums']['exercise_source'];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'exercise_items_created_by_user_id_fkey';
+            columns: ['created_by_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'exercise_items_gym_org_id_fkey';
+            columns: ['gym_org_id'];
+            isOneToOne: false;
+            referencedRelation: 'gym_orgs';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      food_item_servings: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          food_item_id: string;
+          grams: number;
+          id: string;
+          is_default: boolean;
+          label: string;
+          sort_order: number;
+          unit: Database['public']['Enums']['food_serving_unit'];
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          food_item_id: string;
+          grams: number;
+          id?: string;
+          is_default?: boolean;
+          label: string;
+          sort_order?: number;
+          unit: Database['public']['Enums']['food_serving_unit'];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          food_item_id?: string;
+          grams?: number;
+          id?: string;
+          is_default?: boolean;
+          label?: string;
+          sort_order?: number;
+          unit?: Database['public']['Enums']['food_serving_unit'];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'food_item_servings_food_item_id_fkey';
+            columns: ['food_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'food_items';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       food_items: {
         Row: {
           active: boolean;
@@ -587,9 +676,10 @@ export type Database = {
           calories: number;
           carbs_g: number | null;
           created_at: string;
-          default_portion: string | null;
+          created_by_user_id: string | null;
           deleted_at: string | null;
           fat_g: number | null;
+          gym_org_id: string | null;
           id: string;
           name: string;
           protein_g: number | null;
@@ -602,9 +692,10 @@ export type Database = {
           calories: number;
           carbs_g?: number | null;
           created_at?: string;
-          default_portion?: string | null;
+          created_by_user_id?: string | null;
           deleted_at?: string | null;
           fat_g?: number | null;
+          gym_org_id?: string | null;
           id?: string;
           name: string;
           protein_g?: number | null;
@@ -617,16 +708,32 @@ export type Database = {
           calories?: number;
           carbs_g?: number | null;
           created_at?: string;
-          default_portion?: string | null;
+          created_by_user_id?: string | null;
           deleted_at?: string | null;
           fat_g?: number | null;
+          gym_org_id?: string | null;
           id?: string;
           name?: string;
           protein_g?: number | null;
           source?: Database['public']['Enums']['food_source'];
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'food_items_created_by_user_id_fkey';
+            columns: ['created_by_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'food_items_gym_org_id_fkey';
+            columns: ['gym_org_id'];
+            isOneToOne: false;
+            referencedRelation: 'gym_orgs';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       gym_admins: {
         Row: {
@@ -1548,8 +1655,8 @@ export type Database = {
       workout_plan_exercises: {
         Row: {
           deleted_at: string | null;
+          exercise_item_id: string;
           id: string;
-          name: string;
           notes: string | null;
           reps: string | null;
           sets: number | null;
@@ -1558,8 +1665,8 @@ export type Database = {
         };
         Insert: {
           deleted_at?: string | null;
+          exercise_item_id: string;
           id?: string;
-          name: string;
           notes?: string | null;
           reps?: string | null;
           sets?: number | null;
@@ -1568,8 +1675,8 @@ export type Database = {
         };
         Update: {
           deleted_at?: string | null;
+          exercise_item_id?: string;
           id?: string;
-          name?: string;
           notes?: string | null;
           reps?: string | null;
           sets?: number | null;
@@ -1577,6 +1684,13 @@ export type Database = {
           workout_plan_day_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'workout_plan_exercises_exercise_item_id_fkey';
+            columns: ['exercise_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'exercise_items';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'workout_plan_exercises_workout_plan_day_id_fkey';
             columns: ['workout_plan_day_id'];
@@ -1697,10 +1811,7 @@ export type Database = {
         };
       };
       accept_staff_invite: {
-        Args: {
-          p_invite_id: string;
-          p_user_id: string;
-        };
+        Args: { p_invite_id: string; p_user_id: string };
         Returns: {
           accepted_at: string | null;
           created_at: string;
@@ -1752,11 +1863,7 @@ export type Database = {
         };
       };
       offboard_client_membership: {
-        Args: {
-          p_gym_org_id: string;
-          p_membership_id: string;
-          p_now?: string;
-        };
+        Args: { p_gym_org_id: string; p_membership_id: string; p_now?: string };
         Returns: {
           assigned_trainer_id: string | null;
           check_in_blocked: boolean;
@@ -1784,10 +1891,39 @@ export type Database = {
       attendance_recorder: 'CLIENT' | 'ADMIN';
       coaching_plan_status: 'ACTIVE' | 'ARCHIVED';
       data_grant_class: 'PROGRESS' | 'CALORIES' | 'WEARABLES' | 'DIET_PLANS' | 'WORKOUT_PLANS';
+      exercise_equipment:
+        | 'BARBELL'
+        | 'DUMBBELL'
+        | 'MACHINE'
+        | 'CABLE'
+        | 'BODYWEIGHT'
+        | 'KETTLEBELL'
+        | 'BAND'
+        | 'OTHER';
+      exercise_measurement: 'WEIGHT_REPS' | 'REPS_ONLY' | 'DURATION' | 'BODYWEIGHT_ASSISTED';
+      exercise_muscle:
+        | 'CHEST'
+        | 'LATS'
+        | 'UPPER_BACK'
+        | 'LOWER_BACK'
+        | 'SHOULDERS'
+        | 'BICEPS'
+        | 'TRICEPS'
+        | 'QUADS'
+        | 'HAMSTRINGS'
+        | 'GLUTES'
+        | 'CALVES'
+        | 'CORE'
+        | 'FULL_BODY'
+        | 'CARDIO'
+        | 'OTHER';
+      exercise_source: 'seed' | 'manual';
+      food_serving_unit: 'G' | 'ML' | 'PIECE' | 'KATORI' | 'CUP' | 'GLASS' | 'TBSP' | 'TSP';
       food_source: 'seed' | 'manual';
       gender: 'MALE' | 'FEMALE' | 'OTHER';
       invite_status: 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
       lead_status: 'NEW' | 'CONTACTED' | 'TRIAL' | 'CONVERTED' | 'LOST';
+      meal_slot: 'BREAKFAST' | 'MORNING_SNACK' | 'LUNCH' | 'EVENING_SNACK' | 'DINNER';
       membership_status: 'ACTIVE' | 'INACTIVE';
       notification_type:
         | 'SUBSCRIPTION_EXPIRING'
@@ -1932,10 +2068,41 @@ export const Constants = {
       attendance_recorder: ['CLIENT', 'ADMIN'],
       coaching_plan_status: ['ACTIVE', 'ARCHIVED'],
       data_grant_class: ['PROGRESS', 'CALORIES', 'WEARABLES', 'DIET_PLANS', 'WORKOUT_PLANS'],
+      exercise_equipment: [
+        'BARBELL',
+        'DUMBBELL',
+        'MACHINE',
+        'CABLE',
+        'BODYWEIGHT',
+        'KETTLEBELL',
+        'BAND',
+        'OTHER',
+      ],
+      exercise_measurement: ['WEIGHT_REPS', 'REPS_ONLY', 'DURATION', 'BODYWEIGHT_ASSISTED'],
+      exercise_muscle: [
+        'CHEST',
+        'LATS',
+        'UPPER_BACK',
+        'LOWER_BACK',
+        'SHOULDERS',
+        'BICEPS',
+        'TRICEPS',
+        'QUADS',
+        'HAMSTRINGS',
+        'GLUTES',
+        'CALVES',
+        'CORE',
+        'FULL_BODY',
+        'CARDIO',
+        'OTHER',
+      ],
+      exercise_source: ['seed', 'manual'],
+      food_serving_unit: ['G', 'ML', 'PIECE', 'KATORI', 'CUP', 'GLASS', 'TBSP', 'TSP'],
       food_source: ['seed', 'manual'],
       gender: ['MALE', 'FEMALE', 'OTHER'],
       invite_status: ['PENDING', 'ACCEPTED', 'REVOKED', 'EXPIRED'],
       lead_status: ['NEW', 'CONTACTED', 'TRIAL', 'CONVERTED', 'LOST'],
+      meal_slot: ['BREAKFAST', 'MORNING_SNACK', 'LUNCH', 'EVENING_SNACK', 'DINNER'],
       membership_status: ['ACTIVE', 'INACTIVE'],
       notification_type: [
         'SUBSCRIPTION_EXPIRING',
