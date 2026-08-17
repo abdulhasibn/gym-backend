@@ -19,9 +19,19 @@ export function createGymOrgRouter(
 
   router.get('/:gymOrgId', controller.getOne);
   router.patch('/:gymOrgId', controller.update);
-  router.get('/:gymOrgId/trainers', controller.listTrainers);
   router.post('/:gymOrgId/staff-invites', controller.createInvite);
   router.get('/:gymOrgId/staff-invites', controller.listInvitesForGym);
 
+  return router;
+}
+
+/** Mount at `/gym-orgs/:gymOrgId/trainers` so coaching routers cannot swallow the path. */
+export function createGymTrainersRouter(
+  controller: GymOrgController,
+  authenticate: RequestHandler,
+): Router {
+  const router = Router({ mergeParams: true });
+  router.use(authenticate);
+  router.get('/', controller.listTrainers);
   return router;
 }

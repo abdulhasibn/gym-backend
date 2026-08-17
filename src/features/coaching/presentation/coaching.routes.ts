@@ -19,23 +19,24 @@ export function createMyDietPlanRouter(
 ): Router {
   const router = Router({ mergeParams: true });
   router.use(authenticate);
-  router.get('/my-diet-plan', controller.myPlan);
-  router.post('/my-diet-plan/items/:itemId/complete', controller.complete);
-  router.delete('/my-diet-plan/items/:itemId/complete', controller.uncomplete);
+  router.get('/', controller.myPlan);
+  router.post('/items/:itemId/complete', controller.complete);
+  router.delete('/items/:itemId/complete', controller.uncomplete);
   return router;
 }
 
+/** Mount at `/gym-orgs/:gymOrgId/diet-plan-templates`. */
 export function createStaffDietTemplateRouter(
   controller: CoachingController,
   authenticate: RequestHandler,
 ): Router {
   const router = Router({ mergeParams: true });
   router.use(authenticate);
-  router.post('/diet-plan-templates', controller.createTemplate);
-  router.get('/diet-plan-templates', controller.listTemplates);
-  router.get('/diet-plan-templates/:templateId', controller.getTemplate);
-  router.post('/diet-plan-templates/:templateId/duplicate', controller.duplicateTemplate);
-  router.patch('/diet-plan-templates/:templateId', controller.updateTemplate);
-  router.delete('/diet-plan-templates/:templateId', controller.deleteTemplate);
+  router.post('/', controller.createTemplate);
+  router.get('/', controller.listTemplates);
+  router.get('/:templateId', controller.getTemplate);
+  router.post('/:templateId/duplicate', controller.duplicateTemplate);
+  router.patch('/:templateId', controller.updateTemplate);
+  router.delete('/:templateId', controller.deleteTemplate);
   return router;
 }

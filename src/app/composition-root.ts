@@ -255,6 +255,7 @@ export function composeApp(config: AppConfig): AppDependencies {
     createRouter(
       authFeature.router,
       gymOrgFeature.router,
+      gymOrgFeature.trainersRouter,
       leadsFeature.router,
       membershipsFeature.plansRouter,
       membershipsFeature.invitesRouter,

@@ -24,7 +24,7 @@ import { IanaTimezone } from '../../domain/iana-timezone.value-object';
 import { StaffCode } from '../../domain/staff-code.value-object';
 import { GymOrgController } from '../../presentation/gym-org.controller';
 import { mapGymOrgError } from '../../presentation/gym-org.error-mapper';
-import { createGymOrgRouter } from '../../presentation/gym-org.routes';
+import { createGymOrgRouter, createGymTrainersRouter } from '../../presentation/gym-org.routes';
 import { FixedClock } from '../fakes/fixed-clock';
 import { InMemoryGymOrgRepository } from '../fakes/in-memory-gym-org.repository';
 import { InMemoryStaffInviteRepository } from '../fakes/in-memory-staff-invite.repository';
@@ -89,6 +89,7 @@ function createTestApp(
   const app = express();
   app.use(express.json());
   app.use('/gym-orgs', createGymOrgRouter(controller, authenticate));
+  app.use('/gym-orgs/:gymOrgId/trainers', createGymTrainersRouter(controller, authenticate));
   app.use(createErrorHandlerMiddleware(new SilentLogger(), [mapGymOrgError]));
 
   return { app, gymOrgs, staffInvites, staffUsers, trainers, clock };

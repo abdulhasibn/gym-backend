@@ -26,7 +26,7 @@ within 1.5.
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
-| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (Admin picker for assign) |
+| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (dedicated mount so coaching catch-alls cannot 404 it) |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
 | Memberships feature (`src/features/memberships`) | Phase 1–5 + 2.4 renewals due-list done — plans, invites, accept/grants, subscriptions, roster/assign/offboard/block, `GET .../subscriptions/renewals-due`; A8b attach/renew deferred |
 | Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
@@ -69,6 +69,19 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-17 — Fix GET trainers 404 (Express 5 catch-all)
+
+- Live smoke: `GET /gym-orgs/:gymOrgId/trainers` 404 (`No route`) while
+  staff-invites on the gym-org router still 200. Cause: coaching catch-alls
+  `router.use('/gym-orgs/:gymOrgId', …)` on Express 5 swallowed leftover
+  paths.
+- Dedicated `createGymTrainersRouter` mounted at
+  `/gym-orgs/:gymOrgId/trainers`. Diet templates at
+  `/diet-plan-templates`; my plan at `/my-diet-plan` (same public URLs).
+- Wired in `composition.ts` → `composition-root.ts` → `createRouter`.
+  Tests: `gym-org-trainers-routing.test.ts` plus gym-org and coaching
+  route mounts. Public URLs unchanged.
 
 ### 2026-08-17 — Sync-docs + Postman after trainer list
 

@@ -256,7 +256,10 @@ function createApp(
     '/gym-orgs/:gymOrgId/clients/:clientUserId',
     createStaffDietPlanRouter(controller, authenticate),
   );
-  app.use('/gym-orgs/:gymOrgId', createStaffDietTemplateRouter(controller, authenticate));
+  app.use(
+    '/gym-orgs/:gymOrgId/diet-plan-templates',
+    createStaffDietTemplateRouter(controller, authenticate),
+  );
   app.use(createErrorHandlerMiddleware(new SilentLogger(), [mapCoachingError]));
   return { app, templates };
 }

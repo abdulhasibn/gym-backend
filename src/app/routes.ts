@@ -6,6 +6,7 @@ import { Router, type RequestHandler } from 'express';
 export function createRouter(
   authRouter: RequestHandler,
   gymOrgRouter: RequestHandler,
+  gymOrgTrainersRouter: RequestHandler,
   leadsRouter: RequestHandler,
   membershipPlansRouter: RequestHandler,
   membershipInvitesRouter: RequestHandler,
@@ -34,6 +35,8 @@ export function createRouter(
   });
   router.use('/auth', authRouter);
   router.use('/gym-orgs', gymOrgRouter);
+  // Specific prefixes only — Express 5 catch-alls steal leftover paths like /trainers.
+  router.use('/gym-orgs/:gymOrgId/trainers', gymOrgTrainersRouter);
   router.use('/gym-orgs/:gymOrgId/leads', leadsRouter);
   router.use('/gym-orgs/:gymOrgId/plans', membershipPlansRouter);
   router.use('/gym-orgs/:gymOrgId/membership-invites', membershipInvitesRouter);
@@ -51,8 +54,8 @@ export function createRouter(
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientUsersRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientCalorieLogRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffDietPlanRouter);
-  router.use('/gym-orgs/:gymOrgId', staffDietTemplateRouter);
-  router.use('/gym-orgs/:gymOrgId', myDietPlanRouter);
+  router.use('/gym-orgs/:gymOrgId/diet-plan-templates', staffDietTemplateRouter);
+  router.use('/gym-orgs/:gymOrgId/my-diet-plan', myDietPlanRouter);
   router.use('/membership-invites', membershipInviteClientRouter);
 
   return router;

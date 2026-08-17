@@ -27,7 +27,7 @@ import { SupabaseTrainerProfileDirectory } from './infrastructure/supabase-train
 import { SupabaseTrainerProfileQueries } from './infrastructure/supabase-trainer-profile.queries';
 import { GymOrgController } from './presentation/gym-org.controller';
 import { mapGymOrgError } from './presentation/gym-org.error-mapper';
-import { createGymOrgRouter } from './presentation/gym-org.routes';
+import { createGymOrgRouter, createGymTrainersRouter } from './presentation/gym-org.routes';
 
 export function composeGymOrgFeature(
   dataClient: SupabaseClient<Database>,
@@ -59,6 +59,7 @@ export function composeGymOrgFeature(
 
   return {
     router: createGymOrgRouter(controller, authenticate),
+    trainersRouter: createGymTrainersRouter(controller, authenticate),
     errorMapper: mapGymOrgError,
     isLiveAdmin: (userId: UserId, gymOrgId: GymOrgId) => gymOrgs.isLiveAdmin(userId, gymOrgId),
     findLiveTrainerProfileId: (userId: UserId, gymOrgId: GymOrgId) =>
