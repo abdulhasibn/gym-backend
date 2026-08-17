@@ -168,8 +168,19 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | `PATCH` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId` | [nutrition § Gym diet templates](nutrition.md#gym-diet-templates) |
 | `DELETE` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId` | [nutrition § Gym diet templates](nutrition.md#gym-diet-templates) |
 
+### Coaching workouts (3.2)
+
+| Method | Path | Guide |
+|--------|------|-------|
+| `GET` | `/exercises/search` | [coaching § Search](coaching.md#search-catalog) |
+| `POST` | `/gym-orgs/:gymOrgId/clients/:clientUserId/workout-plans` | [coaching § Assign](coaching.md#assign) |
+| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/workout-plans` | [coaching § Staff get](coaching.md#staff-get-definition) |
+| `GET` | `/gym-orgs/:gymOrgId/my-workout-plan` | [coaching § Client my plan](coaching.md#client-my-plan) |
+| `POST` | `/gym-orgs/:gymOrgId/my-workout-plan/items/:itemId/complete` | [coaching § Complete](coaching.md#complete--uncomplete) |
+| `DELETE` | `/gym-orgs/:gymOrgId/my-workout-plan/items/:itemId/complete` | [coaching § Complete](coaching.md#complete--uncomplete) |
+
 ---
 
 ## Not shipped yet
 
-Workout assign/complete APIs (3.2; exercise catalog seed is live), broader food catalog, CustomFood / CustomExercise APIs, workout templates, health sync, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
+Broader food/exercise seed, CustomFood / CustomExercise APIs, gym workout templates, staff `WORKOUT_PLANS` adherence overlay, health sync, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).

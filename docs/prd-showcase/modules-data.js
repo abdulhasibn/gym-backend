@@ -231,10 +231,10 @@ window.MODULES_DATA = [
       "Expiry freezes new assignments; history stays readable.",
     ],
     items: [
-      "Catalog search (movement × equipment) — seed live (30); APIs next (3.2)",
-      "Days → sets/reps + free-text notes — next (3.2)",
-      "Assign only with active Trainer addon — next (3.2)",
-      "Per-day PlanCompletion; staff adherence needs WORKOUT_PLANS grant — next (3.2)",
+      "Catalog search (movement × equipment) — API live (3.2); 30 seed rows",
+      "Days → sets/reps + free-text notes — API live (3.2)",
+      "Assign only with active Trainer addon — API live (3.2)",
+      "Per-day PlanCompletion — API live (3.2); staff adherence overlay later (WORKOUT_PLANS)",
       "Clone / template (P1 UI)",
     ],
     detail: {

@@ -4,24 +4,32 @@ import { toGymOrgId } from '../../../domain/shared/gym-org-id';
 import { requireAuthenticatedActor } from '../../../presentation/http/context/request-actor';
 import type { AssignDietPlanFromTemplateUseCase } from '../application/assign-diet-plan-from-template.use-case';
 import type { AssignDietPlanUseCase } from '../application/assign-diet-plan.use-case';
+import type { AssignWorkoutPlanUseCase } from '../application/assign-workout-plan.use-case';
 import type { CompleteDietItemUseCase } from '../application/complete-diet-item.use-case';
+import type { CompleteWorkoutExerciseUseCase } from '../application/complete-workout-exercise.use-case';
 import type { CreateDietPlanTemplateUseCase } from '../application/create-diet-plan-template.use-case';
 import type { DeleteDietPlanTemplateUseCase } from '../application/delete-diet-plan-template.use-case';
 import type { DuplicateDietPlanTemplateUseCase } from '../application/duplicate-diet-plan-template.use-case';
 import type { GetDietPlanTemplateUseCase } from '../application/get-diet-plan-template.use-case';
 import type { GetMyDietPlanUseCase } from '../application/get-my-diet-plan.use-case';
+import type { GetMyWorkoutPlanUseCase } from '../application/get-my-workout-plan.use-case';
 import type { GetStaffDietPlanUseCase } from '../application/get-staff-diet-plan.use-case';
+import type { GetStaffWorkoutPlanUseCase } from '../application/get-staff-workout-plan.use-case';
 import type { ListDietPlanTemplatesUseCase } from '../application/list-diet-plan-templates.use-case';
+import type { SearchExercisesUseCase } from '../application/search-exercises.use-case';
 import type { UncompleteDietItemUseCase } from '../application/uncomplete-diet-item.use-case';
+import type { UncompleteWorkoutExerciseUseCase } from '../application/uncomplete-workout-exercise.use-case';
 import type { UpdateDietPlanTemplateUseCase } from '../application/update-diet-plan-template.use-case';
 import {
   assignDietPlanSchema,
+  assignWorkoutPlanSchema,
   dietItemParamSchema,
   dietPlanTemplateBodySchema,
   dietTemplateIdParamSchema,
   gymAndClientUserIdParamSchema,
   gymOrgIdParamSchema,
   paginationQuerySchema,
+  searchExercisesQuerySchema,
 } from './coaching.schemas';
 
 export class CoachingController {
@@ -38,6 +46,12 @@ export class CoachingController {
     private readonly duplicateDietPlanTemplate: DuplicateDietPlanTemplateUseCase,
     private readonly updateDietPlanTemplate: UpdateDietPlanTemplateUseCase,
     private readonly deleteDietPlanTemplate: DeleteDietPlanTemplateUseCase,
+    private readonly searchExercises: SearchExercisesUseCase,
+    private readonly assignWorkoutPlan: AssignWorkoutPlanUseCase,
+    private readonly getStaffWorkoutPlan: GetStaffWorkoutPlanUseCase,
+    private readonly getMyWorkoutPlan: GetMyWorkoutPlanUseCase,
+    private readonly completeWorkoutExercise: CompleteWorkoutExerciseUseCase,
+    private readonly uncompleteWorkoutExercise: UncompleteWorkoutExerciseUseCase,
   ) {}
 
   assign: RequestHandler = async (req, res, next) => {
@@ -213,6 +227,97 @@ export class CoachingController {
         requireAuthenticatedActor(req),
         toGymOrgId(gymOrgId),
         templateId,
+      );
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  search: RequestHandler = async (req, res, next) => {
+    try {
+      requireAuthenticatedActor(req);
+      const query = searchExercisesQuerySchema.parse(req.query);
+      const exercises = await this.searchExercises.execute(query.q);
+      res.status(200).json({ exercises });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  assignWorkout: RequestHandler = async (req, res, next) => {
+    try {
+      const { gymOrgId, clientUserId } = gymAndClientUserIdParamSchema.parse(req.params);
+      const body = assignWorkoutPlanSchema.parse(req.body);
+      const workoutPlan = await this.assignWorkoutPlan.execute(requireAuthenticatedActor(req), {
+        gymOrgId: toGymOrgId(gymOrgId),
+        clientUserId,
+        title: body.title,
+        notes: body.notes ?? null,
+        days: body.days.map((day) => ({
+          dayLabel: day.dayLabel,
+          exercises: day.exercises.map((exercise) => ({
+            exerciseItemId: exercise.exerciseItemId,
+            sets: exercise.sets ?? null,
+            reps: exercise.reps ?? null,
+            notes: exercise.notes ?? null,
+          })),
+        })),
+      });
+      res.status(201).json({ workoutPlan });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  staffGetWorkout: RequestHandler = async (req, res, next) => {
+    try {
+      const { gymOrgId, clientUserId } = gymAndClientUserIdParamSchema.parse(req.params);
+      const workoutPlan = await this.getStaffWorkoutPlan.execute(
+        requireAuthenticatedActor(req),
+        toGymOrgId(gymOrgId),
+        clientUserId,
+      );
+      res.status(200).json({ workoutPlan });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  myWorkout: RequestHandler = async (req, res, next) => {
+    try {
+      const { gymOrgId } = gymOrgIdParamSchema.parse(req.params);
+      const workoutPlan = await this.getMyWorkoutPlan.execute(
+        requireAuthenticatedActor(req),
+        toGymOrgId(gymOrgId),
+      );
+      res.status(200).json({ workoutPlan });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  completeWorkout: RequestHandler = async (req, res, next) => {
+    try {
+      const { gymOrgId, itemId } = dietItemParamSchema.parse(req.params);
+      await this.completeWorkoutExercise.execute(
+        requireAuthenticatedActor(req),
+        toGymOrgId(gymOrgId),
+        itemId,
+      );
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  uncompleteWorkout: RequestHandler = async (req, res, next) => {
+    try {
+      const { gymOrgId, itemId } = dietItemParamSchema.parse(req.params);
+      await this.uncompleteWorkoutExercise.execute(
+        requireAuthenticatedActor(req),
+        toGymOrgId(gymOrgId),
+        itemId,
       );
       res.status(204).send();
     } catch (error) {

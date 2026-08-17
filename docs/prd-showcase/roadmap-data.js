@@ -380,7 +380,7 @@ export const ROADMAP = {
       orbit: 3,
       label: "Stint 3",
       title: "Keep Them Coming",
-      tagline: "3.1 diet/diary + templates shipped · next 3.2 workout APIs",
+      tagline: "3.2 workout assign + completions shipped · next 3.3 health-sync",
       outcome:
         "Full MVP loop — coaching differentiator, Client fitness, CRM convert + automated nudges.",
       exit: "Solo owner can run renewals inbox + CRM convert + (self-)coaching; Client can log food, sync health, complete plans; T-2 / unpaid / lead-follow-up jobs fire idempotently.",
@@ -410,16 +410,16 @@ export const ROADMAP = {
           id: "3.2",
           num: "3.2",
           title: "Workout catalog + assign + completions",
-          body: "30-exercise seed live. Assign from catalog + Client complete-per-day APIs next. Addon-gated.",
+          body: "30-exercise seed + catalog search, assign/replace WorkoutPlan, Client gym-today complete. Gym templates and set logs later. Addon-gated.",
           paths: "src/features/coaching/",
           prd: "C6, T6",
           ownership: "client",
-          status: "todo",
+          status: "done",
           detail: {
             purpose: "Hevy-style ExerciseItem identity under TRAINER_COACHING; still PlanCompletion (not set logs). ADR-0007.",
             howItWorks: [
               "Search seed catalog (movement × equipment); no typed names.",
-              "Assign while addon in-date; Client completes per calendar day; WORKOUT_PLANS grant-gates staff adherence.",
+              "Assign while addon in-date; Client completes per calendar day; WORKOUT_PLANS staff adherence overlay later.",
             ],
             acceptance: ["Assign from catalog + daily complete works with active addon."],
             prdRefs: "C6, T6 · PRD §5.5 · ADR-0007",

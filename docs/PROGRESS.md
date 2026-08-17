@@ -4,10 +4,9 @@
 
 ## Current stage
 
-**Stage:** Stint **3.1** shipped, plus gym diet templates (T7 / ADR-0008).
-ADR-0007 exercise catalog **applied** (30 seed rows live). Workout **APIs**
-are **3.2**. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b still deferred
-within 1.5.
+**Stage:** Stint **3.2** shipped (exercise catalog search + workout assign
++ per-day completions, ADR-0007). Stint **3.1** diet + gym templates remain
+live. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b still deferred within 1.5.
 
 | Area | Status |
 |------|--------|
@@ -33,11 +32,12 @@ within 1.5.
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
-| Other feature modules under `src/features/*` | Next **3.2** workout APIs (search/assign/complete); then health-sync, notifications |
+| Coaching workout (`src/features/coaching`) | Done — `GET /exercises/search`, assign/replace `WorkoutPlan`, staff GET, Client GET + per-day complete/uncomplete (not set logs; not CustomExercise; no gym workout templates) |
+| Other feature modules under `src/features/*` | Next **3.3** health-sync; then notifications, CRM convert (A14) |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet + templates); **Gym Orgs** List Gym Trainers |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet + templates + workout); **Gym Orgs** List Gym Trainers |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -54,10 +54,10 @@ within 1.5.
 
 ## Next up
 
-1. **Stint 3.2 APIs** — search exercise catalog, assign workout, per-day
-   completions (not set logs; not CustomExercise).
-2. Then 3.3 health-sync; CRM convert (A14); notifications; audit.
-3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs.
+1. **Stint 3.3 APIs** — health-sync ingest/read (provider adapters).
+2. Then CRM convert (A14); notifications; audit.
+3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs;
+   gym workout templates; T8 `WORKOUT_PLANS` staff adherence overlay.
 4. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
 5. Feature-scoped RLS — not needed while the API uses service-role only.
 6. Extra Auth provider/failure-path tests — only when a concrete gap blocks
@@ -69,6 +69,26 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-17 — Sync Orbit: 3.2 done, next 3.3
+
+- Orbit `roadmap-data.js` + `docs/mvp-roadmap/` mirror: 3.2 `done`; stint
+  tagline next 3.3 health-sync. Lede + M7 items already API-live (3.2).
+- Live: https://gym-prd-visual.vercel.app (deploy
+  `dpl_Fs8vJuwahnMCuVHUb1qPYMZ9kmLY`).
+
+### 2026-08-17 — Ship Stint 3.2 workout APIs
+
+- Coaching: `GET /exercises/search` (seed, cap 20); assign/replace Client-owned
+  `WorkoutPlan` (archive ACTIVE then insert days/exercises); staff GET
+  definition; Client GET with gym-today `completed` flags; POST/DELETE
+  complete ticks `workout_plan_exercise_completions` (not set logs).
+- Public URLs use dedicated prefixes (`/exercises`, `…/workout-plans`,
+  `…/my-workout-plan`) so Express 5 catch-alls cannot swallow leftover
+  gym-org paths.
+- Out of this stint: gym workout templates, CustomExercise, T8 adherence
+  overlay, assign audit. Guide: `docs/coaching.md`. Postman Coaching folder
+  extended with search/assign/GET/complete.
 
 ### 2026-08-17 — Fix GET trainers 404 (Express 5 catch-all)
 

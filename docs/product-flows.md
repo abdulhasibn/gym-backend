@@ -469,7 +469,7 @@ C5, T5, T7, T8 (grant), A4 coupling · ADR-0006 (unified diary) · ADR-0008 (gym
 
 Same pattern as diet for **structure**: search catalog `ExerciseItem` (not typed names); days → prescribed sets/reps/notes; per-day `PlanCompletion`; `WORKOUT_PLANS` grant for adherence. Not a Hevy session log (ADR-0007).
 
-**API status:** Catalog seed **live** (30 movements, ADR-0007). Assign / complete APIs **not shipped** (3.2).
+**API status:** Catalog seed **live** (30 movements, ADR-0007). Assign / complete APIs **shipped** (3.2). Staff `WORKOUT_PLANS` adherence overlay and gym workout templates are later.
 
 ### Screens & flows
 

@@ -40,3 +40,38 @@ export function createStaffDietTemplateRouter(
   router.delete('/:templateId', controller.deleteTemplate);
   return router;
 }
+
+export function createExercisesRouter(
+  controller: CoachingController,
+  authenticate: RequestHandler,
+): Router {
+  const router = Router();
+  router.use(authenticate);
+  router.get('/search', controller.search);
+  return router;
+}
+
+/** Mount at `/gym-orgs/:gymOrgId/clients/:clientUserId`. */
+export function createStaffWorkoutPlanRouter(
+  controller: CoachingController,
+  authenticate: RequestHandler,
+): Router {
+  const router = Router({ mergeParams: true });
+  router.use(authenticate);
+  router.post('/workout-plans', controller.assignWorkout);
+  router.get('/workout-plans', controller.staffGetWorkout);
+  return router;
+}
+
+/** Mount at `/gym-orgs/:gymOrgId/my-workout-plan`. */
+export function createMyWorkoutPlanRouter(
+  controller: CoachingController,
+  authenticate: RequestHandler,
+): Router {
+  const router = Router({ mergeParams: true });
+  router.use(authenticate);
+  router.get('/', controller.myWorkout);
+  router.post('/items/:itemId/complete', controller.completeWorkout);
+  router.delete('/items/:itemId/complete', controller.uncompleteWorkout);
+  return router;
+}

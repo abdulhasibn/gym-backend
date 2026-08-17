@@ -40,6 +40,16 @@ describe('GET /gym-orgs/:gymOrgId/trainers vs coaching mounts', () => {
       res.status(200).json({ dietPlan: null });
     });
 
+    const exercises = Router();
+    exercises.get('/search', (_req, res) => {
+      res.status(200).json({ exercises: [] });
+    });
+
+    const myWorkout = Router({ mergeParams: true });
+    myWorkout.get('/', (_req, res) => {
+      res.status(200).json({ workoutPlan: null });
+    });
+
     const app = express();
     app.use(
       createRouter(
@@ -66,6 +76,9 @@ describe('GET /gym-orgs/:gymOrgId/trainers vs coaching mounts', () => {
         unused(),
         templates,
         myDiet,
+        exercises,
+        unused(),
+        myWorkout,
       ),
     );
     app.use(notFoundMiddleware);
@@ -80,5 +93,11 @@ describe('GET /gym-orgs/:gymOrgId/trainers vs coaching mounts', () => {
 
     const mine = await supertest(app).get(`/gym-orgs/${gymOrgId}/my-diet-plan`);
     expect(mine.status).toBe(200);
+
+    const search = await supertest(app).get('/exercises/search');
+    expect(search.status).toBe(200);
+
+    const myWorkoutPlan = await supertest(app).get(`/gym-orgs/${gymOrgId}/my-workout-plan`);
+    expect(myWorkoutPlan.status).toBe(200);
   });
 });

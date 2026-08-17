@@ -11,7 +11,9 @@ import { createErrorHandlerMiddleware } from '../../../../presentation/http/erro
 import type { Logger } from '../../../../shared/logging/logger.port';
 import { AssignDietPlanFromTemplateUseCase } from '../../application/assign-diet-plan-from-template.use-case';
 import { AssignDietPlanUseCase } from '../../application/assign-diet-plan.use-case';
+import { AssignWorkoutPlanUseCase } from '../../application/assign-workout-plan.use-case';
 import { CompleteDietItemUseCase } from '../../application/complete-diet-item.use-case';
+import { CompleteWorkoutExerciseUseCase } from '../../application/complete-workout-exercise.use-case';
 import { CreateDietPlanTemplateUseCase } from '../../application/create-diet-plan-template.use-case';
 import { DeleteDietPlanTemplateUseCase } from '../../application/delete-diet-plan-template.use-case';
 import { DietAssignPolicy } from '../../application/diet-assign.policy';
@@ -20,9 +22,13 @@ import { DietTemplatePolicy } from '../../application/diet-template.policy';
 import { DuplicateDietPlanTemplateUseCase } from '../../application/duplicate-diet-plan-template.use-case';
 import { GetDietPlanTemplateUseCase } from '../../application/get-diet-plan-template.use-case';
 import { GetMyDietPlanUseCase } from '../../application/get-my-diet-plan.use-case';
+import { GetMyWorkoutPlanUseCase } from '../../application/get-my-workout-plan.use-case';
 import { GetStaffDietPlanUseCase } from '../../application/get-staff-diet-plan.use-case';
+import { GetStaffWorkoutPlanUseCase } from '../../application/get-staff-workout-plan.use-case';
 import { ListDietPlanTemplatesUseCase } from '../../application/list-diet-plan-templates.use-case';
+import { SearchExercisesUseCase } from '../../application/search-exercises.use-case';
 import { UncompleteDietItemUseCase } from '../../application/uncomplete-diet-item.use-case';
+import { UncompleteWorkoutExerciseUseCase } from '../../application/uncomplete-workout-exercise.use-case';
 import { UpdateDietPlanTemplateUseCase } from '../../application/update-diet-plan-template.use-case';
 import type { CoachingEntitlementPort } from '../../domain/coaching-entitlement.port';
 import type { DietPlan } from '../../domain/diet-plan.entity';
@@ -44,12 +50,20 @@ import { toTrainerProfileId } from '../../domain/trainer-profile-id';
 import { CoachingController } from '../../presentation/coaching.controller';
 import { mapCoachingError } from '../../presentation/coaching.error-mapper';
 import {
+  createExercisesRouter,
+  createMyWorkoutPlanRouter,
   createStaffDietPlanRouter,
   createStaffDietTemplateRouter,
+  createStaffWorkoutPlanRouter,
 } from '../../presentation/coaching.routes';
 import type { Page, Pagination } from '../../../../shared/pagination/pagination';
 import { toPage } from '../../../../shared/pagination/pagination';
 import type { GymOrgId } from '../../../../domain/shared/gym-org-id';
+import { toExerciseItemId } from '../../domain/exercise-item-id';
+import { InMemoryExerciseCatalog } from '../fakes/in-memory-exercise-catalog';
+import { InMemoryWorkoutCompletions } from '../fakes/in-memory-workout-completions';
+import { InMemoryWorkoutPlanQueries } from '../fakes/in-memory-workout-plan.queries';
+import { InMemoryWorkoutPlanRepository } from '../fakes/in-memory-workout-plan.repository';
 
 class SilentLogger implements Logger {
   info(): void {}
@@ -207,6 +221,18 @@ function createApp(
   const templatePolicy = new DietTemplatePolicy(assignPolicy);
   const clock = { now: () => new Date('2026-08-17T10:00:00.000Z') };
   const ids = { generate: () => crypto.randomUUID() };
+  const workoutPlans = new InMemoryWorkoutPlanRepository();
+  const workoutQueries = new InMemoryWorkoutPlanQueries(workoutPlans);
+  const workoutCompletions = new InMemoryWorkoutCompletions();
+  const exerciseCatalog = new InMemoryExerciseCatalog();
+  exerciseCatalog.seedExercise({
+    id: toExerciseItemId('e0e00000-0000-4000-8000-000000000001'),
+    name: 'Barbell Bench Press',
+    aliases: ['bench'],
+    primaryMuscle: 'CHEST',
+    equipment: 'BARBELL',
+    measurement: 'WEIGHT_REPS',
+  });
   const controller = new CoachingController(
     new AssignDietPlanUseCase(assignPolicy, entitlement, catalog, plans, gymClock, clock, ids),
     new AssignDietPlanFromTemplateUseCase(
@@ -244,6 +270,41 @@ function createApp(
     new DuplicateDietPlanTemplateUseCase(templatePolicy, templates, clock, ids),
     new UpdateDietPlanTemplateUseCase(templatePolicy, catalog, templates, clock, ids),
     new DeleteDietPlanTemplateUseCase(templatePolicy, templates, clock),
+    new SearchExercisesUseCase(exerciseCatalog),
+    new AssignWorkoutPlanUseCase(
+      assignPolicy,
+      entitlement,
+      exerciseCatalog,
+      workoutPlans,
+      gymClock,
+      clock,
+      ids,
+    ),
+    new GetStaffWorkoutPlanUseCase(assignPolicy, entitlement, workoutQueries),
+    new GetMyWorkoutPlanUseCase(
+      new DietClientPolicy(),
+      entitlement,
+      workoutQueries,
+      workoutCompletions,
+      gymClock,
+      clock,
+    ),
+    new CompleteWorkoutExerciseUseCase(
+      new DietClientPolicy(),
+      entitlement,
+      workoutPlans,
+      workoutCompletions,
+      gymClock,
+      clock,
+    ),
+    new UncompleteWorkoutExerciseUseCase(
+      new DietClientPolicy(),
+      entitlement,
+      workoutPlans,
+      workoutCompletions,
+      gymClock,
+      clock,
+    ),
   );
 
   const authenticate: RequestHandler = (req, _res, next) => {
@@ -259,6 +320,15 @@ function createApp(
   app.use(
     '/gym-orgs/:gymOrgId/diet-plan-templates',
     createStaffDietTemplateRouter(controller, authenticate),
+  );
+  app.use('/exercises', createExercisesRouter(controller, authenticate));
+  app.use(
+    '/gym-orgs/:gymOrgId/clients/:clientUserId',
+    createStaffWorkoutPlanRouter(controller, authenticate),
+  );
+  app.use(
+    '/gym-orgs/:gymOrgId/my-workout-plan',
+    createMyWorkoutPlanRouter(controller, authenticate),
   );
   app.use(createErrorHandlerMiddleware(new SilentLogger(), [mapCoachingError]));
   return { app, templates };
@@ -337,5 +407,39 @@ describe('diet-plan-templates', () => {
       .post(`/gym-orgs/${gymOrgId}/diet-plan-templates`)
       .send({ title: 'Cut' });
     expect(response.status).toBe(422);
+  });
+});
+
+describe('POST workout-plans', () => {
+  it('rejects a body without days', async () => {
+    const { app } = createApp(trainer);
+    const response = await request(app)
+      .post(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-plans`)
+      .send({ title: 'PPL' });
+    expect(response.status).toBe(422);
+  });
+
+  it('assigns a catalog workout plan', async () => {
+    const { app } = createApp(trainer);
+    const response = await request(app)
+      .post(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-plans`)
+      .send({
+        title: 'PPL',
+        days: [
+          {
+            dayLabel: 'Push',
+            exercises: [
+              {
+                exerciseItemId: 'e0e00000-0000-4000-8000-000000000001',
+                sets: 3,
+                reps: '8-12',
+              },
+            ],
+          },
+        ],
+      });
+    expect(response.status).toBe(201);
+    expect(response.body.workoutPlan.title).toBe('PPL');
+    expect(response.body.workoutPlan.days).toHaveLength(1);
   });
 });

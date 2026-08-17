@@ -27,9 +27,12 @@ Use lane `CLIENT` on first provision. Staff-only routes (gym create, leads, plan
 | My attendance | `GET /gym-orgs/:gymOrgId/my-attendances` | Own gym-owned history |
 | Profile | `GET` / `PATCH /me/profile` | Height, DOB, gender, medical; weight via progress |
 | Progress | `GET` / `PUT /me/progress-logs` | Weight history + BMI |
+| Calories | `GET /me/calorie-logs`, extras `POST`/`DELETE …/items` | [`nutrition.md`](nutrition.md) |
+| Diet | `GET /gym-orgs/:gymOrgId/my-diet-plan`; complete prescribed | [`nutrition.md`](nutrition.md) |
+| Workout | `GET /exercises/search`; `GET /gym-orgs/:gymOrgId/my-workout-plan`; complete per day | [`coaching.md`](coaching.md) |
 | Health | `GET /health` | Liveness |
 
-**Not yet for CLIENT:** workout plans (3.2), health sync, push. Calories + diet plan APIs are live — [`nutrition.md`](nutrition.md) (staff gym templates are there too). Staff roster / assign / offboard / block: [`roster.md`](roster.md). Staff attendance + grant-gated profile/progress: [`api.md`](api.md).
+**Not yet for CLIENT:** health sync, push. Staff roster / assign / offboard / block: [`roster.md`](roster.md). Staff attendance + grant-gated profile/progress: [`api.md`](api.md).
 
 ---
 
