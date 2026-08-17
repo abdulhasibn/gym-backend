@@ -36,7 +36,7 @@
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Attendance** + **Profile & Progress** + renewals-due (Stint 2); every request Docs opens with `**Story:**` functional blurb |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet 3.1); every request Docs opens with `**Story:**` functional blurb |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -56,8 +56,7 @@
 1. **Stint 3.2 APIs** — search exercise catalog, assign workout, per-day
    completions (not set logs; not CustomExercise).
 2. Then 3.3 health-sync; CRM convert (A14); notifications; audit.
-3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs;
-   Postman folders for 3.1.
+3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs.
 4. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
 5. Feature-scoped RLS — not needed while the API uses service-role only.
 6. Extra Auth provider/failure-path tests — only when a concrete gap blocks
@@ -69,6 +68,15 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-17 — Push 3.1 + Postman Nutrition/Coaching
+
+- Pushed gym-backend `feat: ship Stint 3.1 nutrition, diet, and exercise
+  catalog` (`a7c50ca`).
+- Postman: top-level **Nutrition** (search, diary, staff CALORIES) and
+  **Coaching** (assign/get/complete diet). Docs + Examples audited
+  (`gapCount` 0). Git `../gym-backend-postman` `5727c89`; cloud `Gym
+  Backend API` folders verified (requests inside folders, not root).
 
 ### 2026-08-17 — Apply ADR-0007 + sync-docs (Orbit local)
 
