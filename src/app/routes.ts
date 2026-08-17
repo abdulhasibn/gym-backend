@@ -24,6 +24,7 @@ export function createRouter(
   meCalorieLogRouter: RequestHandler,
   staffClientCalorieLogRouter: RequestHandler,
   staffDietPlanRouter: RequestHandler,
+  staffDietTemplateRouter: RequestHandler,
   myDietPlanRouter: RequestHandler,
 ): Router {
   const router = Router();
@@ -50,6 +51,7 @@ export function createRouter(
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientUsersRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientCalorieLogRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffDietPlanRouter);
+  router.use('/gym-orgs/:gymOrgId', staffDietTemplateRouter);
   router.use('/gym-orgs/:gymOrgId', myDietPlanRouter);
   router.use('/membership-invites', membershipInviteClientRouter);
 

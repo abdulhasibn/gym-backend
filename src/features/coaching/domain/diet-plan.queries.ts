@@ -27,6 +27,7 @@ export interface DietPlanSummary {
   readonly notes: string | null;
   readonly status: string;
   readonly meals: readonly DietPlanMealSummary[];
+  readonly clonedFromTemplateId: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }

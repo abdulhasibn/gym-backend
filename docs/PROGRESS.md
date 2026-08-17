@@ -4,22 +4,23 @@
 
 ## Current stage
 
-**Stage:** Stint **3.1** shipped. ADR-0007 exercise catalog **applied**
-(30 seed rows live). Workout **APIs** are **3.2**. See
-[`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b still deferred within 1.5.
+**Stage:** Stint **3.1** shipped, plus gym diet templates (T7 / ADR-0008).
+ADR-0007 exercise catalog **applied** (30 seed rows live). Workout **APIs**
+are **3.2**. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b still deferred
+within 1.5.
 
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
-| Domain glossary / PRD / architecture docs | Done — ADR-0006 food diary · ADR-0007 exercise catalog |
-| DBML source of truth (`docs/schema.dbml`) | Done — `exercise_items`; plan line is `exercise_item_id` |
-| Supabase project + SQL migrations applied | Done — 22 local + remote; through `20260817121500_seed_exercise_catalog_v1` |
-| Generated `database.types.ts` | Done — `exercise_items` + muscle/equipment/measurement enums |
+| Domain glossary / PRD / architecture docs | Done — ADR-0006 food diary · ADR-0007 exercise catalog · ADR-0008 diet templates |
+| DBML source of truth (`docs/schema.dbml`) | Done — `diet_plan_templates` + `cloned_from_template_id` |
+| Supabase project + SQL migrations applied | Done — 23 local + remote; through `20260817121500` (templates `20260817102811`) |
+| Generated `database.types.ts` | Done — template tables + `cloned_from_template_id` |
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
 | Food catalog seed | Done — 20 foods × 8 units (160 servings), `source=seed` |
 | Exercise catalog seed | Done — 30 movements, `source=seed` (ADR-0007) |
-| Feature RLS policies (beyond deny-all) | Not started — 33 public tables RLS on, no policies |
+| Feature RLS policies (beyond deny-all) | Not started — 36 public tables RLS on, no policies |
 | Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me` |
 | Auth automated tests | Partial — refresh use-case + route coverage added; provider integration and remaining failure-path coverage still deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
@@ -31,12 +32,12 @@
 | Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
-| Coaching diet (`src/features/coaching`) | Done — assign/get/complete into diary; freeze on expired addon |
+| Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
 | Other feature modules under `src/features/*` | Next **3.2** workout APIs (search/assign/complete); then health-sync, notifications |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet 3.1); every request Docs opens with `**Story:**` functional blurb |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet + templates) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
 
 **Supabase project**
@@ -47,8 +48,8 @@
 | Ref | `igcmptpjmagzwoccxcnw` |
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
-| Tables | 33 in `public`; RLS enabled (no policies) |
-| Migrations applied | 22 — remote through `20260817121500_seed_exercise_catalog_v1` |
+| Tables | 36 in `public`; RLS enabled (no policies) |
+| Migrations applied | 23 — remote through `20260817121500_seed_exercise_catalog_v1` (templates `20260817102811`) |
 | Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 30 |
 
 ## Next up
@@ -68,6 +69,29 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-17 — Sync-docs + Postman after T7
+
+- Orbit/README/MVP: 3.1 copy now names gym diet templates; `roadmap-data.js`
+  mirrored to `docs/mvp-roadmap/`. Prod
+  https://gym-prd-visual.vercel.app (lede + 3.1 `status: "done"`).
+- Postman: Coaching template CRUD/duplicate/assign-from-template Docs +
+  403 Examples; audit `gapCount` 0. Git `../gym-backend-postman`
+  `02af5fe`; cloud PUT async (`994021fe…` successful). Templates sit
+  inside **Coaching**, not root.
+
+### 2026-08-17 — Gym diet plan templates (T7 / ADR-0008)
+
+- Detour before 3.2: trainer-owned gym `DietPlanTemplate` library. Assigned
+  `diet_plans` stay Client-owned snapshots (`cloned_from_template_id`).
+- Schema: `20260817102811_diet_plan_templates.sql` on
+  `igcmptpjmagzwoccxcnw` (three tables + serving-matches trigger). DBML,
+  types regen, ADR-0008.
+- APIs under `coaching`: template CRUD / duplicate / list; assign XOR
+  `{ templateId }` or meals body. Tests: entity, use-case, routes.
+- Docs: CONTEXT, PRD T7/F6.4, nutrition.md, architecture §7, api.md.
+  Postman Coaching folder: template CRUD + assign-from-template (meals-body
+  request kept). Out: workout templates, client→client clone, CustomFood.
 
 ### 2026-08-17 — Push 3.1 + Postman Nutrition/Coaching
 

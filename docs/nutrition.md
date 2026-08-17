@@ -4,7 +4,7 @@ Seed catalog search, extras diary, and (with coaching) complete-prescribed into 
 
 **Base URL:** `https://gym-backend-lovat-mu.vercel.app` (prod) or `http://localhost:3000` (local)  
 **API index:** [`api.md`](api.md)  
-**ADR:** [`adr/0006-catalog-food-and-unified-calorie-diary.md`](adr/0006-catalog-food-and-unified-calorie-diary.md)
+**ADR:** [`adr/0006-catalog-food-and-unified-calorie-diary.md`](adr/0006-catalog-food-and-unified-calorie-diary.md) · [`adr/0008-gym-diet-plan-templates.md`](adr/0008-gym-diet-plan-templates.md)
 
 Auth: `Authorization: Bearer <accessToken>`. Errors: `{ "error": { "code", "message" } }`.
 
@@ -73,7 +73,9 @@ Requires in-date `TRAINER_COACHING` addon to assign or complete. Assigned Traine
 
 `POST /gym-orgs/:gymOrgId/clients/:clientUserId/diet-plans`
 
-Archives the prior ACTIVE plan for that `(client, gym)`.
+Archives the prior ACTIVE plan for that `(client, gym)`. Body is **XOR**: `{ templateId }` **or** `{ title, notes, meals }` — `422` if both or neither. `templateId` copies a gym `DietPlanTemplate` (snapshot; new meal/item ids; `clonedFromTemplateId` set). Optional `title` / `notes` override the template.
+
+Meals-body:
 
 ```json
 {
@@ -88,7 +90,22 @@ Archives the prior ACTIVE plan for that `(client, gym)`.
 }
 ```
 
+From template: `{ "templateId": "…" }`
+
 **201:** `{ "dietPlan": … }` · **409** `COACHING_ADDON_REQUIRED`
+
+### Gym diet templates
+
+Trainer-owned at the gym (ADR-0008). Create/duplicate does **not** need a client or coaching addon. Trainer mutates own templates; Admin-as-Trainer may read/mutate any at the gym; duplicate always lands in the **duplicator’s** library.
+
+| Method | Path |
+|--------|------|
+| `POST` | `/gym-orgs/:gymOrgId/diet-plan-templates` — meals body like assign |
+| `GET` | `/gym-orgs/:gymOrgId/diet-plan-templates` — paginated; Trainer: own; Admin: all at gym |
+| `GET` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId` |
+| `POST` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId/duplicate` |
+| `PATCH` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId` — replace title/notes/meals |
+| `DELETE` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId` — soft-delete; assigned clients keep their snapshot |
 
 ### Staff get definition
 

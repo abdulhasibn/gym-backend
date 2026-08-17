@@ -8,6 +8,7 @@ import type { ServingQuantity } from '../../../domain/shared/serving-quantity.va
 import type { CoachingPlanStatus } from './coaching-plan-status';
 import type { DietPlanId } from './diet-plan-id';
 import type { DietPlanMealId } from './diet-plan-meal-id';
+import type { DietPlanTemplateId } from './diet-plan-template-id';
 import type { DietPlanTitle } from './diet-plan-title.value-object';
 import { InvalidDietPlanError } from './invalid-diet-plan.error';
 import type { TrainerProfileId } from './trainer-profile-id';
@@ -35,6 +36,7 @@ export interface DietPlanData {
   readonly notes: string | null;
   readonly status: CoachingPlanStatus;
   readonly meals: readonly DietPlanMealData[];
+  readonly clonedFromTemplateId: DietPlanTemplateId | null;
   readonly deletedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -48,6 +50,7 @@ export interface CreateDietPlanProps {
   readonly title: DietPlanTitle;
   readonly notes: string | null;
   readonly meals: readonly DietPlanMealData[];
+  readonly clonedFromTemplateId?: DietPlanTemplateId | null;
   readonly now: Date;
 }
 
@@ -71,6 +74,7 @@ export class DietPlan {
     return new DietPlan({
       ...props,
       notes: normalizeNotes(props.notes),
+      clonedFromTemplateId: props.clonedFromTemplateId ?? null,
       status: 'ACTIVE',
       deletedAt: null,
       createdAt: props.now,
@@ -112,6 +116,10 @@ export class DietPlan {
 
   get meals(): readonly DietPlanMealData[] {
     return this.data.meals;
+  }
+
+  get clonedFromTemplateId(): DietPlanTemplateId | null {
+    return this.data.clonedFromTemplateId;
   }
 
   get deletedAt(): Date | null {

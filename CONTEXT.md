@@ -31,7 +31,7 @@ Data whose row is owned by the User (Client), never copied into a gym. Staff at 
 _Avoid_: Gym-scoped personal data, per-membership copy of profile/progress/nutrition/health/plans, `gym_org_id` as owner on personal logs
 
 **GymOwnedRecord**:
-Tenant data owned by the `GymOrg`. No client grant required for staff to use it within that org. Includes: `ClientMembership`, `MembershipInvite`, `Subscription`, `Attendance`, `Lead`, and plan catalog / staff ops. `Attendance` is retained after the client leaves; it is the personal-data exception that stays with the gym.
+Tenant data owned by the `GymOrg`. No client grant required for staff to use it within that org. Includes: `ClientMembership`, `MembershipInvite`, `Subscription`, `Attendance`, `Lead`, `DietPlanTemplate`, and plan catalog / staff ops. `Attendance` is retained after the client leaves; it is the personal-data exception that stays with the gym.
 _Avoid_: Calling membership or billing "client-owned"
 
 **Erasure**:
@@ -73,6 +73,10 @@ _Avoid_: Free-text exercise on the assigned plan; scraping third-party libraries
 **MealSlot**:
 Fixed meal window shared by diet plans and the diary: `BREAKFAST`, `MORNING_SNACK`, `LUNCH`, `EVENING_SNACK`, `DINNER`.
 _Avoid_: Free-text `slot_name`; a second slot list for extras
+
+**DietPlanTemplate**:
+Gym-owned reusable diet structure (`gym_org_id` + authoring `trainer_id`). Trainer lists/edits **their** templates; Admin-as-Trainer sees all at that gym and can duplicate into **their** library. Assign copies meals onto a Client-owned `DietPlan` instance (snapshot; `cloned_from_template_id`). Ad-hoc meals-body assign remains (XOR with `templateId`). ADR-0008.
+_Avoid_: Null `diet_plans.client_user_id` for a library row; rewriting assigned instances when the template later changes
 
 **CalorieLog**:
 A Client's eaten-today diary (`ClientOwnedRecord`). Each item is `FoodItem` × `FoodServing` × qty, with snapshotted macros, in a `MealSlot`. A plan-linked item is how diet adherence is recorded; a null plan link is extra food.

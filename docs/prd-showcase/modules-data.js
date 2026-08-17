@@ -202,14 +202,14 @@ window.MODULES_DATA = [
       "Free-text notes — API live (3.1)",
       "Assign only with active Trainer addon — API live (3.1)",
       "Complete → diary write; staff adherence needs DIET_PLANS grant — API live (3.1)",
-      "Clone / template (P1 UI)",
+      "Clone / template — gym library API live (ADR-0008)",
     ],
     detail: {
       purpose: "Deliver diet programming as the coaching wedge — without PDF-as-plan.",
       howItWorks: [
         "Plans are Client-owned instances with assigning gym/trainer as provenance.",
         "Diet adherence is the diary (ADR-0006), not a second completion table.",
-        "Clone/template supported in data; UI may be P1.",
+        "Clone/template is a gym-owned library; assign copies a snapshot (ADR-0008).",
       ],
       acceptance: ["With active addon, trainer assigns catalog foods; Client complete appears in today’s calories."],
       prdRefs: "C5, T5, T7, T8 · PRD §5.5 · §5.13",

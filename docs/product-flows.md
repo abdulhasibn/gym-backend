@@ -405,7 +405,7 @@ C4, A5 · Trainer cannot log · block check-in interaction with M3.
 
 Structured diet plans assigned from the **same food catalog** as the calorie diary; completing an item logs it; grant-gated adherence for staff.
 
-**API status:** Search / assign / client complete into diary **shipped** (3.1). CustomFood and clone/template UI later. Integration: [`nutrition.md`](nutrition.md).
+**API status:** Search / assign / client complete into diary **shipped** (3.1). Gym diet templates (T7, ADR-0008) **shipped**. CustomFood later. Integration: [`nutrition.md`](nutrition.md).
 
 ### Entitlement gate
 
@@ -451,7 +451,7 @@ Client must have **in-date TRAINER_COACHING** addon for new assigns and active e
 - With CALORIES: show extras and day totals.
 - Without: hide numbers; optional CTA “Ask member to share diet progress.”
 
-**F6.4 Clone / template (P1)** — duplicate plan structure onto another client (still needs addon on target).
+**F6.4 Clone / template (P1)** — trainer-owned gym library (`DietPlanTemplate`). Trainer lists/edits theirs; Admin-as-Trainer sees all at the gym and duplicates into their library. Assign copies a snapshot (`templateId` XOR meals body). Client-to-client clone without a template is out.
 
 ### Out of module
 
@@ -459,7 +459,7 @@ Client must have **in-date TRAINER_COACHING** addon for new assigns and active e
 
 ### Requirements
 
-C5, T5, T7 (P1), T8 (grant), A4 coupling · ADR-0006 (unified diary).
+C5, T5, T7, T8 (grant), A4 coupling · ADR-0006 (unified diary) · ADR-0008 (gym templates).
 
 ---
 
@@ -778,7 +778,7 @@ Not a user-facing “module,” but UI must respect:
 
 **P0 — ship first:** Auth, create gym, plans catalog, membership invite/accept + grants checklist, roster, check-in + desk mark, subscriptions/renewals/unpaid badges, trainer assign, catalog foods + diet assign + diary (complete + extras), workout assign + complete, progress/profile/BMI, health connect, notifications for invites/renewals/assign, offboard, block check-in, privacy management.
 
-**P1 — next:** Dashboard widgets, lead → invite convert, plan clone/template, adherence % for staff, account erasure UX, richer unpaid digest layout.
+**P1 — next:** Dashboard widgets, lead → invite convert, workout clone/template, adherence % for staff, account erasure UX, richer unpaid digest layout.
 
 ---
 

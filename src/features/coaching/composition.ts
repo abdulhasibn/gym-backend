@@ -4,13 +4,21 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../../infrastructure/supabase/database.types';
 import { SystemClock } from '../../shared/clock/clock';
 import { UuidIdGenerator } from '../../shared/ids/id-generator';
+import { AssignDietPlanFromTemplateUseCase } from './application/assign-diet-plan-from-template.use-case';
 import { AssignDietPlanUseCase } from './application/assign-diet-plan.use-case';
 import { CompleteDietItemUseCase } from './application/complete-diet-item.use-case';
+import { CreateDietPlanTemplateUseCase } from './application/create-diet-plan-template.use-case';
+import { DeleteDietPlanTemplateUseCase } from './application/delete-diet-plan-template.use-case';
 import { DietAssignPolicy } from './application/diet-assign.policy';
 import { DietClientPolicy } from './application/diet-client.policy';
+import { DietTemplatePolicy } from './application/diet-template.policy';
+import { DuplicateDietPlanTemplateUseCase } from './application/duplicate-diet-plan-template.use-case';
+import { GetDietPlanTemplateUseCase } from './application/get-diet-plan-template.use-case';
 import { GetMyDietPlanUseCase } from './application/get-my-diet-plan.use-case';
 import { GetStaffDietPlanUseCase } from './application/get-staff-diet-plan.use-case';
+import { ListDietPlanTemplatesUseCase } from './application/list-diet-plan-templates.use-case';
 import { UncompleteDietItemUseCase } from './application/uncomplete-diet-item.use-case';
+import { UpdateDietPlanTemplateUseCase } from './application/update-diet-plan-template.use-case';
 import type { CoachingEntitlementPort } from './domain/coaching-entitlement.port';
 import type { GymLocalClock } from './domain/gym-local-clock.port';
 import type { LiveGymAdminPort, LiveTrainerProfilePort } from './domain/live-staff.port';
@@ -19,9 +27,15 @@ import type { PrescribedDiaryQueries } from './domain/prescribed-diary.queries';
 import type { SeedCatalogPort } from './domain/seed-catalog.port';
 import { SupabaseDietPlanQueries } from './infrastructure/supabase-diet-plan.queries';
 import { SupabaseDietPlanRepository } from './infrastructure/supabase-diet-plan.repository';
+import { SupabaseDietPlanTemplateQueries } from './infrastructure/supabase-diet-plan-template.queries';
+import { SupabaseDietPlanTemplateRepository } from './infrastructure/supabase-diet-plan-template.repository';
 import { CoachingController } from './presentation/coaching.controller';
 import { mapCoachingError } from './presentation/coaching.error-mapper';
-import { createMyDietPlanRouter, createStaffDietPlanRouter } from './presentation/coaching.routes';
+import {
+  createMyDietPlanRouter,
+  createStaffDietPlanRouter,
+  createStaffDietTemplateRouter,
+} from './presentation/coaching.routes';
 
 export interface CoachingCrossFeaturePorts {
   readonly liveGymAdmin: LiveGymAdminPort;
@@ -42,7 +56,10 @@ export function composeCoachingFeature(
   const ids = new UuidIdGenerator();
   const plans = new SupabaseDietPlanRepository(dataClient);
   const planQueries = new SupabaseDietPlanQueries(dataClient);
+  const templates = new SupabaseDietPlanTemplateRepository(dataClient);
+  const templateQueries = new SupabaseDietPlanTemplateQueries(dataClient);
   const assignPolicy = new DietAssignPolicy(ports.liveGymAdmin, ports.liveTrainerProfile);
+  const templatePolicy = new DietTemplatePolicy(assignPolicy);
   const clientPolicy = new DietClientPolicy();
 
   const controller = new CoachingController(
@@ -50,6 +67,17 @@ export function composeCoachingFeature(
       assignPolicy,
       ports.entitlement,
       ports.seedCatalog,
+      plans,
+      ports.gymLocalClock,
+      clock,
+      ids,
+    ),
+    new AssignDietPlanFromTemplateUseCase(
+      assignPolicy,
+      templatePolicy,
+      ports.entitlement,
+      ports.seedCatalog,
+      templates,
       plans,
       ports.gymLocalClock,
       clock,
@@ -80,10 +108,17 @@ export function composeCoachingFeature(
       ports.gymLocalClock,
       clock,
     ),
+    new CreateDietPlanTemplateUseCase(templatePolicy, ports.seedCatalog, templates, clock, ids),
+    new ListDietPlanTemplatesUseCase(templatePolicy, templateQueries),
+    new GetDietPlanTemplateUseCase(templatePolicy, templateQueries),
+    new DuplicateDietPlanTemplateUseCase(templatePolicy, templates, clock, ids),
+    new UpdateDietPlanTemplateUseCase(templatePolicy, ports.seedCatalog, templates, clock, ids),
+    new DeleteDietPlanTemplateUseCase(templatePolicy, templates, clock),
   );
 
   return {
     staffDietPlanRouter: createStaffDietPlanRouter(controller, authenticate),
+    staffDietTemplateRouter: createStaffDietTemplateRouter(controller, authenticate),
     myDietPlanRouter: createMyDietPlanRouter(controller, authenticate),
     errorMapper: mapCoachingError,
   };

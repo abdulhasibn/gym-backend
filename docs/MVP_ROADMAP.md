@@ -68,7 +68,9 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 
 **Outcome:** Admin can sell a plan, invite a client, client can accept with grants; gym has a live roster.
 
-**Current:** 3.1 shipped (food catalog + diet + diary). Exercise catalog seed live (ADR-0007). Next: 3.2 workout assign/complete APIs. A8b addon attach / renew deferred within 1.5.
+**Current:** 3.1 shipped (food catalog + diet + diary + gym diet templates,
+ADR-0008). Exercise catalog seed live (ADR-0007). Next: 3.2 workout
+assign/complete APIs. A8b addon attach / renew deferred within 1.5.
 
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
@@ -106,7 +108,7 @@ Stint 3 keeps a **CRM remainder** row for A14 + reminder delivery (see 3.4).
 
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
-| 3.1 | Catalog seed + diet assign + unified diary (complete prescribed + extras) | `nutrition/` + `coaching/` (diet) | C5, C9, T5 | Client-owned diary; Client-owned plans | Done |
+| 3.1 | Catalog seed + diet assign + gym templates + unified diary | `nutrition/` + `coaching/` (diet) | C5, C9, T5, T7 | Client-owned diary/plans; gym-owned templates | Done |
 | 3.2 | Exercise catalog seed + workout assign + per-day completions | `src/features/coaching/` (workout) | C6, T6 | Client-owned plans; platform catalog | Todo (seed live) |
 | 3.3 | Health sync ingest/read APIs (provider adapters) | `src/features/health-sync/` | C12 | Client-owned | Todo |
 | 3.4 | CRM remainder: A14 convert lead → membership invite; follow-up *delivery* via 3.5 | `leads` + invites | A14 (+ A13 push) | Gym-owned / platform | Todo |

@@ -254,7 +254,7 @@ Signup sets **lane** via frozen role (`CLIENT` vs `STAFF_UNASSIGNED`). Gym power
 | T4 | View a client's granted profile fields, BMI (if height+weight granted), progress (if `PROGRESS`), and attendance (gym-owned) | P0 |
 | T5 | Create and assign a diet plan from catalog foods (structured + notes) — active `TRAINER_COACHING` addon; assign/edit definition does **not** require `DIET_PLANS` grant | P0 |
 | T6 | Create and assign a workout plan from the exercise catalog (structured + notes) — same entitlement as T5 (`WORKOUT_PLANS` grant not required to assign/edit definition) | P0 |
-| T7 | Reuse/duplicate a plan as a template for another client | P1 |
+| T7 | Save gym diet templates; duplicate; assign a snapshot to a client (meals body still allowed) | P1 |
 | T8 | View client plan adherence / completion % — requires matching `DIET_PLANS` / `WORKOUT_PLANS` class grant | P1 |
 
 Trainer **cannot** log attendance in MVP.
@@ -323,9 +323,9 @@ Requires an **ACTIVE** `TRAINER_COACHING` addon. Trainer or Admin-as-Trainer ope
 - **Diet:** `MealSlot`s → catalog `FoodItem` × `FoodServing` × qty + calorie/macro targets + free-text notes. No typed food names.
 - **Workout:** days → catalog `ExerciseItem` (movement × equipment) × sets/reps prescription + free-text notes. No typed exercise names.
 
-Client sees immediately. Completing a diet item **writes that food into today’s `CalorieLog`** (plan-linked); extra food uses the same diary and catalog (C9). Workout still uses per-day `PlanCompletion` (not logged sets). Adherence feeds Trainer/Admin views only when the matching class grant exists (`DIET_PLANS` for prescribed vs eaten; `CALORIES` for extras / day totals; `WORKOUT_PLANS` for exercise ticks). Assigning Trainer may view/edit the plan definition without that grant. No PDF-upload-as-plan in MVP. Data model supports clone/template (UI may be P1). Without an active Trainer addon: Client has **no coaching surface** (or empty state); if prior plans exist after expiry, they are **read-only history**. Extra calorie logging (C9) still works on base membership.
+Client sees immediately. Completing a diet item **writes that food into today’s `CalorieLog`** (plan-linked); extra food uses the same diary and catalog (C9). Workout still uses per-day `PlanCompletion` (not logged sets). Adherence feeds Trainer/Admin views only when the matching class grant exists (`DIET_PLANS` for prescribed vs eaten; `CALORIES` for extras / day totals; `WORKOUT_PLANS` for exercise ticks). Assigning Trainer may view/edit the plan definition without that grant. No PDF-upload-as-plan in MVP. Gym diet templates (T7, ADR-0008) are trainer-owned at the gym; assign copies a snapshot onto the client (`POST` XOR `templateId` or meals). Workout clone/template is still later. Without an active Trainer addon: Client has **no coaching surface** (or empty state); if prior plans exist after expiry, they are **read-only history**. Extra calorie logging (C9) still works on base membership.
 
-See ADR-0006 (diet/diary) and ADR-0007 (exercise catalog).
+See ADR-0006 (diet/diary), ADR-0007 (exercise catalog), ADR-0008 (diet templates).
 
 ### 5.6 Attendance
 
@@ -402,7 +402,7 @@ Illustrative entities (see `docs/schema.dbml` for full shape; soft-delete `delet
 - **ProfileAttributeGrant** — per-attribute consent (DOB/HEIGHT/WEIGHT required on accept).
 - **DataGrant** — class grants: `PROGRESS`, `CALORIES`, `WEARABLES`, `DIET_PLANS`, `WORKOUT_PLANS`.
 - **ProgressLog** / **CalorieLog*** / **WearableConnection** / **WearableDailyMetric** — User-owned.
-- **DietPlan** / **WorkoutPlan** — Client-owned instances; `gym_org_id` + trainer = assigning provenance. Diet adherence = plan-linked `CalorieLogItem`. Workout **PlanCompletion** = per-day completion child (not `completed_at` on templates).
+- **DietPlan** / **WorkoutPlan** — Client-owned instances; `gym_org_id` + trainer = assigning provenance. Diet adherence = plan-linked `CalorieLogItem`. Workout **PlanCompletion** = per-day completion child (not `completed_at` on templates). **DietPlanTemplate** is gym-owned (ADR-0008), not a nullable-client plan.
 
 **Also:**
 

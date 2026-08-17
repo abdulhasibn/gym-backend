@@ -24,3 +24,18 @@ export function createMyDietPlanRouter(
   router.delete('/my-diet-plan/items/:itemId/complete', controller.uncomplete);
   return router;
 }
+
+export function createStaffDietTemplateRouter(
+  controller: CoachingController,
+  authenticate: RequestHandler,
+): Router {
+  const router = Router({ mergeParams: true });
+  router.use(authenticate);
+  router.post('/diet-plan-templates', controller.createTemplate);
+  router.get('/diet-plan-templates', controller.listTemplates);
+  router.get('/diet-plan-templates/:templateId', controller.getTemplate);
+  router.post('/diet-plan-templates/:templateId/duplicate', controller.duplicateTemplate);
+  router.patch('/diet-plan-templates/:templateId', controller.updateTemplate);
+  router.delete('/diet-plan-templates/:templateId', controller.deleteTemplate);
+  return router;
+}

@@ -273,6 +273,7 @@ export function composeApp(config: AppConfig): AppDependencies {
       nutritionFeature.meCalorieLogRouter,
       nutritionFeature.staffClientCalorieLogRouter,
       coachingFeature.staffDietPlanRouter,
+      coachingFeature.staffDietTemplateRouter,
       coachingFeature.myDietPlanRouter,
     ),
   );

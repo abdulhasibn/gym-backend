@@ -488,10 +488,156 @@ export type Database = {
           },
         ];
       };
+      diet_plan_template_meal_items: {
+        Row: {
+          deleted_at: string | null;
+          diet_plan_template_meal_id: string;
+          food_item_id: string;
+          id: string;
+          quantity: number;
+          serving_id: string;
+        };
+        Insert: {
+          deleted_at?: string | null;
+          diet_plan_template_meal_id: string;
+          food_item_id: string;
+          id?: string;
+          quantity: number;
+          serving_id: string;
+        };
+        Update: {
+          deleted_at?: string | null;
+          diet_plan_template_meal_id?: string;
+          food_item_id?: string;
+          id?: string;
+          quantity?: number;
+          serving_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'diet_plan_template_meal_items_diet_plan_template_meal_id_fkey';
+            columns: ['diet_plan_template_meal_id'];
+            isOneToOne: false;
+            referencedRelation: 'diet_plan_template_meals';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'diet_plan_template_meal_items_food_item_id_fkey';
+            columns: ['food_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'food_items';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'diet_plan_template_meal_items_serving_id_fkey';
+            columns: ['serving_id'];
+            isOneToOne: false;
+            referencedRelation: 'food_item_servings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      diet_plan_template_meals: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          diet_plan_template_id: string;
+          id: string;
+          meal_slot: Database['public']['Enums']['meal_slot'];
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          diet_plan_template_id: string;
+          id?: string;
+          meal_slot: Database['public']['Enums']['meal_slot'];
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          diet_plan_template_id?: string;
+          id?: string;
+          meal_slot?: Database['public']['Enums']['meal_slot'];
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'diet_plan_template_meals_diet_plan_template_id_fkey';
+            columns: ['diet_plan_template_id'];
+            isOneToOne: false;
+            referencedRelation: 'diet_plan_templates';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      diet_plan_templates: {
+        Row: {
+          cloned_from_id: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          gym_org_id: string;
+          id: string;
+          notes: string | null;
+          title: string;
+          trainer_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          cloned_from_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          gym_org_id: string;
+          id?: string;
+          notes?: string | null;
+          title: string;
+          trainer_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          cloned_from_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          gym_org_id?: string;
+          id?: string;
+          notes?: string | null;
+          title?: string;
+          trainer_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'diet_plan_templates_cloned_from_id_fkey';
+            columns: ['cloned_from_id'];
+            isOneToOne: false;
+            referencedRelation: 'diet_plan_templates';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'diet_plan_templates_gym_org_id_fkey';
+            columns: ['gym_org_id'];
+            isOneToOne: false;
+            referencedRelation: 'gym_orgs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'diet_plan_templates_trainer_id_fkey';
+            columns: ['trainer_id'];
+            isOneToOne: false;
+            referencedRelation: 'trainer_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       diet_plans: {
         Row: {
           client_user_id: string;
           cloned_from_id: string | null;
+          cloned_from_template_id: string | null;
           created_at: string;
           deleted_at: string | null;
           gym_org_id: string;
@@ -505,6 +651,7 @@ export type Database = {
         Insert: {
           client_user_id: string;
           cloned_from_id?: string | null;
+          cloned_from_template_id?: string | null;
           created_at?: string;
           deleted_at?: string | null;
           gym_org_id: string;
@@ -518,6 +665,7 @@ export type Database = {
         Update: {
           client_user_id?: string;
           cloned_from_id?: string | null;
+          cloned_from_template_id?: string | null;
           created_at?: string;
           deleted_at?: string | null;
           gym_org_id?: string;
@@ -541,6 +689,13 @@ export type Database = {
             columns: ['cloned_from_id'];
             isOneToOne: false;
             referencedRelation: 'diet_plans';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'diet_plans_cloned_from_template_id_fkey';
+            columns: ['cloned_from_template_id'];
+            isOneToOne: false;
+            referencedRelation: 'diet_plan_templates';
             referencedColumns: ['id'];
           },
           {

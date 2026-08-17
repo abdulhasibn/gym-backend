@@ -380,7 +380,7 @@ export const ROADMAP = {
       orbit: 3,
       label: "Stint 3",
       title: "Keep Them Coming",
-      tagline: "3.1 diet/diary shipped · next 3.2 workout APIs",
+      tagline: "3.1 diet/diary + templates shipped · next 3.2 workout APIs",
       outcome:
         "Full MVP loop — coaching differentiator, Client fitness, CRM convert + automated nudges.",
       exit: "Solo owner can run renewals inbox + CRM convert + (self-)coaching; Client can log food, sync health, complete plans; T-2 / unpaid / lead-follow-up jobs fire idempotently.",
@@ -388,22 +388,22 @@ export const ROADMAP = {
         {
           id: "3.1",
           num: "3.1",
-          title: "Catalog + diet + unified diary",
-          body: "Seed Indian foods/servings; Trainer assigns diet from catalog; Client completes into the diary and logs extras.",
+          title: "Catalog + diet + unified diary + gym templates",
+          body: "Seed Indian foods/servings; Trainer assigns diet from catalog or a gym template (T7); Client completes into the diary and logs extras.",
           paths: "src/features/nutrition/ + coaching (diet)",
-          prd: "C5, C9, T5",
+          prd: "C5, C9, T5, T7",
           ownership: "client",
           status: "done",
           detail: {
-            purpose: "One catalog, one eaten-today diary; diet plan is a prescription of catalog foods (ADR-0006).",
+            purpose: "One catalog, one eaten-today diary; diet plan is a prescription of catalog foods (ADR-0006). Gym templates are trainer-owned snapshots (ADR-0008).",
             howItWorks: [
               "Seed cooked staples with katori/piece/g servings; no free-text meal names.",
-              "Assign diet while TRAINER_COACHING in-date; complete writes plan-linked CalorieLogItems; extras are the same diary.",
+              "Assign diet while TRAINER_COACHING in-date (meals body or templateId); complete writes plan-linked CalorieLogItems; extras are the same diary.",
             ],
             acceptance: [
               "Search + serving log works; completing Breakfast appears in today’s calories; extras sit on a MealSlot.",
             ],
-            prdRefs: "C5, C9, T5 · PRD §5.5 §5.10 · ADR-0006",
+            prdRefs: "C5, C9, T5, T7 · PRD §5.5 §5.10 · ADR-0006 · ADR-0008",
           },
         },
         {

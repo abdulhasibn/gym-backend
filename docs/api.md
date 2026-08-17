@@ -160,9 +160,15 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | `GET` | `/gym-orgs/:gymOrgId/my-diet-plan` | [nutrition § Client my plan](nutrition.md#client-my-plan) |
 | `POST` | `/gym-orgs/:gymOrgId/my-diet-plan/items/:itemId/complete` | [nutrition § Complete](nutrition.md#complete--uncomplete) |
 | `DELETE` | `/gym-orgs/:gymOrgId/my-diet-plan/items/:itemId/complete` | [nutrition § Complete](nutrition.md#complete--uncomplete) |
+| `POST` | `/gym-orgs/:gymOrgId/diet-plan-templates` | [nutrition § Gym diet templates](nutrition.md#gym-diet-templates) |
+| `GET` | `/gym-orgs/:gymOrgId/diet-plan-templates` | [nutrition § Gym diet templates](nutrition.md#gym-diet-templates) |
+| `GET` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId` | [nutrition § Gym diet templates](nutrition.md#gym-diet-templates) |
+| `POST` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId/duplicate` | [nutrition § Gym diet templates](nutrition.md#gym-diet-templates) |
+| `PATCH` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId` | [nutrition § Gym diet templates](nutrition.md#gym-diet-templates) |
+| `DELETE` | `/gym-orgs/:gymOrgId/diet-plan-templates/:templateId` | [nutrition § Gym diet templates](nutrition.md#gym-diet-templates) |
 
 ---
 
 ## Not shipped yet
 
-Workout assign/complete APIs (3.2; exercise catalog seed is live), broader food catalog, CustomFood / CustomExercise APIs, health sync, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
+Workout assign/complete APIs (3.2; exercise catalog seed is live), broader food catalog, CustomFood / CustomExercise APIs, workout templates, health sync, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
