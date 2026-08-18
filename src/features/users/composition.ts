@@ -11,6 +11,7 @@ import { ListMyProgressLogsUseCase } from './application/list-my-progress-logs.u
 import { ListStaffClientProgressLogsUseCase } from './application/list-staff-client-progress-logs.use-case';
 import { StaffClientReadPolicy } from './application/staff-client-read.policy';
 import { UpdateMyProfileUseCase } from './application/update-my-profile.use-case';
+import { SyncWearableWeightUseCase } from './application/sync-wearable-weight.use-case';
 import { UpsertMyProgressLogUseCase } from './application/upsert-my-progress-log.use-case';
 import type { ClientDataGrantGate } from './domain/client-data-grant.gate';
 import type { LiveGymAdminPort, LiveTrainerPort } from './domain/live-staff.port';
@@ -41,12 +42,20 @@ export function composeUsersFeature(
   const progressLogQueries = new SupabaseProgressLogQueries(dataClient);
   const selfPolicy = new ClientSelfPolicy();
   const staffPolicy = new StaffClientReadPolicy(staffPorts.liveGymAdmin, staffPorts.liveTrainer);
+  const syncWearableWeight = new SyncWearableWeightUseCase(profiles, progressLogs, clock, ids);
 
   const controller = new UsersController(
     new GetMyProfileUseCase(selfPolicy, profileQueries),
     new UpdateMyProfileUseCase(selfPolicy, profiles, progressLogs, clock, ids),
     new ListMyProgressLogsUseCase(selfPolicy, progressLogQueries),
-    new UpsertMyProgressLogUseCase(selfPolicy, profiles, progressLogs, clock, ids),
+    new UpsertMyProgressLogUseCase(
+      selfPolicy,
+      profiles,
+      progressLogs,
+      syncWearableWeight,
+      clock,
+      ids,
+    ),
     new GetStaffClientProfileUseCase(staffPolicy, profileQueries, staffPorts.dataGrantGate),
     new ListStaffClientProgressLogsUseCase(
       staffPolicy,
@@ -59,5 +68,6 @@ export function composeUsersFeature(
     meRouter: createMeUsersRouter(controller, authenticate),
     staffClientRouter: createStaffClientUsersRouter(controller, authenticate),
     errorMapper: mapUsersError,
+    syncWearableWeight,
   };
 }

@@ -30,9 +30,10 @@ Use lane `CLIENT` on first provision. Staff-only routes (gym create, leads, plan
 | Calories | `GET /me/calorie-logs`, extras `POST`/`DELETE …/items` | [`nutrition.md`](nutrition.md) |
 | Diet | `GET /gym-orgs/:gymOrgId/my-diet-plan`; complete prescribed | [`nutrition.md`](nutrition.md) |
 | Workout | `GET /exercises/search`; `GET /gym-orgs/:gymOrgId/my-workout-plan`; complete per day | [`coaching.md`](coaching.md) |
+| Health sync | `GET/POST/DELETE /me/wearable-connections`; `POST /me/wearable-metrics/sync`; `GET /me/wearable-metrics` | [`health-sync.md`](health-sync.md) |
 | Health | `GET /health` | Liveness |
 
-**Not yet for CLIENT:** health sync, push. Staff roster / assign / offboard / block: [`roster.md`](roster.md). Staff attendance + grant-gated profile/progress: [`api.md`](api.md).
+**Not yet for CLIENT:** push. Staff wearable metrics: `GET …/clients/:clientUserId/wearable-metrics` (WEARABLES grant). Staff roster / assign / offboard / block: [`roster.md`](roster.md). Staff attendance + grant-gated profile/progress: [`api.md`](api.md).
 
 ---
 

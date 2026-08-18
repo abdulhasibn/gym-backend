@@ -16,6 +16,7 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | [`client-auth.md`](client-auth.md#client-surface-available-now) | Client attendance + profile/progress (2.1–2.2) |
 | [`leads.md`](leads.md) | Mini-CRM leads |
 | [`nutrition.md`](nutrition.md) | Food search, calorie diary, diet assign / complete (3.1) |
+| [`health-sync.md`](health-sync.md) | Wearable connect, metrics sync, staff read (3.3) |
 
 ---
 
@@ -179,8 +180,19 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | `POST` | `/gym-orgs/:gymOrgId/my-workout-plan/items/:itemId/complete` | [coaching § Complete](coaching.md#complete--uncomplete) |
 | `DELETE` | `/gym-orgs/:gymOrgId/my-workout-plan/items/:itemId/complete` | [coaching § Complete](coaching.md#complete--uncomplete) |
 
+### Health sync (3.3)
+
+| Method | Path | Guide |
+|--------|------|-------|
+| `GET` | `/me/wearable-connections` | [health-sync § List](health-sync.md#list-connections) |
+| `POST` | `/me/wearable-connections` | [health-sync § Connect](health-sync.md#connect) |
+| `DELETE` | `/me/wearable-connections/:provider` | [health-sync § Disconnect](health-sync.md#disconnect) |
+| `POST` | `/me/wearable-metrics/sync` | [health-sync § Batch sync](health-sync.md#batch-sync) |
+| `GET` | `/me/wearable-metrics` | [health-sync § List my metrics](health-sync.md#list-my-metrics) |
+| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/wearable-metrics` | [health-sync § Staff read](health-sync.md#staff-read-wearables-grant) |
+
 ---
 
 ## Not shipped yet
 
-Broader food/exercise seed, CustomFood / CustomExercise APIs, gym workout templates, staff `WORKOUT_PLANS` adherence overlay, health sync, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
+Broader food/exercise seed, CustomFood / CustomExercise APIs, gym workout templates, staff `WORKOUT_PLANS` adherence overlay, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).

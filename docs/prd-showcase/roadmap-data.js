@@ -380,7 +380,7 @@ export const ROADMAP = {
       orbit: 3,
       label: "Stint 3",
       title: "Keep Them Coming",
-      tagline: "3.2 workout assign + completions shipped · next 3.3 health-sync",
+      tagline: "3.3 health-sync shipped · next 3.4 CRM convert",
       outcome:
         "Full MVP loop — coaching differentiator, Client fitness, CRM convert + automated nudges.",
       exit: "Solo owner can run renewals inbox + CRM convert + (self-)coaching; Client can log food, sync health, complete plans; T-2 / unpaid / lead-follow-up jobs fire idempotently.",
@@ -433,7 +433,7 @@ export const ROADMAP = {
           paths: "src/features/health-sync/",
           prd: "C12",
           ownership: "client",
-          status: "todo",
+          status: "done",
           detail: {
             purpose: "Live wearable ingest into Client-owned metrics (production bar).",
             howItWorks: [

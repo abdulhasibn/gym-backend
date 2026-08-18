@@ -79,6 +79,8 @@ describe('GET /gym-orgs/:gymOrgId/trainers vs coaching mounts', () => {
         exercises,
         unused(),
         myWorkout,
+        unused(),
+        unused(),
       ),
     );
     app.use(notFoundMiddleware);

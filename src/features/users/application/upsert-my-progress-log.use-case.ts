@@ -9,6 +9,7 @@ import { toProgressLogId } from '../domain/progress-log-id';
 import type { ProgressLogRepository } from '../domain/progress-log.repository';
 import { WeightKg } from '../domain/weight-kg.value-object';
 import { ClientSelfPolicy } from './client-self.policy';
+import type { SyncWearableWeightUseCase } from './sync-wearable-weight.use-case';
 import { toProgressLogDto, type ProgressLogDto } from './users.dto';
 
 export interface UpsertMyProgressLogCommand {
@@ -22,6 +23,7 @@ export class UpsertMyProgressLogUseCase {
     private readonly policy: ClientSelfPolicy,
     private readonly profiles: ClientProfileRepository,
     private readonly progressLogs: ProgressLogRepository,
+    private readonly syncWearableWeight: SyncWearableWeightUseCase,
     private readonly clock: Clock,
     private readonly ids: IdGenerator,
   ) {}
@@ -41,33 +43,42 @@ export class UpsertMyProgressLogUseCase {
     const logDate = CalendarDate.create(command.logDate);
     const weightKg = command.weightKg === null ? null : WeightKg.create(command.weightKg);
 
+    if (weightKg !== null) {
+      await this.syncWearableWeight.upsert(actor.userId, logDate, weightKg.value);
+      const log = await this.progressLogs.findByClientAndDate(actor.userId, logDate);
+      if (log === null) {
+        throw new NotFoundError('Progress log not found after weight sync');
+      }
+      if (command.notes !== log.notes) {
+        log.applyWeight(log.weightKg, profile.heightCm, command.notes);
+        await this.progressLogs.save(log);
+      }
+      return toProgressLogDto({
+        id: log.id,
+        clientUserId: log.clientUserId,
+        logDate: log.logDate.value,
+        weightKg: log.weightKg?.value ?? null,
+        bmi: log.bmi,
+        notes: log.notes,
+        createdAt: log.createdAt.toISOString(),
+      });
+    }
+
     let log = await this.progressLogs.findByClientAndDate(actor.userId, logDate);
     if (log === null) {
       log = ProgressLog.create({
         id: toProgressLogId(this.ids.generate()),
         clientUserId: actor.userId,
         logDate,
-        weightKg,
+        weightKg: null,
         heightCm: profile.heightCm,
         notes: command.notes,
         now,
       });
     } else {
-      log.applyWeight(weightKg, profile.heightCm, command.notes);
+      log.applyWeight(null, profile.heightCm, command.notes);
     }
     await this.progressLogs.save(log);
-
-    if (weightKg !== null) {
-      profile.update({
-        heightCm: profile.heightCm,
-        weightKg,
-        dob: profile.dob,
-        gender: profile.gender,
-        medicalNotes: profile.medicalNotes,
-        now,
-      });
-      await this.profiles.save(profile);
-    }
 
     return toProgressLogDto({
       id: log.id,

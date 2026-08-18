@@ -30,6 +30,8 @@ export function createRouter(
   exercisesRouter: RequestHandler,
   staffWorkoutPlanRouter: RequestHandler,
   myWorkoutPlanRouter: RequestHandler,
+  meWearableRouter: RequestHandler,
+  staffClientWearableRouter: RequestHandler,
 ): Router {
   const router = Router();
 
@@ -53,10 +55,12 @@ export function createRouter(
   router.use('/gym-orgs/:gymOrgId/my-attendances', myAttendancesRouter);
   router.use('/me', meUsersRouter);
   router.use('/me', meCalorieLogRouter);
+  router.use('/me', meWearableRouter);
   router.use('/foods', foodsRouter);
   router.use('/exercises', exercisesRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientUsersRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientCalorieLogRouter);
+  router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientWearableRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffDietPlanRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffWorkoutPlanRouter);
   router.use('/gym-orgs/:gymOrgId/diet-plan-templates', staffDietTemplateRouter);

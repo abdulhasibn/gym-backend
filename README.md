@@ -33,21 +33,22 @@ curl http://localhost:3000/health
 
 ## Client / Admin integration docs
 
-| Guide                                                        | Audience                                                                   |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| [`docs/client-auth.md`](./docs/client-auth.md)               | Auth + **CLIENT** surface map (inbox / accept / grants / subs)             |
-| [`docs/membership-invites.md`](./docs/membership-invites.md) | Admin invites + Client accept + DataGrants                                 |
-| [`docs/subscriptions.md`](./docs/subscriptions.md)           | Admin payment / start override + Client subscription list                  |
-| [`docs/roster.md`](./docs/roster.md)                         | Roster, gym trainer list, trainer assign, offboard, check-in block         |
-| [`docs/nutrition.md`](./docs/nutrition.md)                   | Food catalog, calorie diary, diet assign + gym templates                   |
-| [`docs/coaching.md`](./docs/coaching.md)                     | Exercise catalog search, workout assign, per-day complete                  |
-| [`docs/api.md`](./docs/api.md)                               | Endpoint catalogue (trainers, attendance, profile/progress, diet, workout) |
-| [`docs/PROGRESS.md`](./docs/PROGRESS.md)                     | Current stage / next up                                                    |
-| [`docs/MVP_ROADMAP.md`](./docs/MVP_ROADMAP.md)               | Build order (Orbit tab visualizes this)                                    |
-| Postman                                                      | [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman)  |
+| Guide                                                        | Audience                                                                                |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| [`docs/client-auth.md`](./docs/client-auth.md)               | Auth + **CLIENT** surface map (inbox / accept / grants / subs)                          |
+| [`docs/membership-invites.md`](./docs/membership-invites.md) | Admin invites + Client accept + DataGrants                                              |
+| [`docs/subscriptions.md`](./docs/subscriptions.md)           | Admin payment / start override + Client subscription list                               |
+| [`docs/roster.md`](./docs/roster.md)                         | Roster, gym trainer list, trainer assign, offboard, check-in block                      |
+| [`docs/nutrition.md`](./docs/nutrition.md)                   | Food catalog, calorie diary, diet assign + gym templates                                |
+| [`docs/coaching.md`](./docs/coaching.md)                     | Exercise catalog search, workout assign, per-day complete                               |
+| [`docs/health-sync.md`](./docs/health-sync.md)               | Wearable connect, metrics sync, staff WEARABLES read                                    |
+| [`docs/api.md`](./docs/api.md)                               | Endpoint catalogue (trainers, attendance, profile/progress, diet, workout, health sync) |
+| [`docs/PROGRESS.md`](./docs/PROGRESS.md)                     | Current stage / next up                                                                 |
+| [`docs/MVP_ROADMAP.md`](./docs/MVP_ROADMAP.md)               | Build order (Orbit tab visualizes this)                                                 |
+| Postman                                                      | [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman)               |
 
-**Shipped (Stint 1–3.2):** Auth, gym-orgs, Mini-CRM A11–A13, plans, invites/accept/grants, subscriptions core, roster / gym trainer list / assign / offboard / block, attendance, profile/progress, renewals due-list, food catalog + diet + gym diet templates + calorie diary, 30-exercise catalog + workout assign/complete.  
-**Next:** Stint 3.3 — health-sync ingest/read, then CRM convert, notifications ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
+**Shipped (Stint 1–3.3):** Auth, gym-orgs, Mini-CRM A11–A13, plans, invites/accept/grants, subscriptions core, roster / gym trainer list / assign / offboard / block, attendance, profile/progress, renewals due-list, food catalog + diet + gym diet templates + calorie diary, 30-exercise catalog + workout assign/complete, health-sync connect/sync/read.  
+**Next:** Stint 3.4 — CRM convert (A14), then notifications ([Orbit](https://gym-prd-visual.vercel.app/#orbit)).
 
 ## Scripts
 

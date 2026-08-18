@@ -4,10 +4,8 @@
 
 ## Current stage
 
-**Stage:** Stint **3.2** shipped (exercise catalog search + workout assign
-+ per-day completions, ADR-0007). Stint **3.1** diet + gym templates remain
-live. **Detour (not Next up):** production API latency (Vercel `bom1` +
-local JWT verify). See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+**Stage:** Stint **3.3** shipped (health-sync connect/sync/read, PRD C12).
+Stints **3.1–3.2** (diet + workout) remain live. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 A8b still deferred within 1.5.
 
 | Area | Status |
@@ -24,7 +22,7 @@ A8b still deferred within 1.5.
 | Feature RLS policies (beyond deny-all) | Not started — 36 public tables RLS on, no policies |
 | Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; access tokens verified locally (`getClaims` JWKS / jose HS256), not `auth.getUser` per request
 | Auth automated tests | Partial — refresh use-case + route coverage added; Google provider E2E and remaining failure-path coverage still deferred |
-| HTTP integration (local Docker) | Done — 13 files / 38 tests via `pnpm test:integration`; default `pnpm test` stays offline; CI Docker job deferred |
+| HTTP integration (local Docker) | Done — 14 files / 39 tests via `pnpm test:integration`; default `pnpm test` stays offline; CI Docker job deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
@@ -36,11 +34,12 @@ A8b still deferred within 1.5.
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
 | Coaching workout (`src/features/coaching`) | Done — `GET /exercises/search`, assign/replace `WorkoutPlan`, staff GET, Client GET + per-day complete/uncomplete (not set logs; not CustomExercise; no gym workout templates) |
-| Other feature modules under `src/features/*` | Next **3.3** health-sync; then notifications, CRM convert (A14) |
+| Health sync (`src/features/health-sync`) | Done — connect/disconnect, batch metrics sync (device-push), client list, staff WEARABLES grant read; weight → ProgressLog via users port |
+| Other feature modules under `src/features/*` | Next **3.4** CRM convert (A14); then notifications, audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet + templates + workout); **Gym Orgs** List Gym Trainers |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Health Sync** (3.3) synced git + cloud |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai) |
 
 **Supabase project**
@@ -57,8 +56,8 @@ A8b still deferred within 1.5.
 
 ## Next up
 
-1. **Stint 3.3 APIs** — health-sync ingest/read (provider adapters).
-2. Then CRM convert (A14); notifications; audit.
+1. **Stint 3.4** — CRM convert (A14): lead → membership invite.
+2. Then notifications (3.5); audit (3.6).
 3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs;
    gym workout templates; T8 `WORKOUT_PLANS` staff adherence overlay.
 4. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
@@ -72,6 +71,34 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-18 — Sync Postman + docs after 3.3 health-sync
+
+- Postman git `gym-backend-postman` `8d54a09`: **Health Sync** folder (6
+  requests, Story docs + Examples). Audit `gapCount` 0.
+- Cloud `putCollection` async restored full collection (includes Health Sync);
+  verified 14 top-level folders on `Gym Backend API`.
+- Docs: README Shipped/Next through 3.3; `modules-data.js` M10 API live (3.3);
+  `roadmap-data.js` mirror unchanged (3.3 already done).
+- Orbit prod https://gym-prd-visual.vercel.app — lede 3.1–3.3 lit, next 3.4.
+
+### 2026-08-18 — Ship Stint 3.3 health-sync APIs
+
+- New `src/features/health-sync/`: connect/disconnect wearable providers,
+  batch daily metrics ingest (device-push canonical DTO), client list, staff
+  read gated on `WEARABLES` grant. Reuses existing `wearable_*` tables — no
+  migration.
+- Weight in sync upserts ProgressLog + profile via `SyncWearableWeightUseCase`
+  in users (exported from `users/composition`; wired at composition-root).
+- Routes: `/me/wearable-connections`, `/me/wearable-metrics/sync`,
+  `/gym-orgs/:gymOrgId/clients/:clientUserId/wearable-metrics`.
+- Tests: domain + application + routes; `health-sync.integration.test.ts`
+  (Health Connect path). Vitest 244 unit tests green.
+- Docs: `docs/health-sync.md`; api/client-auth/product-flows/MVP/Orbit 3.3
+  done. Postman **Health Sync** folder in `../gym-backend-postman` (`gapCount`
+  0 audit); cloud sync in follow-up log entry same day.
+- Deferred: background scheduled sync jobs (3.5); per-provider payload
+  normalizers beyond canonical DTO; server OAuth.
 
 ### 2026-08-18 — Cut ~3s API latency (region + local JWT)
 

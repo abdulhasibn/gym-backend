@@ -616,6 +616,8 @@ Connect Apple Health / Health Connect / Samsung Health; sync steps, workouts, ac
 
 C12 · Client-owned · grant-gated staff · production-quality live sync.
 
+**API status:** Connect, sync, and grant-gated staff read **shipped** (3.3). Background scheduled sync jobs deferred (Stint 3.5).
+
 ---
 
 ## M11 — Mini-CRM (Leads)

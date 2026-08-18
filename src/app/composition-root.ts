@@ -10,6 +10,7 @@ import type { GymOrgId } from '../domain/shared/gym-org-id';
 import type { UserId } from '../domain/shared/user-id';
 import { toTrainerProfileId as toCoachingTrainerProfileId } from '../features/coaching/domain/trainer-profile-id';
 import { composeCoachingFeature } from '../features/coaching/composition';
+import { composeHealthSyncFeature } from '../features/health-sync/composition';
 import { composeAttendanceFeature } from '../features/attendance/composition';
 import { composeNutritionFeature } from '../features/nutrition/composition';
 import type { BaseSubscriptionStarter } from '../features/attendance/domain/base-subscription-starter.port';
@@ -246,6 +247,33 @@ export function composeApp(config: AppConfig): AppDependencies {
     },
   });
 
+  const healthSyncStaffPorts = {
+    liveGymAdmin: { isLiveAdmin: gymOrgFeature.isLiveAdmin },
+    liveTrainer: {
+      isLiveTrainer: async (userId: UserId, gymOrgId: GymOrgId) =>
+        (await gymOrgFeature.findLiveTrainerProfileId(userId, gymOrgId)) !== null,
+    },
+    dataGrantGate: {
+      async loadForActiveMembership(clientUserId: UserId, gymOrgId: GymOrgId) {
+        const snapshot = await membershipsFeature.dataGrantQueries.listForActiveMembership(
+          clientUserId,
+          gymOrgId,
+        );
+        if (snapshot === null) {
+          return null;
+        }
+        return { classGrants: [...snapshot.classGrants] };
+      },
+    },
+  };
+
+  const healthSyncFeature = composeHealthSyncFeature(
+    supabaseClient,
+    authFeature.authenticate,
+    healthSyncStaffPorts,
+    { syncWearableWeight: usersFeature.syncWearableWeight },
+  );
+
   const app = express();
 
   app.use(helmet());
@@ -282,6 +310,8 @@ export function composeApp(config: AppConfig): AppDependencies {
       coachingFeature.exercisesRouter,
       coachingFeature.staffWorkoutPlanRouter,
       coachingFeature.myWorkoutPlanRouter,
+      healthSyncFeature.meWearableRouter,
+      healthSyncFeature.staffClientWearableRouter,
     ),
   );
 
@@ -296,6 +326,7 @@ export function composeApp(config: AppConfig): AppDependencies {
       usersFeature.errorMapper,
       nutritionFeature.errorMapper,
       coachingFeature.errorMapper,
+      healthSyncFeature.errorMapper,
     ]),
   );
 
