@@ -81,10 +81,14 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
   on GET plans). `/health` was already 350–740ms from India.
 - Pin `vercel.json` `regions` to `bom1`. Verify access tokens in
   process: hosted ES256 via `getClaims` (JWKS); local Docker HS256 via
-  `jose` when `SUPABASE_JWT_SECRET` is set.
+  dynamic `import('jose')` when `SUPABASE_JWT_SECRET` is set (static
+  jose import crashed Vercel CJS with `ERR_REQUIRE_ESM`).
 - `Server-Timing` + pino `spans` (`auth` / `policy` / `query` / `total`).
-- Deferred: IPv6 `ipv4first` (only if a ~3s connect stall remains);
-  duplicate `users` read on `GET /auth/me`.
+- Measured from Chennai after deploy: `x-vercel-id` `bom1::bom1`;
+  `/health` in-process `total;dur=0–4`; warm TTFB ~180–460ms (was
+  350–740ms via `iad1`). Invalid Bearer GET plans `auth;dur=0–1`.
+- Deferred: IPv6 `ipv4first` (no ~3s connect stall); duplicate
+  `users` read on `GET /auth/me`.
 
 ### 2026-08-18 — HTTP integration tests against local Docker Supabase
 
