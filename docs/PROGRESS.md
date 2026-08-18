@@ -6,7 +6,9 @@
 
 **Stage:** Stint **3.2** shipped (exercise catalog search + workout assign
 + per-day completions, ADR-0007). Stint **3.1** diet + gym templates remain
-live. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b still deferred within 1.5.
+live. **Detour (not Next up):** HTTP flow tests against local Docker
+Supabase (`pnpm test:integration`). See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+A8b still deferred within 1.5.
 
 | Area | Status |
 |------|--------|
@@ -21,7 +23,8 @@ live. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md). A8b still deferred within 1.5
 | Exercise catalog seed | Done — 30 movements, `source=seed` (ADR-0007) |
 | Feature RLS policies (beyond deny-all) | Not started — 36 public tables RLS on, no policies |
 | Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me` |
-| Auth automated tests | Partial — refresh use-case + route coverage added; provider integration and remaining failure-path coverage still deferred |
+| Auth automated tests | Partial — refresh use-case + route coverage added; Google provider E2E and remaining failure-path coverage still deferred |
+| HTTP integration (local Docker) | Done — 13 files / 38 tests via `pnpm test:integration`; default `pnpm test` stays offline; CI Docker job deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
@@ -69,6 +72,19 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-18 — HTTP integration tests against local Docker Supabase
+
+- Detour from Next up (3.3 health-sync). Product APIs unchanged.
+- Seam: Supertest → `composeApp` → local GoTrue + Postgres. Loopback-only
+  `SUPABASE_URL` guard. Never `pnpm db:reset-data` / hosted wipe.
+- `supabase/config.toml` + OTP email templates (Mailpit `:54324`);
+  `.env.integration.example`; `pnpm test:integration` (excluded from
+  default `pnpm test`).
+- 13 flow files under `src/app/tests/integration/` (auth through workout).
+  Existing `*.routes.test.ts` + domain tests kept as-is.
+- Deferred: CI Docker job; real `POST /auth/google/complete` with a Google
+  identity (401 without Bearer is the live hit).
 
 ### 2026-08-17 — Sync Orbit: 3.2 done, next 3.3
 

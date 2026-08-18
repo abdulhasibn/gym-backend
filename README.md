@@ -56,8 +56,9 @@ curl http://localhost:3000/health
 | `pnpm dev`                          | Run the server with live reload                     |
 | `pnpm build`                        | Compile TypeScript to `dist/`                       |
 | `pnpm start`                        | Run the compiled server (`dist/app/http-server.js`) |
-| `pnpm test`                         | Run the Vitest suite once                           |
+| `pnpm test`                         | Run the Vitest suite once (excludes integration)    |
 | `pnpm test:watch`                   | Run Vitest in watch mode                            |
+| `pnpm test:integration`             | HTTP flows against local Docker Supabase            |
 | `pnpm typecheck`                    | Type-check without emitting                         |
 | `pnpm lint` / `pnpm lint:fix`       | ESLint                                              |
 | `pnpm format` / `pnpm format:check` | Prettier                                            |
@@ -66,6 +67,23 @@ Git hooks (Husky, installed via `pnpm install` → `prepare`):
 
 - **pre-commit** — `lint-staged` runs Prettier (and ESLint check) on staged files
 - **pre-push** — `format:check`, `typecheck`, `lint`, and `test` (mirrors CI quality gates)
+
+## Local HTTP integration tests
+
+These hit the real HTTP surface (`composeApp`) against **local Docker
+Supabase** (GoTrue + Postgres + Mailpit). Default `pnpm test` stays offline
+and does not start Docker.
+
+1. Start Docker (Colima on macOS is fine).
+2. If another local Supabase project already owns ports `54321` / `54322`,
+   stop it first (`supabase stop --project-id <id>`).
+3. From this repo: `supabase start` (applies `supabase/migrations/`).
+4. `cp .env.integration.example .env.integration`
+5. `pnpm test:integration`
+
+OTP mail is Mailpit at `http://127.0.0.1:54324` (`INBUCKET_URL`). The suite
+aborts unless `SUPABASE_URL` is loopback — never point `.env.integration` at
+the hosted project.
 
 ## Project structure
 
