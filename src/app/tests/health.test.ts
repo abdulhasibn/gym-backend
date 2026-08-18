@@ -13,6 +13,7 @@ function testConfig(): AppConfig {
       url: 'https://test-project.supabase.co',
       anonKey: 'test-anon-key',
       serviceRoleKey: 'test-service-role-key',
+      jwtSecret: 'test-jwt-secret-at-least-32-characters-long',
     },
   };
 }
@@ -26,6 +27,7 @@ describe('GET /health', () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ status: 'ok' });
     expect(typeof response.body.timestamp).toBe('string');
+    expect(response.headers['server-timing']).toMatch(/total;dur=\d+/);
   });
 });
 

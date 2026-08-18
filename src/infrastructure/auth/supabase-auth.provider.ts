@@ -1,3 +1,4 @@
+import { decodeProtectedHeader, jwtVerify } from 'jose';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type {
@@ -10,13 +11,29 @@ import { EmailAddressInvalidError } from '../../features/auth/domain/email-addre
 import { EmailAddress } from '../../features/auth/domain/email-address.value-object';
 import { toAuthUserId } from '../../features/auth/domain/user.entity';
 import type { Database } from '../supabase/database.types';
+import { toIdentityFromAccessTokenClaims } from './access-token-claims.mapper';
 import {
   mapSupabaseCredentialError,
   mapSupabaseOtpRequestError,
 } from './supabase-auth-error.mapper';
 
+export interface AccessTokenVerification {
+  readonly jwtSecret: string | null;
+  readonly issuer: string;
+}
+
 export class SupabaseAuthProvider implements AuthProvider {
-  constructor(private readonly client: SupabaseClient<Database>) {}
+  private readonly jwtSecret: Uint8Array | null;
+
+  constructor(
+    private readonly client: SupabaseClient<Database>,
+    private readonly tokenVerification: AccessTokenVerification,
+  ) {
+    this.jwtSecret =
+      tokenVerification.jwtSecret === null
+        ? null
+        : new TextEncoder().encode(tokenVerification.jwtSecret);
+  }
 
   async requestEmailOtp(email: EmailAddress): Promise<void> {
     const { error } = await this.client.auth.signInWithOtp({ email: email.value });
@@ -65,16 +82,35 @@ export class SupabaseAuthProvider implements AuthProvider {
     };
   }
 
+  /**
+   * Verifies access tokens without calling GoTrue `getUser` on every request.
+   * Hosted projects sign with ES256 — `getClaims` checks JWKS locally (cached).
+   * Local Docker still uses HS256; when `SUPABASE_JWT_SECRET` is set we verify
+   * with jose so that path is also in-process.
+   */
   async getUserFromAccessToken(accessToken: string): Promise<AuthenticatedIdentity> {
-    const { data, error } = await this.client.auth.getUser(accessToken);
-    if (error !== null) {
-      throw mapSupabaseCredentialError(error);
-    }
-    if (data.user === null) {
+    try {
+      const header = decodeProtectedHeader(accessToken);
+      if (header.alg === 'HS256' && this.jwtSecret !== null) {
+        const { payload } = await jwtVerify(accessToken, this.jwtSecret, {
+          issuer: this.tokenVerification.issuer,
+          audience: 'authenticated',
+          clockTolerance: 5,
+        });
+        return toIdentityFromAccessTokenClaims(payload);
+      }
+
+      const { data, error } = await this.client.auth.getClaims(accessToken);
+      if (error !== null || data === null) {
+        throw new AuthenticationFailedError();
+      }
+      return toIdentityFromAccessTokenClaims(data.claims);
+    } catch (error) {
+      if (error instanceof AuthenticationFailedError || error instanceof EmailAddressInvalidError) {
+        throw error;
+      }
       throw new AuthenticationFailedError();
     }
-
-    return toIdentity(data.user);
   }
 }
 
@@ -109,4 +145,8 @@ function toIdentity(user: {
     displayName: typeof displayName === 'string' && displayName.trim() !== '' ? displayName : null,
     googleId: typeof googleSubject === 'string' ? googleSubject : null,
   };
+}
+
+export function supabaseAuthIssuer(supabaseUrl: string): string {
+  return `${supabaseUrl.replace(/\/$/, '')}/auth/v1`;
 }

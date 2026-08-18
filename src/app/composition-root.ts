@@ -33,6 +33,7 @@ import {
   createSupabaseInfraClient,
 } from '../infrastructure/supabase/supabase-client';
 import { createErrorHandlerMiddleware } from '../presentation/http/errors/error-handler.middleware';
+import { createServerTimingMiddleware } from '../presentation/http/middleware/server-timing.middleware';
 import { notFoundMiddleware } from '../presentation/http/middleware/not-found.middleware';
 import type { Logger } from '../shared/logging/logger.port';
 import { createRouter } from './routes';
@@ -61,6 +62,7 @@ export function composeApp(config: AppConfig): AppDependencies {
   const authClient = createSupabaseAuthClient(config);
   const authFeature = composeAuthFeature(authClient, supabaseClient, {
     supabaseUrl: config.supabase.url,
+    jwtSecret: config.supabase.jwtSecret,
     enableGoogleCallbackHelper: config.nodeEnv !== 'production',
   });
   const gymOrgFeature = composeGymOrgFeature(supabaseClient, authFeature.authenticate);
@@ -249,6 +251,7 @@ export function composeApp(config: AppConfig): AppDependencies {
   app.use(helmet());
   app.use(cors());
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
+  app.use(createServerTimingMiddleware());
   app.use(createRequestLoggerMiddleware(logger));
 
   app.use(

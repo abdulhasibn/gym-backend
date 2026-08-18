@@ -1,5 +1,6 @@
 import type { AuthenticatedActor } from '../../../domain/shared/authenticated-actor';
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
+import { measureSpan } from '../../../shared/timing/request-spans';
 import type { LiveGymAdminPort } from '../domain/live-gym-admin.port';
 import { PlanForbiddenError } from './plan-forbidden.error';
 
@@ -10,7 +11,9 @@ export class PlanAdminPolicy {
     if (actor.roleCode !== 'ADMIN') {
       throw new PlanForbiddenError();
     }
-    const isAdmin = await this.admins.isLiveAdmin(actor.userId, gymOrgId);
+    const isAdmin = await measureSpan('policy', () =>
+      this.admins.isLiveAdmin(actor.userId, gymOrgId),
+    );
     if (!isAdmin) {
       throw new PlanForbiddenError();
     }

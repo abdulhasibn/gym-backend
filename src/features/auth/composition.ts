@@ -8,7 +8,10 @@ import { ProvisionAuthUserUseCase } from './application/provision-auth-user.use-
 import { RefreshSessionUseCase } from './application/refresh-session.use-case';
 import { RequestEmailOtpUseCase } from './application/request-email-otp.use-case';
 import { VerifyEmailOtpUseCase } from './application/verify-email-otp.use-case';
-import { SupabaseAuthProvider } from '../../infrastructure/auth/supabase-auth.provider';
+import {
+  SupabaseAuthProvider,
+  supabaseAuthIssuer,
+} from '../../infrastructure/auth/supabase-auth.provider';
 import type { Database } from '../../infrastructure/supabase/database.types';
 import {
   createAuthenticateIdentityMiddleware,
@@ -25,10 +28,14 @@ export function composeAuthFeature(
   dataClient: SupabaseClient<Database>,
   options: {
     readonly supabaseUrl: string;
+    readonly jwtSecret: string | null;
     readonly enableGoogleCallbackHelper: boolean;
   },
 ) {
-  const authProvider = new SupabaseAuthProvider(authClient);
+  const authProvider = new SupabaseAuthProvider(authClient, {
+    jwtSecret: options.jwtSecret,
+    issuer: supabaseAuthIssuer(options.supabaseUrl),
+  });
   const users = new SupabaseAuthUserRepository(dataClient);
   const userQueries = new SupabaseAuthUserQueries(dataClient);
   const authenticate = createAuthenticateMiddleware(

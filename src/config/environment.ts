@@ -7,6 +7,10 @@ const environmentSchema = z.object({
   SUPABASE_URL: z.string().url('SUPABASE_URL must be a valid URL'),
   SUPABASE_ANON_KEY: z.string().min(1, 'SUPABASE_ANON_KEY is required'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is required'),
+  SUPABASE_JWT_SECRET: z
+    .string()
+    .min(32, 'SUPABASE_JWT_SECRET must be at least 32 characters')
+    .optional(),
 });
 
 export interface AppConfig {
@@ -17,6 +21,7 @@ export interface AppConfig {
     readonly url: string;
     readonly anonKey: string;
     readonly serviceRoleKey: string;
+    readonly jwtSecret: string | null;
   };
 }
 
@@ -53,6 +58,7 @@ export function loadEnvironment(source: NodeJS.ProcessEnv = process.env): AppCon
       url: env.SUPABASE_URL,
       anonKey: env.SUPABASE_ANON_KEY,
       serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
+      jwtSecret: env.SUPABASE_JWT_SECRET ?? null,
     },
   };
 }

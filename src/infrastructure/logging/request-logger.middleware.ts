@@ -5,6 +5,7 @@ import pinoHttp from 'pino-http';
 
 import { CORRELATION_ID_HEADER } from '../../config/constants';
 import type { Logger } from '../../shared/logging/logger.port';
+import { getRequestSpans } from '../../shared/timing/request-spans';
 
 /**
  * Wraps `pino-http`, which is why this lives in infrastructure rather than
@@ -26,6 +27,10 @@ export function createRequestLoggerMiddleware(logger: Logger): RequestHandler {
     genReqId: (req) => {
       const inbound = req.headers[CORRELATION_ID_HEADER];
       return (Array.isArray(inbound) ? inbound[0] : inbound) ?? randomUUID();
+    },
+    customProps: () => {
+      const spans = getRequestSpans();
+      return Object.keys(spans).length === 0 ? {} : { spans };
     },
   });
 

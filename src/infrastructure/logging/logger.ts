@@ -20,6 +20,7 @@ export function createLogger(config: Pick<AppConfig, 'logLevel' | 'nodeEnv'>): L
         '*.otp',
         '*.medicalNotes',
         '*.serviceRoleKey',
+        '*.jwtSecret',
       ],
       censor: '[REDACTED]',
     },

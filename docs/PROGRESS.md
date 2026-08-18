@@ -6,8 +6,8 @@
 
 **Stage:** Stint **3.2** shipped (exercise catalog search + workout assign
 + per-day completions, ADR-0007). Stint **3.1** diet + gym templates remain
-live. **Detour (not Next up):** HTTP flow tests against local Docker
-Supabase (`pnpm test:integration`). See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+live. **Detour (not Next up):** production API latency (Vercel `bom1` +
+local JWT verify). See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 A8b still deferred within 1.5.
 
 | Area | Status |
@@ -22,7 +22,7 @@ A8b still deferred within 1.5.
 | Food catalog seed | Done — 20 foods × 8 units (160 servings), `source=seed` |
 | Exercise catalog seed | Done — 30 movements, `source=seed` (ADR-0007) |
 | Feature RLS policies (beyond deny-all) | Not started — 36 public tables RLS on, no policies |
-| Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me` |
+| Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; access tokens verified locally (`getClaims` JWKS / jose HS256), not `auth.getUser` per request
 | Auth automated tests | Partial — refresh use-case + route coverage added; Google provider E2E and remaining failure-path coverage still deferred |
 | HTTP integration (local Docker) | Done — 13 files / 38 tests via `pnpm test:integration`; default `pnpm test` stays offline; CI Docker job deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
@@ -41,7 +41,7 @@ A8b still deferred within 1.5.
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
 | Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Nutrition** + **Coaching** (diet + templates + workout); **Gym Orgs** List Gym Trainers |
-| Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200) |
+| Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai) |
 
 **Supabase project**
 
@@ -72,6 +72,19 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-18 — Cut ~3s API latency (region + local JWT)
+
+- Detour from Next up (3.3 health-sync). Product APIs unchanged.
+- Cause: Vercel Lambda in `iad1` calling Supabase `ap-south-1`, plus
+  remote `auth.getUser` on every Bearer request (four sequential hops
+  on GET plans). `/health` was already 350–740ms from India.
+- Pin `vercel.json` `regions` to `bom1`. Verify access tokens in
+  process: hosted ES256 via `getClaims` (JWKS); local Docker HS256 via
+  `jose` when `SUPABASE_JWT_SECRET` is set.
+- `Server-Timing` + pino `spans` (`auth` / `policy` / `query` / `total`).
+- Deferred: IPv6 `ipv4first` (only if a ~3s connect stall remains);
+  duplicate `users` read on `GET /auth/me`.
 
 ### 2026-08-18 — HTTP integration tests against local Docker Supabase
 
