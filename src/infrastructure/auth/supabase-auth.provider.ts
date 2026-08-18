@@ -1,4 +1,3 @@
-import { decodeProtectedHeader, jwtVerify } from 'jose';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type {
@@ -86,12 +85,13 @@ export class SupabaseAuthProvider implements AuthProvider {
    * Verifies access tokens without calling GoTrue `getUser` on every request.
    * Hosted projects sign with ES256 — `getClaims` checks JWKS locally (cached).
    * Local Docker still uses HS256; when `SUPABASE_JWT_SECRET` is set we verify
-   * with jose so that path is also in-process.
+   * with jose (dynamic import — jose is ESM-only and this project emits CJS).
    */
   async getUserFromAccessToken(accessToken: string): Promise<AuthenticatedIdentity> {
     try {
-      const header = decodeProtectedHeader(accessToken);
-      if (header.alg === 'HS256' && this.jwtSecret !== null) {
+      const alg = readJwtAlg(accessToken);
+      if (alg === 'HS256' && this.jwtSecret !== null) {
+        const { jwtVerify } = await import('jose');
         const { payload } = await jwtVerify(accessToken, this.jwtSecret, {
           issuer: this.tokenVerification.issuer,
           audience: 'authenticated',
@@ -149,4 +149,20 @@ function toIdentity(user: {
 
 export function supabaseAuthIssuer(supabaseUrl: string): string {
   return `${supabaseUrl.replace(/\/$/, '')}/auth/v1`;
+}
+
+function readJwtAlg(accessToken: string): string | undefined {
+  const headerPart = accessToken.split('.')[0];
+  if (headerPart === undefined || headerPart.trim() === '') {
+    throw new AuthenticationFailedError();
+  }
+
+  try {
+    const header = JSON.parse(Buffer.from(headerPart, 'base64url').toString('utf8')) as {
+      readonly alg?: unknown;
+    };
+    return typeof header.alg === 'string' ? header.alg : undefined;
+  } catch {
+    throw new AuthenticationFailedError();
+  }
 }

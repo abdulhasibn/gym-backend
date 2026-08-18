@@ -1,9 +1,16 @@
-import type { JWTPayload } from 'jose';
-
 import { AuthenticationFailedError } from '../../features/auth/domain/authentication-failed.error';
 import type { AuthenticatedIdentity } from '../../features/auth/domain/auth-provider.port';
 import { EmailAddress } from '../../features/auth/domain/email-address.value-object';
 import { toAuthUserId } from '../../features/auth/domain/user.entity';
+
+export interface AccessTokenClaims {
+  readonly sub?: unknown;
+  readonly email?: unknown;
+  readonly email_verified?: unknown;
+  readonly email_confirmed_at?: unknown;
+  readonly user_metadata?: unknown;
+  readonly app_metadata?: unknown;
+}
 
 interface AccessTokenUserMetadata {
   readonly full_name?: unknown;
@@ -23,7 +30,7 @@ interface AccessTokenAppMetadata {
  * feature expects. Google subject comes from app/user metadata, never from
  * the JWT `sub` (that is the Auth user id).
  */
-export function toIdentityFromAccessTokenClaims(payload: JWTPayload): AuthenticatedIdentity {
+export function toIdentityFromAccessTokenClaims(payload: AccessTokenClaims): AuthenticatedIdentity {
   if (typeof payload.sub !== 'string' || payload.sub.trim() === '') {
     throw new AuthenticationFailedError();
   }
@@ -53,7 +60,7 @@ function parseEmail(value: unknown): EmailAddress | null {
 }
 
 function emailVerifiedAt(
-  payload: JWTPayload,
+  payload: AccessTokenClaims,
   userMetadata: AccessTokenUserMetadata | undefined,
 ): Date | null {
   if (typeof payload.email_confirmed_at === 'string') {
