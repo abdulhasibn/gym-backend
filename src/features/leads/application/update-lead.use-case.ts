@@ -3,6 +3,7 @@ import type { AuthenticatedActor } from '../../../domain/shared/authenticated-ac
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { Clock } from '../../../shared/clock/clock';
 import type { LeadId } from '../domain/lead-id';
+import type { LeadEmail } from '../domain/lead-email.value-object';
 import type { LeadName } from '../domain/lead-name.value-object';
 import type { LeadPhone } from '../domain/lead-phone.value-object';
 import type { LeadRepository } from '../domain/lead.repository';
@@ -19,6 +20,8 @@ export interface UpdateLeadCommand {
   readonly notes: string | null;
   /** Omit to keep existing; `null` clears. */
   readonly followUpDate?: string | null;
+  /** Omit to keep existing; `null` clears. */
+  readonly email?: LeadEmail | null;
 }
 
 export class UpdateLeadUseCase {
@@ -49,6 +52,7 @@ export class UpdateLeadUseCase {
       {
         name: command.name,
         phone: command.phone,
+        email: command.email === undefined ? lead.email : command.email,
         source: command.source,
         interest: command.interest,
         notes: command.notes,

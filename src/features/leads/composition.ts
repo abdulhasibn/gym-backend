@@ -5,6 +5,7 @@ import type { Database } from '../../infrastructure/supabase/database.types';
 import { SystemClock } from '../../shared/clock/clock';
 import { UuidIdGenerator } from '../../shared/ids/id-generator';
 import { ChangeLeadStatusUseCase } from './application/change-lead-status.use-case';
+import { ConvertLeadUseCase } from './application/convert-lead.use-case';
 import { CreateLeadUseCase } from './application/create-lead.use-case';
 import { GetLeadUseCase } from './application/get-lead.use-case';
 import { LeadAdminPolicy } from './application/lead-admin.policy';
@@ -12,6 +13,7 @@ import { ListDueFollowUpsUseCase } from './application/list-due-follow-ups.use-c
 import { ListLeadsUseCase } from './application/list-leads.use-case';
 import { SoftDeleteLeadUseCase } from './application/soft-delete-lead.use-case';
 import { UpdateLeadUseCase } from './application/update-lead.use-case';
+import type { CreateMembershipInviteFromLead } from './domain/create-membership-invite.port';
 import type { LiveGymAdminPort } from './domain/live-gym-admin.port';
 import { SupabaseLeadQueries } from './infrastructure/supabase-lead.queries';
 import { SupabaseLeadRepository } from './infrastructure/supabase-lead.repository';
@@ -19,10 +21,15 @@ import { LeadController } from './presentation/lead.controller';
 import { mapLeadError } from './presentation/lead.error-mapper';
 import { createLeadRouter } from './presentation/lead.routes';
 
+export interface LeadsCrossFeaturePorts {
+  readonly createMembershipInviteFromLead: CreateMembershipInviteFromLead;
+}
+
 export function composeLeadsFeature(
   dataClient: SupabaseClient<Database>,
   authenticate: RequestHandler,
   liveGymAdmin: LiveGymAdminPort,
+  crossFeature: LeadsCrossFeaturePorts,
 ) {
   const clock = new SystemClock();
   const ids = new UuidIdGenerator();
@@ -36,6 +43,7 @@ export function composeLeadsFeature(
     new GetLeadUseCase(leadQueries, policy),
     new UpdateLeadUseCase(leads, policy, clock),
     new ChangeLeadStatusUseCase(leads, policy, clock),
+    new ConvertLeadUseCase(leads, policy, crossFeature.createMembershipInviteFromLead, clock),
     new SoftDeleteLeadUseCase(leads, policy, clock),
     new ListDueFollowUpsUseCase(leadQueries, policy),
   );

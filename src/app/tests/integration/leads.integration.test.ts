@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   authHeader,
+  createBaseAndAddonPlans,
   createGymOrg,
   loadIntegrationApp,
   resetLocalDb,
@@ -88,6 +89,71 @@ describe('leads HTTP (local Supabase)', () => {
       .send({ name: 'Second', phone: '9876543210' });
     expect(second.status).toBe(201);
     expect(second.body.warnings.length).toBeGreaterThan(0);
+  });
+
+  it('converts a lead with stored email and rejects a second convert', async () => {
+    const owner = await signupViaOtp(app, { lane: 'STAFF', name: 'Owner Admin' });
+    const gymOrgId = await createGymOrg(app, owner.accessToken);
+    const header = authHeader(owner.accessToken);
+    const { basePlanId } = await createBaseAndAddonPlans(app, owner.accessToken, gymOrgId);
+
+    const created = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads`)
+      .set(header)
+      .send({ name: 'Priya', phone: '9876543210', email: 'priya.convert@gym.test' });
+    expect(created.status).toBe(201);
+    expect(created.body.lead.email).toBe('priya.convert@gym.test');
+    const leadId = created.body.lead.id as string;
+
+    const converted = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`)
+      .set(header)
+      .send({ basePlanId, basePaymentStatus: 'paid' });
+    expect(converted.status).toBe(201);
+    expect(converted.body.lead.status).toBe('CONVERTED');
+    expect(converted.body.membershipInvite.status).toBe('PENDING');
+    expect(converted.body.membershipInvite.invitedEmail).toBe('priya.convert@gym.test');
+    expect(converted.body.membershipInvite.inviteePhone).toBe('9876543210');
+
+    const listed = await supertest(app)
+      .get(`/gym-orgs/${gymOrgId}/membership-invites`)
+      .set(header);
+    expect(listed.status).toBe(200);
+    expect(listed.body.membershipInvites.items.some((item: { id: string }) => item.id === converted.body.membershipInvite.id)).toBe(
+      true,
+    );
+
+    const second = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`)
+      .set(header)
+      .send({ basePlanId, basePaymentStatus: 'paid' });
+    expect(second.status).toBe(409);
+  });
+
+  it('converts a lead without stored email when invitedEmail is supplied', async () => {
+    const owner = await signupViaOtp(app, { lane: 'STAFF', name: 'Owner Admin' });
+    const gymOrgId = await createGymOrg(app, owner.accessToken);
+    const header = authHeader(owner.accessToken);
+    const { basePlanId } = await createBaseAndAddonPlans(app, owner.accessToken, gymOrgId);
+
+    const created = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads`)
+      .set(header)
+      .send({ name: 'Walk-in', phone: '9876543210' });
+    expect(created.status).toBe(201);
+    expect(created.body.lead.email).toBeNull();
+
+    const converted = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads/${created.body.lead.id}/convert`)
+      .set(header)
+      .send({
+        invitedEmail: 'walkin.convert@gym.test',
+        basePlanId,
+        basePaymentStatus: 'unpaid',
+      });
+    expect(converted.status).toBe(201);
+    expect(converted.body.lead.email).toBe('walkin.convert@gym.test');
+    expect(converted.body.lead.status).toBe('CONVERTED');
   });
 
   it('forbids a trainer from creating a lead', async () => {

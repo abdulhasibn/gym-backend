@@ -352,7 +352,7 @@ window.MODULES_DATA = [
     summary:
       "Gym-owned leads before membership. Soft warn on duplicate open-lead phone. Convert to membership invite is P1.",
     howItWorks: [
-      "Capture name, phone, source, interest, notes.",
+      "Capture name, phone, optional email, source, interest, notes.",
       "Pipeline: New → Contacted → Trial → Converted → Lost.",
       "Set follow-up date; due list for Admins.",
       "Push/inbox delivery of reminders waits for notifications stint.",
@@ -361,7 +361,7 @@ window.MODULES_DATA = [
       "Lead capture (soft duplicate phone warn) — API live",
       "Pipeline: New → Contacted → Trial → Converted → Lost — API live",
       "Follow-up date + due list — API live (push later)",
-      "Convert → membership invite (P1)",
+      "Convert → membership invite — API live (3.4)",
     ],
     detail: {
       purpose: "Keep walk-ins and phone leads from falling through before they become members.",
@@ -369,7 +369,7 @@ window.MODULES_DATA = [
         "Phone is not unique — soft warning only.",
         "Convert (P1) prefills membership invite; membership still requires Client accept.",
       ],
-      acceptance: ["CRUD + pipeline + due list work for Admin at a gym."],
+      acceptance: ["CRUD + pipeline + due list + convert-to-invite work for Admin at a gym."],
       prdRefs: "A11–A14 · PRD §5.8",
     },
   },

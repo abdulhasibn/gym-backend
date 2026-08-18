@@ -83,6 +83,15 @@ export function composeMembershipsFeature(
   const policy = new PlanAdminPolicy(liveGymAdmin);
   const trainerPolicy = new TrainerRosterPolicy(liveTrainerProfile);
 
+  const createMembershipInvite = new CreateMembershipInviteUseCase(
+    policy,
+    invites,
+    plans,
+    clientUsers,
+    clock,
+    ids,
+  );
+
   const planController = new MembershipPlanController(
     new CreateMembershipPlanUseCase(plans, policy, clock, ids),
     new ListMembershipPlansUseCase(planQueries, policy),
@@ -92,7 +101,7 @@ export function composeMembershipsFeature(
   );
 
   const inviteController = new MembershipInviteController(
-    new CreateMembershipInviteUseCase(policy, invites, plans, clientUsers, clock, ids),
+    createMembershipInvite,
     new ListMembershipInvitesUseCase(policy, inviteQueries),
     new RevokeMembershipInviteUseCase(policy, invites, clock),
     new ListMyMembershipInviteInboxUseCase(inviteQueries),
@@ -131,6 +140,7 @@ export function composeMembershipsFeature(
     membersRouter: createMembersRouter(rosterController, authenticate),
     myAssignedMembersRouter: createMyAssignedMembersRouter(rosterController, authenticate),
     errorMapper: mapMembershipPlanError,
+    createMembershipInvite,
     /** Cross-feature command ports for attendance / users composition-root adapters. */
     clientMemberships: memberships,
     subscriptions,

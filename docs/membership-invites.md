@@ -422,6 +422,6 @@ Common codes: `AUTHENTICATION_FAILED` · `PLAN_FORBIDDEN` · `MEMBERSHIP_INVITE_
 
 - Addon attach / renew (A8b) — deferred within 1.5  
 - Invite email/push delivery; writing vitals into `client_profiles`  
-- Lead convert → prefilled invite (A14)  
 
-Roster / offboard / block: [`roster.md`](roster.md).
+Roster / offboard / block: [`roster.md`](roster.md).  
+Lead convert (A14): [`leads.md`](leads.md#convert-lead--membership-invite).

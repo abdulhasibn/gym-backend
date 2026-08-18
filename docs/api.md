@@ -146,6 +146,7 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | `GET` | `/gym-orgs/:gymOrgId/leads/:leadId` | [leads § Get](leads.md#get-lead) |
 | `PATCH` | `/gym-orgs/:gymOrgId/leads/:leadId` | [leads § Update](leads.md#update-lead) |
 | `PATCH` | `/gym-orgs/:gymOrgId/leads/:leadId/status` | [leads § Change status](leads.md#change-lead-status) |
+| `POST` | `/gym-orgs/:gymOrgId/leads/:leadId/convert` | [leads § Convert](leads.md#convert-lead--membership-invite) |
 | `DELETE` | `/gym-orgs/:gymOrgId/leads/:leadId` | [leads § Soft-delete](leads.md#soft-delete-lead) |
 
 ### Nutrition & diet (3.1)
@@ -195,4 +196,4 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 
 ## Not shipped yet
 
-Broader food/exercise seed, CustomFood / CustomExercise APIs, gym workout templates, staff `WORKOUT_PLANS` adherence overlay, CRM convert (A14), push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
+Broader food/exercise seed, CustomFood / CustomExercise APIs, gym workout templates, staff `WORKOUT_PLANS` adherence overlay, push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).

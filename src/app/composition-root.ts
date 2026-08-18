@@ -22,7 +22,20 @@ import { GymOrgLocalClock } from '../features/attendance/infrastructure/gym-org-
 import { composeAuthFeature } from '../features/auth/composition';
 import { composeGymOrgFeature } from '../features/gym-orgs/composition';
 import { composeLeadsFeature } from '../features/leads/composition';
+import type {
+  CreateMembershipInviteFromLead,
+  CreateMembershipInviteFromLeadCommand,
+  CreatedMembershipInviteFromLead,
+} from '../features/leads/domain/create-membership-invite.port';
 import { composeMembershipsFeature } from '../features/memberships/composition';
+import { InvalidInvitePlanError } from '../features/memberships/application/invalid-invite-plan.error';
+import { InvalidMembershipInviteeError } from '../features/memberships/application/invalid-membership-invitee.error';
+import type { CreateMembershipInviteUseCase } from '../features/memberships/application/create-membership-invite.use-case';
+import { InviteeEmail } from '../features/memberships/domain/invitee-email.value-object';
+import { InviteeName } from '../features/memberships/domain/invitee-name.value-object';
+import { InviteePhone } from '../features/memberships/domain/invitee-phone.value-object';
+import { isPaymentStatus } from '../features/memberships/domain/payment-status';
+import { toMembershipPlanId } from '../features/memberships/domain/membership-plan-id';
 import { toSubscriptionId } from '../features/memberships/domain/subscription-id';
 import { toTrainerProfileId } from '../features/memberships/domain/trainer-profile-id';
 import { composeUsersFeature } from '../features/users/composition';
@@ -67,9 +80,6 @@ export function composeApp(config: AppConfig): AppDependencies {
     enableGoogleCallbackHelper: config.nodeEnv !== 'production',
   });
   const gymOrgFeature = composeGymOrgFeature(supabaseClient, authFeature.authenticate);
-  const leadsFeature = composeLeadsFeature(supabaseClient, authFeature.authenticate, {
-    isLiveAdmin: gymOrgFeature.isLiveAdmin,
-  });
   const membershipsFeature = composeMembershipsFeature(
     supabaseClient,
     authFeature.authenticate,
@@ -81,6 +91,16 @@ export function composeApp(config: AppConfig): AppDependencies {
       },
       isLiveAtGym: (trainerProfileId, gymOrgId) =>
         gymOrgFeature.isLiveTrainerProfile(trainerProfileId, gymOrgId),
+    },
+  );
+  const leadsFeature = composeLeadsFeature(
+    supabaseClient,
+    authFeature.authenticate,
+    { isLiveAdmin: gymOrgFeature.isLiveAdmin },
+    {
+      createMembershipInviteFromLead: createMembershipInviteFromLeadAdapter(
+        membershipsFeature.createMembershipInvite,
+      ),
     },
   );
 
@@ -331,4 +351,48 @@ export function composeApp(config: AppConfig): AppDependencies {
   );
 
   return { config, logger, supabaseClient, app };
+}
+
+function createMembershipInviteFromLeadAdapter(
+  createMembershipInvite: CreateMembershipInviteUseCase,
+): CreateMembershipInviteFromLead {
+  return {
+    async execute(
+      actor,
+      command: CreateMembershipInviteFromLeadCommand,
+    ): Promise<CreatedMembershipInviteFromLead> {
+      let inviteeName;
+      let invitedEmail;
+      let inviteePhone;
+      try {
+        inviteeName = InviteeName.create(command.inviteeName);
+        invitedEmail = InviteeEmail.create(command.invitedEmail);
+        inviteePhone = InviteePhone.create(command.inviteePhone);
+      } catch (error) {
+        throw new InvalidMembershipInviteeError(
+          error instanceof Error ? error.message : 'Invitee is invalid',
+        );
+      }
+
+      if (!isPaymentStatus(command.basePaymentStatus)) {
+        throw new InvalidInvitePlanError('Base payment status is invalid');
+      }
+      if (command.addonPaymentStatus !== null && !isPaymentStatus(command.addonPaymentStatus)) {
+        throw new InvalidInvitePlanError('Addon payment status is invalid');
+      }
+
+      return createMembershipInvite.execute(actor, {
+        gymOrgId: command.gymOrgId,
+        inviteeName,
+        invitedEmail,
+        inviteePhone,
+        basePlanId: toMembershipPlanId(command.basePlanId),
+        basePaymentStatus: command.basePaymentStatus,
+        addonPlanId:
+          command.addonPlanId === null ? null : toMembershipPlanId(command.addonPlanId),
+        addonPaymentStatus: command.addonPaymentStatus,
+        expiresAt: command.expiresAt,
+      });
+    },
+  };
 }

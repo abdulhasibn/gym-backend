@@ -4,6 +4,7 @@ import { toUserId } from '../../../domain/shared/user-id';
 import type { Database } from '../../../infrastructure/supabase/database.types';
 import { Lead } from '../domain/lead.entity';
 import { toLeadId } from '../domain/lead-id';
+import { LeadEmail } from '../domain/lead-email.value-object';
 import { LeadName } from '../domain/lead-name.value-object';
 import { LeadPhone } from '../domain/lead-phone.value-object';
 import { isLeadStatus } from '../domain/lead-status';
@@ -21,6 +22,7 @@ export function toLead(row: LeadRow): Lead {
       gymOrgId: toGymOrgId(row.gym_org_id),
       name: LeadName.create(row.name),
       phone: LeadPhone.create(row.phone),
+      email: row.email === null ? null : LeadEmail.create(row.email),
       source: row.source,
       status: row.status,
       interest: row.interest,
@@ -46,11 +48,13 @@ export function toLeadSummary(row: LeadRow): LeadSummary {
     gymOrgId: toGymOrgId(row.gym_org_id),
     name: row.name,
     phone: row.phone,
+    email: row.email,
     source: row.source,
     status: row.status,
     interest: row.interest,
     notes: row.notes,
     followUpDate: row.follow_up_date,
+    convertedMembershipInviteId: row.converted_membership_invite_id,
     createdBy: row.created_by,
     createdAt: toValidDate(row.created_at).toISOString(),
     updatedAt: toValidDate(row.updated_at).toISOString(),
@@ -63,6 +67,7 @@ export function toLeadInsert(lead: Lead): Database['public']['Tables']['leads'][
     gym_org_id: lead.gymOrgId,
     name: lead.name.value,
     phone: lead.phone.value,
+    email: lead.email?.value ?? null,
     source: lead.source,
     status: lead.status,
     interest: lead.interest,
@@ -80,6 +85,7 @@ export function toLeadUpdate(lead: Lead): Database['public']['Tables']['leads'][
   return {
     name: lead.name.value,
     phone: lead.phone.value,
+    email: lead.email?.value ?? null,
     source: lead.source,
     status: lead.status,
     interest: lead.interest,

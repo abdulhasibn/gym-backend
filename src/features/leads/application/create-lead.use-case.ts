@@ -4,6 +4,7 @@ import type { Clock } from '../../../shared/clock/clock';
 import type { IdGenerator } from '../../../shared/ids/id-generator';
 import { Lead } from '../domain/lead.entity';
 import { toLeadId } from '../domain/lead-id';
+import type { LeadEmail } from '../domain/lead-email.value-object';
 import type { LeadName } from '../domain/lead-name.value-object';
 import type { LeadPhone } from '../domain/lead-phone.value-object';
 import type { LeadRepository } from '../domain/lead.repository';
@@ -14,6 +15,7 @@ export interface CreateLeadCommand {
   readonly gymOrgId: GymOrgId;
   readonly name: LeadName;
   readonly phone: LeadPhone;
+  readonly email?: LeadEmail | null;
   readonly source: string | null;
   readonly interest: string | null;
   readonly notes: string | null;
@@ -39,6 +41,7 @@ export class CreateLeadUseCase {
       gymOrgId: command.gymOrgId,
       name: command.name,
       phone: command.phone,
+      email: command.email ?? null,
       source: command.source,
       interest: command.interest,
       notes: command.notes,

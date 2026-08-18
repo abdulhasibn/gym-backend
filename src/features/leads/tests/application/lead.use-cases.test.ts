@@ -5,15 +5,25 @@ import type { AuthenticatedActor } from '../../../../domain/shared/authenticated
 import { toGymOrgId } from '../../../../domain/shared/gym-org-id';
 import { toUserId } from '../../../../domain/shared/user-id';
 import { ChangeLeadStatusUseCase } from '../../application/change-lead-status.use-case';
+import { ConvertLeadUseCase } from '../../application/convert-lead.use-case';
 import { CreateLeadUseCase } from '../../application/create-lead.use-case';
 import { GetLeadUseCase } from '../../application/get-lead.use-case';
 import { LeadAdminPolicy } from '../../application/lead-admin.policy';
+import { LeadEmailRequiredError } from '../../application/lead-email-required.error';
 import { LeadForbiddenError } from '../../application/lead-forbidden.error';
 import { ListDueFollowUpsUseCase } from '../../application/list-due-follow-ups.use-case';
 import { ListLeadsUseCase } from '../../application/list-leads.use-case';
 import { SoftDeleteLeadUseCase } from '../../application/soft-delete-lead.use-case';
 import { UpdateLeadUseCase } from '../../application/update-lead.use-case';
+import { LeadAlreadyConvertedError } from '../../domain/lead-already-converted.error';
+import type {
+  CreateMembershipInviteFromLead,
+  CreateMembershipInviteFromLeadCommand,
+  CreatedMembershipInviteFromLead,
+} from '../../domain/create-membership-invite.port';
+import { LeadEmail } from '../../domain/lead-email.value-object';
 import { toLeadId } from '../../domain/lead-id';
+import { LeadNotConvertibleError } from '../../domain/lead-not-convertible.error';
 import { LeadName } from '../../domain/lead-name.value-object';
 import { LeadPhone } from '../../domain/lead-phone.value-object';
 import { FixedClock } from '../../../gym-orgs/tests/fakes/fixed-clock';
@@ -33,12 +43,44 @@ function adminActor(roleCode: AuthenticatedActor['roleCode'] = 'ADMIN'): Authent
   };
 }
 
+class FakeCreateMembershipInvite implements CreateMembershipInviteFromLead {
+  readonly calls: CreateMembershipInviteFromLeadCommand[] = [];
+
+  async execute(
+    _actor: AuthenticatedActor,
+    command: CreateMembershipInviteFromLeadCommand,
+  ): Promise<CreatedMembershipInviteFromLead> {
+    this.calls.push(command);
+    const now = '2026-08-07T00:00:00.000Z';
+    return {
+      id: `invite-${this.calls.length}`,
+      gymOrgId: command.gymOrgId,
+      invitedEmail: command.invitedEmail,
+      invitedUserId: null,
+      inviteeName: command.inviteeName,
+      inviteePhone: command.inviteePhone,
+      basePlanId: command.basePlanId,
+      basePaymentStatus: command.basePaymentStatus,
+      addonPlanId: command.addonPlanId,
+      addonPaymentStatus: command.addonPaymentStatus,
+      status: 'PENDING',
+      expiresAt: null,
+      createdBy: adminId,
+      acceptedAt: null,
+      acceptedMembershipId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+}
+
 function setup() {
   const store = new InMemoryLeadStore();
   const admins = new FixedLiveGymAdmin();
   admins.seed(adminId, gymOrgId);
   const policy = new LeadAdminPolicy(admins);
   const clock = new FixedClock(new Date('2026-08-07T00:00:00.000Z'));
+  const createInvite = new FakeCreateMembershipInvite();
   let n = 0;
   const ids = {
     generate: () => {
@@ -49,11 +91,13 @@ function setup() {
 
   return {
     store,
+    createInvite,
     create: new CreateLeadUseCase(store, policy, clock, ids),
     list: new ListLeadsUseCase(store, policy),
     get: new GetLeadUseCase(store, policy),
     update: new UpdateLeadUseCase(store, policy, clock),
     changeStatus: new ChangeLeadStatusUseCase(store, policy, clock),
+    convert: new ConvertLeadUseCase(store, policy, createInvite, clock),
     softDelete: new SoftDeleteLeadUseCase(store, policy, clock),
     due: new ListDueFollowUpsUseCase(store, policy),
   };
@@ -72,6 +116,8 @@ describe('lead use cases', () => {
     });
 
     expect(created.lead.status).toBe('NEW');
+    expect(created.lead.email).toBeNull();
+    expect(created.lead.convertedMembershipInviteId).toBeNull();
     expect(created.warnings).toEqual([]);
 
     const listed = await list.execute(adminActor(), gymOrgId, { limit: 20, offset: 0 });
@@ -227,5 +273,157 @@ describe('lead use cases', () => {
     await expect(
       get.execute(adminActor(), gymOrgId, toLeadId(created.lead.id)),
     ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('converts a lead with stored email without invitedEmail in the command', async () => {
+    const { create, convert, createInvite } = setup();
+    const created = await create.execute(adminActor(), {
+      gymOrgId,
+      name: LeadName.create('Priya'),
+      phone: LeadPhone.create('9876543210'),
+      email: LeadEmail.create('priya@gym.test'),
+      source: null,
+      interest: null,
+      notes: null,
+    });
+
+    const result = await convert.execute(adminActor(), {
+      gymOrgId,
+      leadId: toLeadId(created.lead.id),
+      basePlanId: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+      basePaymentStatus: 'paid',
+      addonPlanId: null,
+      addonPaymentStatus: null,
+    });
+
+    expect(result.lead.status).toBe('CONVERTED');
+    expect(result.lead.email).toBe('priya@gym.test');
+    expect(result.lead.convertedMembershipInviteId).toBe('invite-1');
+    expect(result.membershipInvite.inviteeName).toBe('Priya');
+    expect(result.membershipInvite.inviteePhone).toBe('9876543210');
+    expect(result.membershipInvite.invitedEmail).toBe('priya@gym.test');
+    expect(createInvite.calls).toHaveLength(1);
+  });
+
+  it('persists body email when the lead has none then converts', async () => {
+    const { create, convert } = setup();
+    const created = await create.execute(adminActor(), {
+      gymOrgId,
+      name: LeadName.create('Walk-in'),
+      phone: LeadPhone.create('9000000005'),
+      source: null,
+      interest: null,
+      notes: null,
+    });
+
+    const result = await convert.execute(adminActor(), {
+      gymOrgId,
+      leadId: toLeadId(created.lead.id),
+      invitedEmail: LeadEmail.create('walkin@gym.test'),
+      basePlanId: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+      basePaymentStatus: 'unpaid',
+      addonPlanId: null,
+      addonPaymentStatus: null,
+    });
+
+    expect(result.lead.email).toBe('walkin@gym.test');
+    expect(result.lead.status).toBe('CONVERTED');
+    expect(result.membershipInvite.invitedEmail).toBe('walkin@gym.test');
+  });
+
+  it('rejects convert when neither lead nor body has email', async () => {
+    const { create, convert, createInvite } = setup();
+    const created = await create.execute(adminActor(), {
+      gymOrgId,
+      name: LeadName.create('No Email'),
+      phone: LeadPhone.create('9000000006'),
+      source: null,
+      interest: null,
+      notes: null,
+    });
+
+    await expect(
+      convert.execute(adminActor(), {
+        gymOrgId,
+        leadId: toLeadId(created.lead.id),
+        basePlanId: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        basePaymentStatus: 'paid',
+        addonPlanId: null,
+        addonPaymentStatus: null,
+      }),
+    ).rejects.toBeInstanceOf(LeadEmailRequiredError);
+    expect(createInvite.calls).toHaveLength(0);
+  });
+
+  it('rejects a second convert', async () => {
+    const { create, convert } = setup();
+    const created = await create.execute(adminActor(), {
+      gymOrgId,
+      name: LeadName.create('Priya'),
+      phone: LeadPhone.create('9876543210'),
+      email: LeadEmail.create('priya@gym.test'),
+      source: null,
+      interest: null,
+      notes: null,
+    });
+    const command = {
+      gymOrgId,
+      leadId: toLeadId(created.lead.id),
+      basePlanId: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+      basePaymentStatus: 'paid' as const,
+      addonPlanId: null,
+      addonPaymentStatus: null,
+    };
+    await convert.execute(adminActor(), command);
+    await expect(convert.execute(adminActor(), command)).rejects.toBeInstanceOf(
+      LeadAlreadyConvertedError,
+    );
+  });
+
+  it('rejects converting a lost lead', async () => {
+    const { create, changeStatus, convert } = setup();
+    const created = await create.execute(adminActor(), {
+      gymOrgId,
+      name: LeadName.create('Lost'),
+      phone: LeadPhone.create('9000000007'),
+      email: LeadEmail.create('lost@gym.test'),
+      source: null,
+      interest: null,
+      notes: null,
+    });
+    await changeStatus.execute(adminActor(), gymOrgId, toLeadId(created.lead.id), 'LOST');
+    await expect(
+      convert.execute(adminActor(), {
+        gymOrgId,
+        leadId: toLeadId(created.lead.id),
+        basePlanId: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        basePaymentStatus: 'paid',
+        addonPlanId: null,
+        addonPaymentStatus: null,
+      }),
+    ).rejects.toBeInstanceOf(LeadNotConvertibleError);
+  });
+
+  it('forbids non-admin convert', async () => {
+    const { create, convert } = setup();
+    const created = await create.execute(adminActor(), {
+      gymOrgId,
+      name: LeadName.create('Priya'),
+      phone: LeadPhone.create('9876543210'),
+      email: LeadEmail.create('priya@gym.test'),
+      source: null,
+      interest: null,
+      notes: null,
+    });
+    await expect(
+      convert.execute(adminActor('TRAINER'), {
+        gymOrgId,
+        leadId: toLeadId(created.lead.id),
+        basePlanId: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        basePaymentStatus: 'paid',
+        addonPlanId: null,
+        addonPaymentStatus: null,
+      }),
+    ).rejects.toBeInstanceOf(LeadForbiddenError);
   });
 });

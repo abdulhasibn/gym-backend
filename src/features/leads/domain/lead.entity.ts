@@ -1,8 +1,11 @@
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { UserId } from '../../../domain/shared/user-id';
+import { LeadAlreadyConvertedError } from './lead-already-converted.error';
 import { LeadDeletedError } from './lead-deleted.error';
+import type { LeadEmail } from './lead-email.value-object';
 import type { LeadId } from './lead-id';
 import { LeadName } from './lead-name.value-object';
+import { LeadNotConvertibleError } from './lead-not-convertible.error';
 import { LeadPhone } from './lead-phone.value-object';
 import { isLeadStatus, type LeadStatus } from './lead-status';
 
@@ -11,6 +14,7 @@ export interface LeadData {
   readonly gymOrgId: GymOrgId;
   readonly name: LeadName;
   readonly phone: LeadPhone;
+  readonly email: LeadEmail | null;
   readonly source: string | null;
   readonly status: LeadStatus;
   readonly interest: string | null;
@@ -28,6 +32,7 @@ export interface CreateLeadProps {
   readonly gymOrgId: GymOrgId;
   readonly name: LeadName;
   readonly phone: LeadPhone;
+  readonly email: LeadEmail | null;
   readonly source: string | null;
   readonly interest: string | null;
   readonly notes: string | null;
@@ -38,6 +43,7 @@ export interface CreateLeadProps {
 export interface UpdateLeadProfile {
   readonly name: LeadName;
   readonly phone: LeadPhone;
+  readonly email: LeadEmail | null;
   readonly source: string | null;
   readonly interest: string | null;
   readonly notes: string | null;
@@ -81,6 +87,7 @@ export class Lead {
       gymOrgId: props.gymOrgId,
       name: props.name,
       phone: props.phone,
+      email: props.email,
       source: props.source,
       status: 'NEW',
       interest: props.interest,
@@ -115,6 +122,10 @@ export class Lead {
 
   get phone(): LeadPhone {
     return this.data.phone;
+  }
+
+  get email(): LeadEmail | null {
+    return this.data.email;
   }
 
   get source(): string | null {
@@ -167,6 +178,7 @@ export class Lead {
       ...this.data,
       name: profile.name,
       phone: profile.phone,
+      email: profile.email,
       source: profile.source,
       interest: profile.interest,
       notes: profile.notes,
@@ -177,12 +189,37 @@ export class Lead {
     this.data = next;
   }
 
+  recordEmail(email: LeadEmail, updatedAt: Date): void {
+    this.assertNotDeleted();
+    this.data = { ...this.data, email, updatedAt };
+  }
+
   changeStatus(status: LeadStatus, updatedAt: Date): void {
     this.assertNotDeleted();
     if (!isLeadStatus(status)) {
       throw new Error('Lead status is invalid');
     }
     this.data = { ...this.data, status, updatedAt };
+  }
+
+  assertCanConvert(): void {
+    this.assertNotDeleted();
+    if (this.data.convertedMembershipInviteId !== null) {
+      throw new LeadAlreadyConvertedError();
+    }
+    if (this.data.status === 'LOST') {
+      throw new LeadNotConvertibleError();
+    }
+  }
+
+  markConverted(inviteId: string, updatedAt: Date): void {
+    this.assertCanConvert();
+    this.data = {
+      ...this.data,
+      status: 'CONVERTED',
+      convertedMembershipInviteId: inviteId,
+      updatedAt,
+    };
   }
 
   softDelete(deletedAt: Date): void {

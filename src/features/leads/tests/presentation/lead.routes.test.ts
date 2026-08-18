@@ -9,9 +9,16 @@ import { createErrorHandlerMiddleware } from '../../../../presentation/http/erro
 import type { Logger } from '../../../../shared/logging/logger.port';
 import { FixedClock } from '../../../gym-orgs/tests/fakes/fixed-clock';
 import { ChangeLeadStatusUseCase } from '../../application/change-lead-status.use-case';
+import { ConvertLeadUseCase } from '../../application/convert-lead.use-case';
 import { CreateLeadUseCase } from '../../application/create-lead.use-case';
 import { GetLeadUseCase } from '../../application/get-lead.use-case';
 import { LeadAdminPolicy } from '../../application/lead-admin.policy';
+import type { AuthenticatedActor } from '../../../../domain/shared/authenticated-actor';
+import type {
+  CreateMembershipInviteFromLead,
+  CreateMembershipInviteFromLeadCommand,
+  CreatedMembershipInviteFromLead,
+} from '../../domain/create-membership-invite.port';
 import { ListDueFollowUpsUseCase } from '../../application/list-due-follow-ups.use-case';
 import { ListLeadsUseCase } from '../../application/list-leads.use-case';
 import { SoftDeleteLeadUseCase } from '../../application/soft-delete-lead.use-case';
@@ -33,6 +40,35 @@ class SilentLogger implements Logger {
 
 const gymOrgId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const adminUserId = '11111111-1111-4111-8111-111111111111';
+const basePlanId = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+
+class FakeCreateMembershipInvite implements CreateMembershipInviteFromLead {
+  async execute(
+    _actor: AuthenticatedActor,
+    command: CreateMembershipInviteFromLeadCommand,
+  ): Promise<CreatedMembershipInviteFromLead> {
+    const now = '2026-08-07T00:00:00.000Z';
+    return {
+      id: 'invite-1',
+      gymOrgId: command.gymOrgId,
+      invitedEmail: command.invitedEmail,
+      invitedUserId: null,
+      inviteeName: command.inviteeName,
+      inviteePhone: command.inviteePhone,
+      basePlanId: command.basePlanId,
+      basePaymentStatus: command.basePaymentStatus,
+      addonPlanId: command.addonPlanId,
+      addonPaymentStatus: command.addonPaymentStatus,
+      status: 'PENDING',
+      expiresAt: null,
+      createdBy: adminUserId,
+      acceptedAt: null,
+      acceptedMembershipId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+}
 
 function createTestApp(roleCode: 'ADMIN' | 'TRAINER' | 'CLIENT' = 'ADMIN') {
   const store = new InMemoryLeadStore();
@@ -55,6 +91,7 @@ function createTestApp(roleCode: 'ADMIN' | 'TRAINER' | 'CLIENT' = 'ADMIN') {
     new GetLeadUseCase(store, policy),
     new UpdateLeadUseCase(store, policy, clock),
     new ChangeLeadStatusUseCase(store, policy, clock),
+    new ConvertLeadUseCase(store, policy, new FakeCreateMembershipInvite(), clock),
     new SoftDeleteLeadUseCase(store, policy, clock),
     new ListDueFollowUpsUseCase(store, policy),
   );
@@ -90,7 +127,9 @@ describe('lead routes', () => {
     expect(create.body.lead).toMatchObject({
       name: 'Walk-in',
       phone: '9876543210',
+      email: null,
       status: 'NEW',
+      convertedMembershipInviteId: null,
     });
     expect(create.body.warnings).toEqual([]);
 
@@ -152,6 +191,82 @@ describe('lead routes', () => {
       .expect(403)
       .expect((res) => {
         expect(res.body.error.code).toBe('LEAD_FORBIDDEN');
+      });
+  });
+
+  it('creates with optional email and converts without invitedEmail', async () => {
+    const { app } = createTestApp();
+
+    const create = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads`)
+      .send({ name: 'Priya', phone: '9876543210', email: 'Priya@Gym.test' })
+      .expect(201);
+    expect(create.body.lead.email).toBe('priya@gym.test');
+    const leadId = create.body.lead.id as string;
+
+    const converted = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`)
+      .send({ basePlanId, basePaymentStatus: 'paid' })
+      .expect(201);
+
+    expect(converted.body.lead.status).toBe('CONVERTED');
+    expect(converted.body.lead.convertedMembershipInviteId).toBe('invite-1');
+    expect(converted.body.membershipInvite.invitedEmail).toBe('priya@gym.test');
+    expect(converted.body.membershipInvite.inviteeName).toBe('Priya');
+  });
+
+  it('converts with invitedEmail when the lead has none', async () => {
+    const { app } = createTestApp();
+    const create = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads`)
+      .send({ name: 'Walk-in', phone: '9876543210' })
+      .expect(201);
+
+    await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads/${create.body.lead.id}/convert`)
+      .send({
+        invitedEmail: 'walkin@gym.test',
+        basePlanId,
+        basePaymentStatus: 'paid',
+      })
+      .expect(201)
+      .expect((res) => {
+        expect(res.body.lead.email).toBe('walkin@gym.test');
+      });
+  });
+
+  it('returns 422 when convert has no email', async () => {
+    const { app } = createTestApp();
+    const create = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads`)
+      .send({ name: 'Walk-in', phone: '9876543210' })
+      .expect(201);
+
+    await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads/${create.body.lead.id}/convert`)
+      .send({ basePlanId, basePaymentStatus: 'paid' })
+      .expect(422)
+      .expect((res) => {
+        expect(res.body.error.code).toBe('LEAD_EMAIL_REQUIRED');
+      });
+  });
+
+  it('returns 409 on a second convert', async () => {
+    const { app } = createTestApp();
+    const create = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads`)
+      .send({ name: 'Priya', phone: '9876543210', email: 'priya@gym.test' })
+      .expect(201);
+    const leadId = create.body.lead.id as string;
+    const body = { basePlanId, basePaymentStatus: 'paid' };
+
+    await supertest(app).post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`).send(body).expect(201);
+    await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`)
+      .send(body)
+      .expect(409)
+      .expect((res) => {
+        expect(res.body.error.code).toBe('LEAD_ALREADY_CONVERTED');
       });
   });
 });

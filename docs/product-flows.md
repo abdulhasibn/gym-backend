@@ -626,15 +626,16 @@ C12 · Client-owned · grant-gated staff · production-quality live sync.
 
 Admin desk pipeline for prospects before they are members.
 
-**API status:** A11–A13 (CRUD, pipeline, soft dup-phone warn, follow-up due list) **shipped**. A14 convert → membership invite and reminder *delivery* remain later.
+**API status:** A11–A14 (CRUD, pipeline, optional email, convert → PENDING invite) **shipped**. Reminder *delivery* remains Stint 3.5.
 
 ### Build scope (execution)
 
-| In pull-forward (now) | Deferred |
+| Shipped | Deferred |
 |---|---|
-| A11 capture + soft duplicate-phone warn | A14 convert → membership invite (Stint 3.4 — invites exist) |
-| A12 status pipeline | A13 *delivery* of follow-up reminders (push/inbox — Stint 3.5) |
+| A11 capture + optional email + soft duplicate-phone warn | A13 *delivery* of follow-up reminders (push/inbox — Stint 3.5) |
+| A12 status pipeline | |
 | A13 store `follow_up_date` + Admin due-list query | |
+| A14 convert → membership invite | |
 
 See [`MVP_ROADMAP.md`](MVP_ROADMAP.md) Pull-forward and [`PROGRESS.md`](PROGRESS.md) Next up.
 
@@ -653,7 +654,7 @@ See [`MVP_ROADMAP.md`](MVP_ROADMAP.md) Pull-forward and [`PROGRESS.md`](PROGRESS
 **F11.1 Capture walk-in lead** → status NEW.  
 **F11.2 Move pipeline** → Contacted / Trial / Lost / Converted.  
 **F11.3 Follow-up date** → reminder to Admins on that date.  
-**F11.4 Convert (P1)** → opens create membership invite with name/phone/email prefilled; does not create membership until Client accepts.  
+**F11.4 Convert (P1)** → `POST .../leads/:id/convert` creates a PENDING membership invite (name/phone from lead; email from lead or body); membership still requires Client accept.  
 **F11.5 Duplicate phone** — warn, do not hard-block; re-inquiry after LOST = new lead row is OK.
 
 ### Requirements
@@ -780,7 +781,7 @@ Not a user-facing “module,” but UI must respect:
 
 **P0 — ship first:** Auth, create gym, plans catalog, membership invite/accept + grants checklist, roster, check-in + desk mark, subscriptions/renewals/unpaid badges, trainer assign, catalog foods + diet assign + diary (complete + extras), workout assign + complete, progress/profile/BMI, health connect, notifications for invites/renewals/assign, offboard, block check-in, privacy management.
 
-**P1 — next:** Dashboard widgets, lead → invite convert, workout clone/template, adherence % for staff, account erasure UX, richer unpaid digest layout.
+**P1 — next:** Dashboard widgets, workout clone/template, adherence % for staff, account erasure UX, richer unpaid digest layout.
 
 ---
 

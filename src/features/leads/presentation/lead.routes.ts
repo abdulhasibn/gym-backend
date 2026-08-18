@@ -13,6 +13,7 @@ export function createLeadRouter(controller: LeadController, authenticate: Reque
   router.get('/:leadId', controller.getOne);
   router.patch('/:leadId', controller.update);
   router.patch('/:leadId/status', controller.changeStatus);
+  router.post('/:leadId/convert', controller.convert);
   router.delete('/:leadId', controller.softDelete);
 
   return router;

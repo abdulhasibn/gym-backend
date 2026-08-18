@@ -3,6 +3,7 @@ import type { RequestHandler } from 'express';
 import { toGymOrgId } from '../../../domain/shared/gym-org-id';
 import { requireAuthenticatedActor } from '../../../presentation/http/context/request-actor';
 import type { ChangeLeadStatusUseCase } from '../application/change-lead-status.use-case';
+import type { ConvertLeadUseCase } from '../application/convert-lead.use-case';
 import type { CreateLeadUseCase } from '../application/create-lead.use-case';
 import type { GetLeadUseCase } from '../application/get-lead.use-case';
 import type { ListDueFollowUpsUseCase } from '../application/list-due-follow-ups.use-case';
@@ -12,6 +13,7 @@ import type { UpdateLeadUseCase } from '../application/update-lead.use-case';
 import { toLeadId } from '../domain/lead-id';
 import {
   changeLeadStatusSchema,
+  convertLeadSchema,
   createLeadSchema,
   dueFollowUpsQuerySchema,
   gymAndLeadIdParamSchema,
@@ -31,6 +33,7 @@ export class LeadController {
     private readonly getLead: GetLeadUseCase,
     private readonly updateLead: UpdateLeadUseCase,
     private readonly changeLeadStatus: ChangeLeadStatusUseCase,
+    private readonly convertLead: ConvertLeadUseCase,
     private readonly softDeleteLead: SoftDeleteLeadUseCase,
     private readonly listDueFollowUps: ListDueFollowUpsUseCase,
   ) {}
@@ -43,6 +46,7 @@ export class LeadController {
         gymOrgId: toGymOrgId(gymOrgId),
         name: body.name,
         phone: body.phone,
+        email: body.email,
         source: body.source,
         interest: body.interest,
         notes: body.notes,
@@ -109,6 +113,7 @@ export class LeadController {
         leadId: toLeadId(leadId),
         name: body.name,
         phone: body.phone,
+        email: body.email,
         source: body.source,
         interest: body.interest,
         notes: body.notes,
@@ -131,6 +136,26 @@ export class LeadController {
         body.status,
       );
       res.status(200).json({ lead });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  convert: RequestHandler = async (req, res, next) => {
+    try {
+      const { gymOrgId, leadId } = gymAndLeadIdParamSchema.parse(req.params);
+      const body = convertLeadSchema.parse(req.body);
+      const result = await this.convertLead.execute(requireAuthenticatedActor(req), {
+        gymOrgId: toGymOrgId(gymOrgId),
+        leadId: toLeadId(leadId),
+        invitedEmail: body.invitedEmail,
+        basePlanId: body.basePlanId,
+        basePaymentStatus: body.basePaymentStatus,
+        addonPlanId: body.addonPlanId,
+        addonPaymentStatus: body.addonPaymentStatus,
+        expiresAt: body.expiresAt,
+      });
+      res.status(201).json(result);
     } catch (error) {
       next(error);
     }

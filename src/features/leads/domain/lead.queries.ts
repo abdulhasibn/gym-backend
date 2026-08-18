@@ -8,11 +8,13 @@ export interface LeadSummary {
   readonly gymOrgId: GymOrgId;
   readonly name: string;
   readonly phone: string;
+  readonly email: string | null;
   readonly source: string | null;
   readonly status: LeadStatus;
   readonly interest: string | null;
   readonly notes: string | null;
   readonly followUpDate: string | null;
+  readonly convertedMembershipInviteId: string | null;
   readonly createdBy: string;
   readonly createdAt: string;
   readonly updatedAt: string;

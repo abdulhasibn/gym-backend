@@ -4,17 +4,17 @@
 
 ## Current stage
 
-**Stage:** Stint **3.3** shipped (health-sync connect/sync/read, PRD C12).
-Stints **3.1–3.2** (diet + workout) remain live. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
+**Stage:** Stint **3.4** shipped (CRM convert A14: lead → membership invite).
+Stints **3.1–3.3** (diet + workout + health-sync) remain live. See [`docs/MVP_ROADMAP.md`](MVP_ROADMAP.md).
 A8b still deferred within 1.5.
 
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
 | Domain glossary / PRD / architecture docs | Done — ADR-0006 food diary · ADR-0007 exercise catalog · ADR-0008 diet templates |
-| DBML source of truth (`docs/schema.dbml`) | Done — `diet_plan_templates` + `cloned_from_template_id` |
-| Supabase project + SQL migrations applied | Done — 23 local + remote; through `20260817121500` (templates `20260817102811`) |
-| Generated `database.types.ts` | Done — template tables + `cloned_from_template_id` |
+| DBML source of truth (`docs/schema.dbml`) | Done — `leads.email` optional (A14) |
+| Supabase project + SQL migrations applied | Done — 24 local + remote; through `20260818100000` (leads email) |
+| Generated `database.types.ts` | Done — `leads.email` |
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
 | Food catalog seed | Done — 20 foods × 8 units (160 servings), `source=seed` |
@@ -27,7 +27,7 @@ A8b still deferred within 1.5.
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (dedicated mount so coaching catch-alls cannot 404 it) |
-| Mini-CRM / leads (`src/features/leads`) | Done — A11–A13: create/list/get/update/soft-delete, status pipeline, soft dup-phone warn, follow-up date + due list. A14 convert + push reminders deferred |
+| Mini-CRM / leads (`src/features/leads`) | Done — A11–A14: CRUD, pipeline, optional email, convert → PENDING membership invite. Push reminders deferred (3.5) |
 | Memberships feature (`src/features/memberships`) | Phase 1–5 + 2.4 renewals due-list done — plans, invites, accept/grants, subscriptions, roster/assign/offboard/block, `GET .../subscriptions/renewals-due`; A8b attach/renew deferred |
 | Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
@@ -35,7 +35,7 @@ A8b still deferred within 1.5.
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
 | Coaching workout (`src/features/coaching`) | Done — `GET /exercises/search`, assign/replace `WorkoutPlan`, staff GET, Client GET + per-day complete/uncomplete (not set logs; not CustomExercise; no gym workout templates) |
 | Health sync (`src/features/health-sync`) | Done — connect/disconnect, batch metrics sync (device-push), client list, staff WEARABLES grant read; weight → ProgressLog via users port |
-| Other feature modules under `src/features/*` | Next **3.4** CRM convert (A14); then notifications, audit |
+| Other feature modules under `src/features/*` | Next **3.5** notifications; then audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
@@ -51,13 +51,13 @@ A8b still deferred within 1.5.
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | 36 in `public`; RLS enabled (no policies) |
-| Migrations applied | 23 — remote through `20260817121500_seed_exercise_catalog_v1` (templates `20260817102811`) |
+| Migrations applied | 24 — remote through `20260818100000_leads_email` |
 | Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 30 |
 
 ## Next up
 
-1. **Stint 3.4** — CRM convert (A14): lead → membership invite.
-2. Then notifications (3.5); audit (3.6).
+1. **Stint 3.5** — notifications + scheduled jobs (T-2, unpaid digest, lead follow-ups).
+2. Then audit (3.6).
 3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs;
    gym workout templates; T8 `WORKOUT_PLANS` staff adherence overlay.
 4. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
@@ -71,6 +71,20 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-18 — Ship Stint 3.4 CRM convert (A14)
+
+- Optional `leads.email` (nullable, not unique) + `LeadEmail` VO; create/update/list
+  expose it. Migration `20260818100000_leads_email` applied local + remote.
+- `POST /gym-orgs/:gymOrgId/leads/:leadId/convert` creates a PENDING membership
+  invite (name/phone from lead; email = body `invitedEmail` ?? lead email). Marks
+  `CONVERTED` and sets `converted_membership_invite_id`. Cross-feature via
+  `CreateMembershipInviteFromLead` port wired at composition-root.
+- Tests: domain + use cases + routes; integration convert with and without stored
+  email (Vitest 258 unit tests).
+- Docs: leads/api/flows/MVP/Orbit 3.4 done. Postman **Leads** Convert + email
+  fields in follow-up log if needed.
+- Deferred: follow-up push/inbox (3.5); invite email/push.
 
 ### 2026-08-18 — Sync Postman + docs after 3.3 health-sync
 

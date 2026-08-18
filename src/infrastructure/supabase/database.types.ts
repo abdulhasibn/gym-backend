@@ -988,6 +988,7 @@ export type Database = {
           created_at: string;
           created_by: string;
           deleted_at: string | null;
+          email: string | null;
           follow_up_date: string | null;
           gym_org_id: string;
           id: string;
@@ -1004,6 +1005,7 @@ export type Database = {
           created_at?: string;
           created_by: string;
           deleted_at?: string | null;
+          email?: string | null;
           follow_up_date?: string | null;
           gym_org_id: string;
           id?: string;
@@ -1020,6 +1022,7 @@ export type Database = {
           created_at?: string;
           created_by?: string;
           deleted_at?: string | null;
+          email?: string | null;
           follow_up_date?: string | null;
           gym_org_id?: string;
           id?: string;
