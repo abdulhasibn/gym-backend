@@ -260,7 +260,10 @@ describe('lead routes', () => {
     const leadId = create.body.lead.id as string;
     const body = { basePlanId, basePaymentStatus: 'paid' };
 
-    await supertest(app).post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`).send(body).expect(201);
+    await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`)
+      .send(body)
+      .expect(201);
     await supertest(app)
       .post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`)
       .send(body)

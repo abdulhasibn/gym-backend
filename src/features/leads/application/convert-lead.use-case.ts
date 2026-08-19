@@ -32,7 +32,10 @@ export class ConvertLeadUseCase {
     private readonly clock: Clock,
   ) {}
 
-  async execute(actor: AuthenticatedActor, command: ConvertLeadCommand): Promise<ConvertLeadResult> {
+  async execute(
+    actor: AuthenticatedActor,
+    command: ConvertLeadCommand,
+  ): Promise<ConvertLeadResult> {
     await this.policy.requireLeadAccess(actor, command.gymOrgId);
 
     const lead = await this.leads.findById(command.gymOrgId, command.leadId);

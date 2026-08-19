@@ -14,13 +14,18 @@ import { isOpenLeadStatus } from '../../domain/lead-status';
 
 const now = new Date('2026-08-07T00:00:00.000Z');
 
-function createLead(overrides: Partial<{ phone: string; name: string; email: string | null }> = {}): Lead {
+function createLead(
+  overrides: Partial<{ phone: string; name: string; email: string | null }> = {},
+): Lead {
   return Lead.create({
     id: toLeadId('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
     gymOrgId: toGymOrgId('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
     name: LeadName.create(overrides.name ?? 'Walk-in'),
     phone: LeadPhone.create(overrides.phone ?? '9876543210'),
-    email: overrides.email === undefined || overrides.email === null ? null : LeadEmail.create(overrides.email),
+    email:
+      overrides.email === undefined || overrides.email === null
+        ? null
+        : LeadEmail.create(overrides.email),
     source: 'walk-in',
     interest: null,
     notes: null,

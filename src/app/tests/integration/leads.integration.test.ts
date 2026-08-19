@@ -115,13 +115,13 @@ describe('leads HTTP (local Supabase)', () => {
     expect(converted.body.membershipInvite.invitedEmail).toBe('priya.convert@gym.test');
     expect(converted.body.membershipInvite.inviteePhone).toBe('9876543210');
 
-    const listed = await supertest(app)
-      .get(`/gym-orgs/${gymOrgId}/membership-invites`)
-      .set(header);
+    const listed = await supertest(app).get(`/gym-orgs/${gymOrgId}/membership-invites`).set(header);
     expect(listed.status).toBe(200);
-    expect(listed.body.membershipInvites.items.some((item: { id: string }) => item.id === converted.body.membershipInvite.id)).toBe(
-      true,
-    );
+    expect(
+      listed.body.membershipInvites.items.some(
+        (item: { id: string }) => item.id === converted.body.membershipInvite.id,
+      ),
+    ).toBe(true);
 
     const second = await supertest(app)
       .post(`/gym-orgs/${gymOrgId}/leads/${leadId}/convert`)

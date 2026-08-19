@@ -388,8 +388,7 @@ function createMembershipInviteFromLeadAdapter(
         inviteePhone,
         basePlanId: toMembershipPlanId(command.basePlanId),
         basePaymentStatus: command.basePaymentStatus,
-        addonPlanId:
-          command.addonPlanId === null ? null : toMembershipPlanId(command.addonPlanId),
+        addonPlanId: command.addonPlanId === null ? null : toMembershipPlanId(command.addonPlanId),
         addonPaymentStatus: command.addonPaymentStatus,
         expiresAt: command.expiresAt,
       });
