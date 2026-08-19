@@ -39,7 +39,7 @@ A8b still deferred within 1.5.
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; folders through **Health Sync** (3.3) synced git + cloud |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; 14 folders / 91 requests through **Convert Lead** (3.4) + Health Sync |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai) |
 
 **Supabase project**
@@ -71,6 +71,17 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-19 — Restore Postman cloud after empty-folder put
+
+- Previous MCP `putCollection` left most folders empty (Auth Email OTP, Gym
+  Orgs, Roster, Attendance, …). Git export was intact.
+- Restored cloud `Gym Backend API` from git via Postman PUT
+  (`Prefer: respond-async`). Verified 14 folders / 91 requests including
+  nested Auth and **Convert Lead**.
+- Postman git already on `main` (`9b0b561`): Convert Lead + email on
+  Create/Update. Audit `gapCount` 0.
+- Orbit Vercel deploy skipped this pass (`Not authorized` on CLI token).
 
 ### 2026-08-18 — Ship Stint 3.4 CRM convert (A14)
 
