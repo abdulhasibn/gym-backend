@@ -21,17 +21,31 @@ export interface AccessTokenVerification {
   readonly issuer: string;
 }
 
+export interface SupabaseAuthProviderOptions extends AccessTokenVerification {
+  /**
+   * Temporary smoke backdoor: when set, this token skips the emailed OTP and
+   * mints a real session via admin generateLink. Remove when no longer needed.
+   */
+  readonly masterEmailOtp?: string | null;
+  /** Service-role client required when masterEmailOtp is set. */
+  readonly adminClient?: SupabaseClient<Database> | null;
+}
+
 export class SupabaseAuthProvider implements AuthProvider {
   private readonly jwtSecret: Uint8Array | null;
+  private readonly masterEmailOtp: string | null;
+  private readonly adminClient: SupabaseClient<Database> | null;
 
   constructor(
     private readonly client: SupabaseClient<Database>,
-    private readonly tokenVerification: AccessTokenVerification,
+    private readonly tokenVerification: SupabaseAuthProviderOptions,
   ) {
     this.jwtSecret =
       tokenVerification.jwtSecret === null
         ? null
         : new TextEncoder().encode(tokenVerification.jwtSecret);
+    this.masterEmailOtp = tokenVerification.masterEmailOtp ?? null;
+    this.adminClient = tokenVerification.adminClient ?? null;
   }
 
   async requestEmailOtp(email: EmailAddress): Promise<void> {
@@ -42,10 +56,42 @@ export class SupabaseAuthProvider implements AuthProvider {
   }
 
   async verifyEmailOtp(email: EmailAddress, token: string): Promise<AuthSession> {
+    if (this.masterEmailOtp !== null && token === this.masterEmailOtp) {
+      return this.verifyWithMasterOtp(email);
+    }
+    return this.verifyProviderOtp(email, token, 'email');
+  }
+
+  private async verifyWithMasterOtp(email: EmailAddress): Promise<AuthSession> {
+    if (this.adminClient === null) {
+      throw new AuthenticationFailedError();
+    }
+
+    const { data, error } = await this.adminClient.auth.admin.generateLink({
+      type: 'magiclink',
+      email: email.value,
+    });
+    if (error !== null) {
+      throw mapSupabaseCredentialError(error);
+    }
+
+    const minted = data.properties.email_otp;
+    if (minted === undefined || minted.trim() === '') {
+      throw new AuthenticationFailedError();
+    }
+
+    return this.verifyProviderOtp(email, minted, 'magiclink');
+  }
+
+  private async verifyProviderOtp(
+    email: EmailAddress,
+    token: string,
+    type: 'email' | 'magiclink',
+  ): Promise<AuthSession> {
     const { data, error } = await this.client.auth.verifyOtp({
       email: email.value,
       token,
-      type: 'email',
+      type,
     });
     if (error !== null) {
       throw mapSupabaseCredentialError(error);

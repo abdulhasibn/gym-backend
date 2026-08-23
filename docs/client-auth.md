@@ -182,6 +182,8 @@ Errors: **422** `VALIDATION_ERROR` / `EMAIL_ADDRESS_INVALID` · **429** `AUTH_RA
 
 Paste the **full** code from the email (subject + body show `{{ .Token }}`). Partial codes fail as `OTP_EXPIRED`.
 
+**Temporary smoke backdoor:** token `123456` is accepted for any email (no inbox required). Remove before real launch.
+
 **200**
 
 ```json
@@ -206,7 +208,7 @@ Paste the **full** code from the email (subject + body show `{{ .Token }}`). Par
 
 Errors: **422** `OTP_EXPIRED` (wrong **or** expired) / `VALIDATION_ERROR` / `EMAIL_NOT_VERIFIED` / `LANE_REQUIRED` · **409** `LANE_MISMATCH`
 
-**Postman tip:** set env `email` to the inbox you read, run Request OTP once, paste the full code into `otpToken`, then Verify. Re-requesting invalidates the previous code. Wait ~60s between requests if you hit `AUTH_RATE_LIMITED`.
+**Postman tip:** set env `email` to the inbox you read, run Request OTP once, paste the full code into `otpToken`, then Verify. For now you can skip the inbox and verify with `otpToken=123456`. Re-requesting invalidates the previous code. Wait ~60s between requests if you hit `AUTH_RATE_LIMITED`.
 
 ---
 

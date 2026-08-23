@@ -23,6 +23,9 @@ import { AuthController } from './presentation/auth.controller';
 import { mapAuthError } from './presentation/auth.error-mapper';
 import { createAuthRouter } from './presentation/auth.routes';
 
+/** Temporary smoke backdoor for any email — remove when real OTP UX is enough. */
+const TEMP_MASTER_EMAIL_OTP = '123456';
+
 export function composeAuthFeature(
   authClient: SupabaseClient<Database>,
   dataClient: SupabaseClient<Database>,
@@ -35,6 +38,8 @@ export function composeAuthFeature(
   const authProvider = new SupabaseAuthProvider(authClient, {
     jwtSecret: options.jwtSecret,
     issuer: supabaseAuthIssuer(options.supabaseUrl),
+    masterEmailOtp: TEMP_MASTER_EMAIL_OTP,
+    adminClient: dataClient,
   });
   const users = new SupabaseAuthUserRepository(dataClient);
   const userQueries = new SupabaseAuthUserQueries(dataClient);

@@ -20,7 +20,7 @@ A8b still deferred within 1.5.
 | Food catalog seed | Done — 20 foods × 8 units (160 servings), `source=seed` |
 | Exercise catalog seed | Done — 30 movements, `source=seed` (ADR-0007) |
 | Feature RLS policies (beyond deny-all) | Not started — 36 public tables RLS on, no policies |
-| Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; access tokens verified locally (`getClaims` JWKS / jose HS256), not `auth.getUser` per request
+| Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; access tokens verified locally (`getClaims` JWKS / jose HS256), not `auth.getUser` per request; **temp master OTP `123456`** |
 | Auth automated tests | Partial — refresh use-case + route coverage added; Google provider E2E and remaining failure-path coverage still deferred |
 | HTTP integration (local Docker) | Done — 14 files / 39 tests via `pnpm test:integration`; default `pnpm test` stays offline; CI Docker job deferred |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
@@ -71,6 +71,12 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-23 — Temporary master OTP `123456` on verify
+
+- `SupabaseAuthProvider.verifyEmailOtp` accepts token `123456` for any email
+  (admin `generateLink` → real session). Wired in auth composition.
+- Docs: `client-auth.md` notes the smoke backdoor. Remove before launch.
 
 ### 2026-08-19 — Restore Postman cloud after empty-folder put
 

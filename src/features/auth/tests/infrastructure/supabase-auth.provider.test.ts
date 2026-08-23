@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { AuthenticationFailedError } from '../../domain/authentication-failed.error';
+import { EmailAddress } from '../../domain/email-address.value-object';
 import type { Database } from '../../../../infrastructure/supabase/database.types';
 import {
   SupabaseAuthProvider,
@@ -105,5 +106,111 @@ describe('SupabaseAuthProvider.getUserFromAccessToken', () => {
     expect(getClaims).toHaveBeenCalledWith(token);
     expect(identity.userId).toBe(userId);
     expect(identity.email?.value).toBe('member@example.com');
+  });
+});
+
+describe('SupabaseAuthProvider.verifyEmailOtp master OTP', () => {
+  it('mints a session via admin generateLink when token matches master OTP', async () => {
+    const generateLink = vi.fn(async () => ({
+      data: {
+        properties: { email_otp: '998877' },
+        user: { id: userId },
+      },
+      error: null,
+    }));
+    const verifyOtp = vi.fn(async () => ({
+      data: {
+        session: {
+          access_token: 'access-token',
+          refresh_token: 'refresh-token',
+          expires_in: 3600,
+        },
+        user: {
+          id: userId,
+          email: 'member@example.com',
+          email_confirmed_at: '2026-08-01T00:00:00.000Z',
+          user_metadata: { full_name: 'Member' },
+          identities: [],
+        },
+      },
+      error: null,
+    }));
+
+    const provider = new SupabaseAuthProvider(
+      { auth: { verifyOtp } } as unknown as SupabaseClient<Database>,
+      {
+        jwtSecret,
+        issuer,
+        masterEmailOtp: '123456',
+        adminClient: {
+          auth: { admin: { generateLink } },
+        } as unknown as SupabaseClient<Database>,
+      },
+    );
+
+    const session = await provider.verifyEmailOtp(
+      EmailAddress.create('member@example.com'),
+      '123456',
+    );
+
+    expect(generateLink).toHaveBeenCalledWith({
+      type: 'magiclink',
+      email: 'member@example.com',
+    });
+    expect(verifyOtp).toHaveBeenCalledWith({
+      email: 'member@example.com',
+      token: '998877',
+      type: 'magiclink',
+    });
+    expect(session).toMatchObject({
+      userId,
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+      expiresIn: 3600,
+      displayName: 'Member',
+    });
+    expect(session.email?.value).toBe('member@example.com');
+  });
+
+  it('uses the normal email OTP path when token is not the master OTP', async () => {
+    const generateLink = vi.fn();
+    const verifyOtp = vi.fn(async () => ({
+      data: {
+        session: {
+          access_token: 'access-token',
+          refresh_token: 'refresh-token',
+          expires_in: 3600,
+        },
+        user: {
+          id: userId,
+          email: 'member@example.com',
+          email_confirmed_at: '2026-08-01T00:00:00.000Z',
+          user_metadata: {},
+          identities: [],
+        },
+      },
+      error: null,
+    }));
+
+    const provider = new SupabaseAuthProvider(
+      { auth: { verifyOtp } } as unknown as SupabaseClient<Database>,
+      {
+        jwtSecret,
+        issuer,
+        masterEmailOtp: '123456',
+        adminClient: {
+          auth: { admin: { generateLink } },
+        } as unknown as SupabaseClient<Database>,
+      },
+    );
+
+    await provider.verifyEmailOtp(EmailAddress.create('member@example.com'), '654321');
+
+    expect(generateLink).not.toHaveBeenCalled();
+    expect(verifyOtp).toHaveBeenCalledWith({
+      email: 'member@example.com',
+      token: '654321',
+      type: 'email',
+    });
   });
 });
