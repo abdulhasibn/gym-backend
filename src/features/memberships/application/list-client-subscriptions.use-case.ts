@@ -19,9 +19,11 @@ export class ListClientSubscriptionsUseCase {
   ): Promise<readonly SubscriptionDto[]> {
     await this.policy.requirePlanAccess(actor, gymOrgId);
 
-    const summaries = await this.subscriptionQueries.listForClientAtGym(gymOrgId, clientUserId);
+    const summaries = await this.subscriptionQueries.listForClientAtGym(gymOrgId, clientUserId, {
+      requireActive: false,
+    });
     if (summaries === null) {
-      throw new NotFoundError('Active membership not found for client at this gym');
+      throw new NotFoundError('Membership not found for client at this gym');
     }
 
     return summaries.map(toSubscriptionDtoFromSummary);

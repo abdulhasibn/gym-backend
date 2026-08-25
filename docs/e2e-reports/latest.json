@@ -1,0 +1,304 @@
+{
+  "runAt": "2026-08-25T18:35:03.142Z",
+  "reason": "passed",
+  "summary": {
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0,
+    "notRun": 0,
+    "total": 29
+  },
+  "unhandledErrors": [],
+  "flows": [
+    {
+      "flowId": "ATTEND-001",
+      "scenario": "First client check-in recorded",
+      "expectedBehaviour": "Attendance row created for Sameer at IronCore",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey H",
+      "durationMs": 690,
+      "failureReason": null
+    },
+    {
+      "flowId": "AUTH-001",
+      "scenario": "Staff OTP → session → /auth/me",
+      "expectedBehaviour": "Arif gets an authenticated STAFF session and /auth/me shows ADMIN after gym create",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey A",
+      "durationMs": 649,
+      "failureReason": null
+    },
+    {
+      "flowId": "BLOCK-001",
+      "scenario": "Block ≠ payment",
+      "expectedBehaviour": "Paid+blocked check-in fails; unpaid+unblocked check-in succeeds",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey H",
+      "durationMs": 620,
+      "failureReason": null
+    },
+    {
+      "flowId": "CRM-001",
+      "scenario": "Lead pipeline → convert → PENDING invite",
+      "expectedBehaviour": "Lead CONVERTED; membership invite PENDING with invited email",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey G",
+      "durationMs": 784,
+      "failureReason": null
+    },
+    {
+      "flowId": "CRM-002",
+      "scenario": "Converted invite → ACTIVE member",
+      "expectedBehaviour": "Fahad accepts convert-created invite → ACTIVE + BASE/ADDON lines",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey G",
+      "durationMs": 784,
+      "failureReason": null
+    },
+    {
+      "flowId": "GRANT-001",
+      "scenario": "Optional class grants on accept",
+      "expectedBehaviour": "Chosen class grants (PROGRESS/CALORIES/…) present; MEDICAL_NOTES not auto-granted as class",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey B",
+      "durationMs": 949,
+      "failureReason": null
+    },
+    {
+      "flowId": "GRANT-010",
+      "scenario": "Grant then revoke CALORIES",
+      "expectedBehaviour": "Staff calorie read 200 with grant; 403 after CALORIES revoked",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey I",
+      "durationMs": 1340,
+      "failureReason": null
+    },
+    {
+      "flowId": "GRANT-011",
+      "scenario": "Offboard clears gym grants",
+      "expectedBehaviour": "After offboard, staff progress/calories 403; client grants at gym fail",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey I",
+      "durationMs": 1340,
+      "failureReason": null
+    },
+    {
+      "flowId": "GRANT-012",
+      "scenario": "Rejoin → fresh grants",
+      "expectedBehaviour": "Titan accept starts without IronCore class grants; Titan staff denied",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey I",
+      "durationMs": 1340,
+      "failureReason": null
+    },
+    {
+      "flowId": "GYM-001",
+      "scenario": "Create IronCore Gym",
+      "expectedBehaviour": "Gym exists; Arif is Admin owner of IronCore Gym",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey A",
+      "durationMs": 649,
+      "failureReason": null
+    },
+    {
+      "flowId": "GYM-010",
+      "scenario": "Client cannot create gym",
+      "expectedBehaviour": "CLIENT lane receives 403 on POST /gym-orgs",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey A",
+      "durationMs": 249,
+      "failureReason": null
+    },
+    {
+      "flowId": "INVITE-001",
+      "scenario": "Admin creates membership invite",
+      "expectedBehaviour": "PENDING invite created; Sameer not yet on ACTIVE roster",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey B",
+      "durationMs": 949,
+      "failureReason": null
+    },
+    {
+      "flowId": "MEMBER-001",
+      "scenario": "Accept → ACTIVE + subscriptions + grants",
+      "expectedBehaviour": "ACTIVE membership; BASE ₹1500 + ADDON ₹2000 snapshots; required DOB/HEIGHT/WEIGHT grants",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey B",
+      "durationMs": 949,
+      "failureReason": null
+    },
+    {
+      "flowId": "MEMBER-002",
+      "scenario": "Duplicate accept of same invite",
+      "expectedBehaviour": "Second accept 4xx; still exactly one ACTIVE membership",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey B",
+      "durationMs": 518,
+      "failureReason": null
+    },
+    {
+      "flowId": "MEMBER-010",
+      "scenario": "Staff email cannot receive membership invite",
+      "expectedBehaviour": "POST membership-invites returns 422 INVALID_MEMBERSHIP_INVITEE",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey B",
+      "durationMs": 437,
+      "failureReason": null
+    },
+    {
+      "flowId": "MEMBER-010b",
+      "scenario": "Staff cannot accept client invite",
+      "expectedBehaviour": "Staff bearer on accept returns 4xx; no membership created",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey B",
+      "durationMs": 626,
+      "failureReason": null
+    },
+    {
+      "flowId": "MEMBER-011",
+      "scenario": "One ACTIVE membership per client",
+      "expectedBehaviour": "ACTIVE at IronCore → Titan invite accept rejected; Titan has no ACTIVE row",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey B",
+      "durationMs": 763,
+      "failureReason": null
+    },
+    {
+      "flowId": "OFFBOARD-001",
+      "scenario": "Offboard retention",
+      "expectedBehaviour": "Roster INACTIVE; check-in denied; attendance history retained; Admin still lists subscriptions",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey H",
+      "durationMs": 711,
+      "failureReason": null
+    },
+    {
+      "flowId": "PLAN-001",
+      "scenario": "Create Base plan ₹1500 / 30d",
+      "expectedBehaviour": "BASE plan listed with price 1500 and duration 30",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey A",
+      "durationMs": 649,
+      "failureReason": null
+    },
+    {
+      "flowId": "PLAN-002",
+      "scenario": "Create Trainer addon ₹2000",
+      "expectedBehaviour": "ADDON plan with TRAINER_COACHING capability listed at price 2000",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey A",
+      "durationMs": 649,
+      "failureReason": null
+    },
+    {
+      "flowId": "PRIV-001",
+      "scenario": "Attendance isolation after rejoin",
+      "expectedBehaviour": "Titan gym-day / client attendance totals stay 0; IronCore history remains",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey I",
+      "durationMs": 1340,
+      "failureReason": null
+    },
+    {
+      "flowId": "STAFF-001",
+      "scenario": "Invite Rizwan as Trainer",
+      "expectedBehaviour": "Rizwan accepts; roleCode TRAINER; appears on gym trainer list",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey A",
+      "durationMs": 649,
+      "failureReason": null
+    },
+    {
+      "flowId": "SUB-001",
+      "scenario": "Unpaid Base still check-in",
+      "expectedBehaviour": "Base paymentStatus unpaid → POST check-in still 201",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey H",
+      "durationMs": 690,
+      "failureReason": null
+    },
+    {
+      "flowId": "SUB-002",
+      "scenario": "Unpaid Trainer addon still coaching",
+      "expectedBehaviour": "Addon unpaid but in-date → trainer diet assign still 201",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey H",
+      "durationMs": 814,
+      "failureReason": null
+    },
+    {
+      "flowId": "SUB-003",
+      "scenario": "Payment mutation + renewals-due",
+      "expectedBehaviour": "partial→paid and start-override succeed; renewals-due includes the line",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey H",
+      "durationMs": 711,
+      "failureReason": null
+    },
+    {
+      "flowId": "TENANT-001",
+      "scenario": "Cross-gym roster/leads/attendance",
+      "expectedBehaviour": "IronCore Admin gets 4xx on Titan members, leads, attendances",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey J",
+      "durationMs": 1606,
+      "failureReason": null
+    },
+    {
+      "flowId": "TENANT-002",
+      "scenario": "Cross-gym subscriptions",
+      "expectedBehaviour": "IronCore Admin cannot list/mutate Titan client subscriptions",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey J",
+      "durationMs": 1606,
+      "failureReason": null
+    },
+    {
+      "flowId": "TENANT-003",
+      "scenario": "Cross-gym client-owned progress",
+      "expectedBehaviour": "Staff cannot read Bilal progress via Titan or wrong gym path",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey J",
+      "durationMs": 1606,
+      "failureReason": null
+    },
+    {
+      "flowId": "TENANT-004",
+      "scenario": "Cross-gym coaching write",
+      "expectedBehaviour": "IronCore trainer diet assign on Titan client returns 4xx",
+      "result": "PASS",
+      "actualBehaviour": "Matched expected behaviour (all assertions passed)",
+      "journey": "Journey J",
+      "durationMs": 1606,
+      "failureReason": null
+    }
+  ]
+}

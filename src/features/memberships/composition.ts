@@ -30,6 +30,7 @@ import { UpdateMyDataGrantsUseCase } from './application/update-my-data-grants.u
 import { UpdateSubscriptionPaymentUseCase } from './application/update-subscription-payment.use-case';
 import type { LiveGymAdminPort } from './domain/live-gym-admin.port';
 import type { LiveTrainerProfilePort } from './domain/live-trainer-profile.port';
+import type { GymLocalClock } from './domain/gym-local-clock.port';
 import { SupabaseClientMembershipQueries } from './infrastructure/supabase-client-membership.queries';
 import { SupabaseClientMembershipRepository } from './infrastructure/supabase-client-membership.repository';
 import { SupabaseClientUserLookup } from './infrastructure/supabase-client-user-lookup';
@@ -65,6 +66,7 @@ export function composeMembershipsFeature(
   authenticate: RequestHandler,
   liveGymAdmin: LiveGymAdminPort,
   liveTrainerProfile: LiveTrainerProfilePort,
+  gymLocalClock: GymLocalClock,
 ) {
   const clock = new SystemClock();
   const ids = new UuidIdGenerator();
@@ -121,7 +123,14 @@ export function composeMembershipsFeature(
   const rosterController = new RosterController(
     new ListGymMembersUseCase(policy, membershipQueries),
     new ListMyAssignedMembersUseCase(trainerPolicy, membershipQueries),
-    new AssignTrainerUseCase(policy, memberships, subscriptions, liveTrainerProfile, clock),
+    new AssignTrainerUseCase(
+      policy,
+      memberships,
+      subscriptions,
+      liveTrainerProfile,
+      clock,
+      gymLocalClock,
+    ),
     new OffboardClientUseCase(policy, memberships, offboardMembership, clock),
     new SetCheckInBlockedUseCase(policy, memberships, clock),
   );

@@ -34,6 +34,11 @@ const trainerUserId = toUserId('33333333-3333-4333-8333-333333333333');
 const clientUserId = toUserId('22222222-2222-4222-8222-222222222222');
 const trainerProfileId = toTrainerProfileId('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
 const now = new Date('2026-08-09T00:00:00.000Z');
+const gymClock = {
+  async today() {
+    return CalendarDate.create('2026-08-09');
+  },
+};
 
 function adminActor(): AuthenticatedActor {
   return {
@@ -165,6 +170,7 @@ describe('AssignTrainerUseCase', () => {
       subscriptions,
       trainers,
       new FixedClock(now),
+      gymClock,
     );
 
     await expect(
@@ -192,6 +198,7 @@ describe('AssignTrainerUseCase', () => {
       subscriptions,
       trainers,
       new FixedClock(now),
+      gymClock,
     );
 
     const result = await useCase.execute(adminActor(), {
@@ -218,6 +225,7 @@ describe('AssignTrainerUseCase', () => {
       subscriptions,
       trainers,
       new FixedClock(now),
+      gymClock,
     );
 
     await expect(

@@ -80,6 +80,7 @@ export function composeApp(config: AppConfig): AppDependencies {
     enableGoogleCallbackHelper: config.nodeEnv !== 'production',
   });
   const gymOrgFeature = composeGymOrgFeature(supabaseClient, authFeature.authenticate);
+  const gymLocalClock = new GymOrgLocalClock({ findTimezone: gymOrgFeature.findTimezone });
   const membershipsFeature = composeMembershipsFeature(
     supabaseClient,
     authFeature.authenticate,
@@ -92,6 +93,7 @@ export function composeApp(config: AppConfig): AppDependencies {
       isLiveAtGym: (trainerProfileId, gymOrgId) =>
         gymOrgFeature.isLiveTrainerProfile(trainerProfileId, gymOrgId),
     },
+    { today: (gymOrgId, now) => gymLocalClock.today(gymOrgId, now) },
   );
   const leadsFeature = composeLeadsFeature(
     supabaseClient,
@@ -153,8 +155,6 @@ export function composeApp(config: AppConfig): AppDependencies {
       await membershipsFeature.subscriptions.save(subscription);
     },
   };
-
-  const gymLocalClock = new GymOrgLocalClock({ findTimezone: gymOrgFeature.findTimezone });
 
   const attendanceFeature = composeAttendanceFeature(supabaseClient, authFeature.authenticate, {
     liveGymAdmin: { isLiveAdmin: gymOrgFeature.isLiveAdmin },

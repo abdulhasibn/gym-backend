@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # Supabase CLI local cache
 supabase/.temp/
+
+# Timestamped E2E reports (keep latest.md / latest.json / README)
+docs/e2e-reports/report-*.md

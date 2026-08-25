@@ -2,8 +2,8 @@ import { NotFoundError } from '../../../domain/errors/not-found.error';
 import type { AuthenticatedActor } from '../../../domain/shared/authenticated-actor';
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { Clock } from '../../../shared/clock/clock';
-import { CalendarDate } from '../../../domain/shared/calendar-date.value-object';
 import type { ClientMembershipRepository } from '../domain/client-membership.repository';
+import type { GymLocalClock } from '../domain/gym-local-clock.port';
 import type { LiveTrainerProfilePort } from '../domain/live-trainer-profile.port';
 import type { MembershipId } from '../domain/membership-id';
 import type { SubscriptionRepository } from '../domain/subscription.repository';
@@ -25,6 +25,7 @@ export class AssignTrainerUseCase {
     private readonly subscriptions: SubscriptionRepository,
     private readonly trainers: LiveTrainerProfilePort,
     private readonly clock: Clock,
+    private readonly gymClock: GymLocalClock,
   ) {}
 
   async execute(
@@ -38,7 +39,7 @@ export class AssignTrainerUseCase {
       throw new NotFoundError('Active membership not found');
     }
 
-    const today = calendarDateFromClock(this.clock.now());
+    const today = await this.gymClock.today(command.gymOrgId, this.clock.now());
     const coachingAddon = await this.subscriptions.findInDateCoachingAddon(
       command.gymOrgId,
       membership.id,
@@ -59,11 +60,4 @@ export class AssignTrainerUseCase {
 
     return toMembershipMutationDto(membership);
   }
-}
-
-function calendarDateFromClock(now: Date): CalendarDate {
-  const yyyy = String(now.getUTCFullYear()).padStart(4, '0');
-  const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(now.getUTCDate()).padStart(2, '0');
-  return CalendarDate.create(`${yyyy}-${mm}-${dd}`);
 }

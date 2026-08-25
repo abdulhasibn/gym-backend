@@ -23,6 +23,7 @@ A8b still deferred within 1.5.
 | Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; access tokens verified locally (`getClaims` JWKS / jose HS256), not `auth.getUser` per request; **temp master OTP `123456`** |
 | Auth automated tests | Partial — refresh use-case + route coverage added; Google provider E2E and remaining failure-path coverage still deferred |
 | HTTP integration (local Docker) | Done — 14 files / 39 tests via `pnpm test:integration`; default `pnpm test` stays offline; CI Docker job deferred |
+| Story E2E journeys (IronCore) | Done — `pnpm test:e2e`; Journeys A/B/G/H/I/J under `src/app/tests/e2e/`; catalogue [`docs/e2e-flow-catalogue.md`](e2e-flow-catalogue.md) |
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
@@ -71,6 +72,22 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-08-25 — IronCore story E2E journeys (v1)
+
+- Added `pnpm test:e2e` (`vitest.e2e.config.ts`) on the same local Supabase
+  harness as integration tests.
+- Story builders + Journeys A/B/G/H/I/J under `src/app/tests/e2e/` — assert
+  ACTIVE membership materialization, one-ACTIVE guard, unpaid entitlement,
+  block≠payment, CRM convert→accept, grant revoke/offboard/rejoin, tenant
+  isolation.
+- Catalogue: `docs/e2e-flow-catalogue.md` (implemented vs integration vs future).
+- Product fix from E2E: Admin `list client subscriptions` retains history after
+  offboard (`requireActive: false`); client self-list still ACTIVE-only.
+- Product fix from E2E: `AssignTrainerUseCase` uses gym-local today (was UTC),
+  matching addon `ADMIN_ATTACH` dates from accept RPC.
+- Flow report: `pnpm test:e2e` writes `docs/e2e-reports/latest.md` (+ JSON).
+- Next up unchanged: Stint 3.5 notifications.
 
 ### 2026-08-23 — Temporary master OTP `123456` on verify
 

@@ -90,7 +90,11 @@ async function createTestApp(roleCode: 'ADMIN' | 'TRAINER' = 'ADMIN') {
   const controller = new RosterController(
     new ListGymMembersUseCase(policy, memberships),
     new ListMyAssignedMembersUseCase(new TrainerRosterPolicy(trainers), memberships),
-    new AssignTrainerUseCase(policy, memberships, subscriptions, trainers, clock),
+    new AssignTrainerUseCase(policy, memberships, subscriptions, trainers, clock, {
+      async today() {
+        return CalendarDate.create('2026-08-09');
+      },
+    }),
     new OffboardClientUseCase(
       policy,
       memberships,

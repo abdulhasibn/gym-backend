@@ -44,6 +44,7 @@ curl http://localhost:3000/health
 | [`docs/health-sync.md`](./docs/health-sync.md)               | Wearable connect, metrics sync, staff WEARABLES read                                    |
 | [`docs/api.md`](./docs/api.md)                               | Endpoint catalogue (trainers, attendance, profile/progress, diet, workout, health sync) |
 | [`docs/PROGRESS.md`](./docs/PROGRESS.md)                     | Current stage / next up                                                                 |
+| [`docs/e2e-flow-catalogue.md`](./docs/e2e-flow-catalogue.md) | IronCore story E2E flow IDs (implemented / future)                                  |
 | [`docs/MVP_ROADMAP.md`](./docs/MVP_ROADMAP.md)               | Build order (Orbit tab visualizes this)                                                 |
 | Postman                                                      | [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman)               |
 
@@ -60,6 +61,7 @@ curl http://localhost:3000/health
 | `pnpm test`                         | Run the Vitest suite once (excludes integration)    |
 | `pnpm test:watch`                   | Run Vitest in watch mode                            |
 | `pnpm test:integration`             | HTTP flows against local Docker Supabase            |
+| `pnpm test:e2e`                     | IronCore story journeys (gap-finding E2E)           |
 | `pnpm typecheck`                    | Type-check without emitting                         |
 | `pnpm lint` / `pnpm lint:fix`       | ESLint                                              |
 | `pnpm format` / `pnpm format:check` | Prettier                                            |
@@ -85,6 +87,24 @@ and does not start Docker.
 OTP mail is Mailpit at `http://127.0.0.1:54324` (`INBUCKET_URL`). The suite
 aborts unless `SUPABASE_URL` is loopback — never point `.env.integration` at
 the hosted project.
+
+## Story E2E journeys (IronCore)
+
+Gap-finding journeys that assert **business outcomes** (ACTIVE membership,
+payment ≠ entitlement, grants after offboard, tenant isolation), not endpoint
+smoke. Same local Supabase prereqs as integration tests.
+
+```bash
+pnpm test:e2e
+```
+
+After the run, open the flow report:
+
+- [`docs/e2e-reports/latest.md`](./docs/e2e-reports/latest.md) — each Flow ID, expected behaviour, actual behaviour, PASS/FAIL
+- [`docs/e2e-reports/latest.json`](./docs/e2e-reports/latest.json) — same data as JSON
+
+Catalogue: [`docs/e2e-flow-catalogue.md`](./docs/e2e-flow-catalogue.md).
+Tests live under `src/app/tests/e2e/`.
 
 ## Project structure
 

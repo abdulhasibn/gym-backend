@@ -85,6 +85,7 @@ export class InMemorySubscriptionStore implements SubscriptionRepository, Subscr
   async listForClientAtGym(
     gymOrgId: GymOrgId,
     clientUserId: UserId,
+    _options?: { readonly requireActive?: boolean },
   ): Promise<readonly SubscriptionSummary[] | null> {
     const membershipId = this.membershipByClientGym.get(`${clientUserId}:${gymOrgId}`);
     if (membershipId === undefined) {

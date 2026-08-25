@@ -44,12 +44,16 @@ export interface SubscriptionQueries {
   ): Promise<readonly SubscriptionSummary[]>;
 
   /**
-   * Lists live subscription lines for the client's ACTIVE membership at the gym.
-   * Returns `null` when there is no ACTIVE membership.
+   * Lists live subscription lines for the client's membership at the gym.
+   * When `requireActive` is true (default), only an ACTIVE membership qualifies.
+   * When false, returns lines for the latest non-deleted membership (ACTIVE or
+   * INACTIVE) so Admin billing history survives offboard.
+   * Returns `null` when no qualifying membership exists.
    */
   listForClientAtGym(
     gymOrgId: GymOrgId,
     clientUserId: UserId,
+    options?: { readonly requireActive?: boolean },
   ): Promise<readonly SubscriptionSummary[] | null>;
 
   /**

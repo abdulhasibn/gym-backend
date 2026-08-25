@@ -46,18 +46,27 @@ export class SupabaseSubscriptionQueries implements SubscriptionQueries {
   async listForClientAtGym(
     gymOrgId: GymOrgId,
     clientUserId: UserId,
+    options?: { readonly requireActive?: boolean },
   ): Promise<readonly SubscriptionSummary[] | null> {
-    const { data: membership, error: membershipError } = await this.client
+    const requireActive = options?.requireActive !== false;
+
+    let query = this.client
       .from('client_memberships')
       .select('id')
       .eq('gym_org_id', gymOrgId)
       .eq('client_user_id', clientUserId)
-      .eq('status', 'ACTIVE')
       .is('deleted_at', null)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (requireActive) {
+      query = query.eq('status', 'ACTIVE');
+    }
+
+    const { data: membership, error: membershipError } = await query.maybeSingle();
 
     if (membershipError !== null) {
-      throw new TransientDatabaseFailureError('Unable to resolve active membership', {
+      throw new TransientDatabaseFailureError('Unable to resolve membership for subscriptions', {
         cause: membershipError,
       });
     }
