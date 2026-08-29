@@ -15,10 +15,11 @@ export class SupabaseFoodCatalogQueries implements FoodCatalogQueries {
   async searchSeed(query: string): Promise<readonly FoodSearchHit[]> {
     const { data, error } = await this.client
       .from('food_items')
-      .select('*, food_item_servings(*)')
+      .select('*, food_item_servings!inner(*)')
       .eq('source', 'seed')
       .eq('active', true)
       .is('deleted_at', null)
+      .is('food_item_servings.deleted_at', null)
       .order('name', { ascending: true });
 
     if (error !== null) {

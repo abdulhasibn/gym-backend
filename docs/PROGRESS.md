@@ -73,6 +73,18 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-08-29 — fix food search 500 on production catalog bloat
+
+- `GET /foods/search` returned **500 `DATA_INTEGRITY`** when remote
+  `food_items` included ~4.7k bulk `source=seed` rows without
+  `food_item_servings`; search mapped every seed food and threw on the first
+  incomplete row (e.g. `adai dosa` before `Idli`).
+- Fix: inner join live servings in
+  `SupabaseFoodCatalogQueries.searchSeed` so only searchable foods load (20
+  bootstrap rows with 8 units each on remote).
+- Deferred: clean up or backfill the orphan seed rows; broader catalog seed
+  remains on the roadmap.
+
 ### 2026-08-25 — IronCore story E2E journeys (v1)
 
 - Added `pnpm test:e2e` (`vitest.e2e.config.ts`) on the same local Supabase
