@@ -41,6 +41,22 @@ export function createStaffDietTemplateRouter(
   return router;
 }
 
+/** Mount at `/gym-orgs/:gymOrgId/workout-plan-templates`. */
+export function createStaffWorkoutTemplateRouter(
+  controller: CoachingController,
+  authenticate: RequestHandler,
+): Router {
+  const router = Router({ mergeParams: true });
+  router.use(authenticate);
+  router.post('/', controller.createWorkoutTemplate);
+  router.get('/', controller.listWorkoutTemplates);
+  router.get('/:templateId', controller.getWorkoutTemplate);
+  router.post('/:templateId/duplicate', controller.duplicateWorkoutTemplate);
+  router.patch('/:templateId', controller.updateWorkoutTemplate);
+  router.delete('/:templateId', controller.deleteWorkoutTemplate);
+  return router;
+}
+
 export function createExercisesRouter(
   controller: CoachingController,
   authenticate: RequestHandler,
@@ -52,26 +68,38 @@ export function createExercisesRouter(
 }
 
 /** Mount at `/gym-orgs/:gymOrgId/clients/:clientUserId`. */
-export function createStaffWorkoutPlanRouter(
+export function createStaffWorkoutScheduleRouter(
   controller: CoachingController,
   authenticate: RequestHandler,
 ): Router {
   const router = Router({ mergeParams: true });
   router.use(authenticate);
-  router.post('/workout-plans', controller.assignWorkout);
-  router.get('/workout-plans', controller.staffGetWorkout);
+  router.put('/workout-schedule', controller.upsertSchedule);
+  router.get('/workout-schedule', controller.staffGetSchedule);
+  router.get('/workout-streak', controller.staffGetStreak);
   return router;
 }
 
-/** Mount at `/gym-orgs/:gymOrgId/my-workout-plan`. */
-export function createMyWorkoutPlanRouter(
+/** Mount at `/gym-orgs/:gymOrgId/my-workout-schedule`. */
+export function createMyWorkoutScheduleRouter(
   controller: CoachingController,
   authenticate: RequestHandler,
 ): Router {
   const router = Router({ mergeParams: true });
   router.use(authenticate);
-  router.get('/', controller.myWorkout);
-  router.post('/items/:itemId/complete', controller.completeWorkout);
-  router.delete('/items/:itemId/complete', controller.uncompleteWorkout);
+  router.get('/', controller.mySchedule);
+  router.post('/items/:itemId/complete', controller.completeSchedule);
+  router.delete('/items/:itemId/complete', controller.uncompleteSchedule);
+  return router;
+}
+
+/** Mount at `/gym-orgs/:gymOrgId/my-workout-streak`. */
+export function createMyWorkoutStreakRouter(
+  controller: CoachingController,
+  authenticate: RequestHandler,
+): Router {
+  const router = Router({ mergeParams: true });
+  router.use(authenticate);
+  router.get('/', controller.myStreak);
   return router;
 }

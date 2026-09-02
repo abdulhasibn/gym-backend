@@ -1858,6 +1858,317 @@ export type Database = {
           },
         ];
       };
+      workout_plan_template_exercises: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          exercise_item_id: string;
+          id: string;
+          notes: string | null;
+          reps: string | null;
+          sets: number | null;
+          sort_order: number;
+          updated_at: string;
+          workout_plan_template_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          exercise_item_id: string;
+          id?: string;
+          notes?: string | null;
+          reps?: string | null;
+          sets?: number | null;
+          sort_order?: number;
+          updated_at?: string;
+          workout_plan_template_id: string;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          exercise_item_id?: string;
+          id?: string;
+          notes?: string | null;
+          reps?: string | null;
+          sets?: number | null;
+          sort_order?: number;
+          updated_at?: string;
+          workout_plan_template_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_plan_template_exercises_exercise_item_id_fkey';
+            columns: ['exercise_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'exercise_items';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_plan_template_exercises_workout_plan_template_id_fkey';
+            columns: ['workout_plan_template_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_plan_templates';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workout_plan_templates: {
+        Row: {
+          cloned_from_id: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          gym_org_id: string;
+          id: string;
+          notes: string | null;
+          title: string;
+          trainer_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          cloned_from_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          gym_org_id: string;
+          id?: string;
+          notes?: string | null;
+          title: string;
+          trainer_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          cloned_from_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          gym_org_id?: string;
+          id?: string;
+          notes?: string | null;
+          title?: string;
+          trainer_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_plan_templates_cloned_from_id_fkey';
+            columns: ['cloned_from_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_plan_templates';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_plan_templates_gym_org_id_fkey';
+            columns: ['gym_org_id'];
+            isOneToOne: false;
+            referencedRelation: 'gym_orgs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_plan_templates_trainer_id_fkey';
+            columns: ['trainer_id'];
+            isOneToOne: false;
+            referencedRelation: 'trainer_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workout_schedule_days: {
+        Row: {
+          client_user_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          gym_org_id: string;
+          id: string;
+          kind: Database['public']['Enums']['workout_schedule_day_kind'];
+          schedule_date: string;
+          trainer_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          client_user_id: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          gym_org_id: string;
+          id?: string;
+          kind: Database['public']['Enums']['workout_schedule_day_kind'];
+          schedule_date: string;
+          trainer_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          client_user_id?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          gym_org_id?: string;
+          id?: string;
+          kind?: Database['public']['Enums']['workout_schedule_day_kind'];
+          schedule_date?: string;
+          trainer_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_schedule_days_client_user_id_fkey';
+            columns: ['client_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_schedule_days_gym_org_id_fkey';
+            columns: ['gym_org_id'];
+            isOneToOne: false;
+            referencedRelation: 'gym_orgs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_schedule_days_trainer_id_fkey';
+            columns: ['trainer_id'];
+            isOneToOne: false;
+            referencedRelation: 'trainer_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workout_schedule_exercise_completions: {
+        Row: {
+          client_user_id: string;
+          completed_on: string;
+          created_at: string;
+          id: string;
+          workout_schedule_exercise_id: string;
+        };
+        Insert: {
+          client_user_id: string;
+          completed_on: string;
+          created_at?: string;
+          id?: string;
+          workout_schedule_exercise_id: string;
+        };
+        Update: {
+          client_user_id?: string;
+          completed_on?: string;
+          created_at?: string;
+          id?: string;
+          workout_schedule_exercise_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_schedule_exercise_completions_client_user_id_fkey';
+            columns: ['client_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_schedule_exercise_completions_workout_schedule_exercise_id_fkey';
+            columns: ['workout_schedule_exercise_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_schedule_exercises';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workout_schedule_exercises: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          exercise_item_id: string;
+          id: string;
+          notes: string | null;
+          reps: string | null;
+          session_id: string;
+          sets: number | null;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          exercise_item_id: string;
+          id?: string;
+          notes?: string | null;
+          reps?: string | null;
+          session_id: string;
+          sets?: number | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          exercise_item_id?: string;
+          id?: string;
+          notes?: string | null;
+          reps?: string | null;
+          session_id?: string;
+          sets?: number | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_schedule_exercises_exercise_item_id_fkey';
+            columns: ['exercise_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'exercise_items';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_schedule_exercises_session_id_fkey';
+            columns: ['session_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_schedule_sessions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workout_schedule_sessions: {
+        Row: {
+          cloned_from_template_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          schedule_day_id: string;
+          slot: Database['public']['Enums']['workout_session_slot'];
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          cloned_from_template_id: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          schedule_day_id: string;
+          slot: Database['public']['Enums']['workout_session_slot'];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          cloned_from_template_id?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          schedule_day_id?: string;
+          slot?: Database['public']['Enums']['workout_session_slot'];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_schedule_sessions_cloned_from_template_id_fkey';
+            columns: ['cloned_from_template_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_plan_templates';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_schedule_sessions_schedule_day_id_fkey';
+            columns: ['schedule_day_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_schedule_days';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       workout_plans: {
         Row: {
           client_user_id: string;
@@ -2101,6 +2412,8 @@ export type Database = {
       staff_invite_target_role: 'TRAINER' | 'ADMIN';
       subscription_start_source: 'FIRST_ATTENDANCE' | 'ADMIN_OVERRIDE' | 'ADMIN_ATTACH';
       wearable_provider: 'APPLE_HEALTH' | 'HEALTH_CONNECT' | 'SAMSUNG_HEALTH';
+      workout_schedule_day_kind: 'TRAINING' | 'REST';
+      workout_session_slot: 'MORNING' | 'EVENING';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2281,6 +2594,8 @@ export const Constants = {
       staff_invite_target_role: ['TRAINER', 'ADMIN'],
       subscription_start_source: ['FIRST_ATTENDANCE', 'ADMIN_OVERRIDE', 'ADMIN_ATTACH'],
       wearable_provider: ['APPLE_HEALTH', 'HEALTH_CONNECT', 'SAMSUNG_HEALTH'],
+      workout_schedule_day_kind: ['TRAINING', 'REST'],
+      workout_session_slot: ['MORNING', 'EVENING'],
     },
   },
 } as const;

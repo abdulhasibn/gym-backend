@@ -157,3 +157,80 @@ export const assignDietPlanSchema = z.union([
 ]);
 
 export const dietPlanTemplateBodySchema = assignDietPlanMealsSchema;
+
+export const workoutPlanTemplateBodySchema = z
+  .object({
+    title: workoutTitleSchema,
+    notes: notesSchema,
+    exercises: z
+      .array(
+        z.object({
+          exerciseItemId: z.string().uuid(),
+          sets: z.number().int().min(1).max(99).nullable().optional(),
+          reps: z.string().max(40).nullable().optional(),
+          notes: notesSchema,
+        }),
+      )
+      .min(1),
+  })
+  .strict();
+
+export const workoutTemplateIdParamSchema = gymOrgIdParamSchema.extend({
+  templateId: z.string().uuid(),
+});
+
+const isoDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD');
+
+export const upsertWorkoutScheduleSchema = z
+  .object({
+    entries: z
+      .array(
+        z.discriminatedUnion('kind', [
+          z
+            .object({
+              date: isoDateSchema,
+              kind: z.literal('REST'),
+            })
+            .strict(),
+          z
+            .object({
+              date: isoDateSchema,
+              kind: z.literal('TRAINING'),
+              morningTemplateId: z.string().uuid().optional(),
+              eveningTemplateId: z.string().uuid().optional(),
+            })
+            .strict()
+            .refine(
+              (entry) =>
+                entry.morningTemplateId !== undefined || entry.eveningTemplateId !== undefined,
+              { message: 'TRAINING days require morningTemplateId and/or eveningTemplateId' },
+            ),
+        ]),
+      )
+      .min(1),
+  })
+  .strict();
+
+export const workoutScheduleRangeQuerySchema = z
+  .object({
+    from: isoDateSchema.optional(),
+    to: isoDateSchema.optional(),
+    date: isoDateSchema.optional(),
+  })
+  .superRefine((query, context) => {
+    if (query.date !== undefined) {
+      return;
+    }
+    if (query.from === undefined || query.to === undefined) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Provide from and to, or a single date',
+      });
+    }
+  });
+
+export const scheduleItemParamSchema = gymOrgIdParamSchema.extend({
+  itemId: z.string().uuid(),
+});

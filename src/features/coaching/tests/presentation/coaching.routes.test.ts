@@ -11,25 +11,34 @@ import { createErrorHandlerMiddleware } from '../../../../presentation/http/erro
 import type { Logger } from '../../../../shared/logging/logger.port';
 import { AssignDietPlanFromTemplateUseCase } from '../../application/assign-diet-plan-from-template.use-case';
 import { AssignDietPlanUseCase } from '../../application/assign-diet-plan.use-case';
-import { AssignWorkoutPlanUseCase } from '../../application/assign-workout-plan.use-case';
 import { CompleteDietItemUseCase } from '../../application/complete-diet-item.use-case';
-import { CompleteWorkoutExerciseUseCase } from '../../application/complete-workout-exercise.use-case';
+import { CompleteScheduleExerciseUseCase } from '../../application/complete-schedule-exercise.use-case';
 import { CreateDietPlanTemplateUseCase } from '../../application/create-diet-plan-template.use-case';
+import { CreateWorkoutPlanTemplateUseCase } from '../../application/create-workout-plan-template.use-case';
 import { DeleteDietPlanTemplateUseCase } from '../../application/delete-diet-plan-template.use-case';
+import { DeleteWorkoutPlanTemplateUseCase } from '../../application/delete-workout-plan-template.use-case';
 import { DietAssignPolicy } from '../../application/diet-assign.policy';
 import { DietClientPolicy } from '../../application/diet-client.policy';
 import { DietTemplatePolicy } from '../../application/diet-template.policy';
 import { DuplicateDietPlanTemplateUseCase } from '../../application/duplicate-diet-plan-template.use-case';
+import { DuplicateWorkoutPlanTemplateUseCase } from '../../application/duplicate-workout-plan-template.use-case';
 import { GetDietPlanTemplateUseCase } from '../../application/get-diet-plan-template.use-case';
 import { GetMyDietPlanUseCase } from '../../application/get-my-diet-plan.use-case';
-import { GetMyWorkoutPlanUseCase } from '../../application/get-my-workout-plan.use-case';
+import { GetMyWorkoutScheduleUseCase } from '../../application/get-my-workout-schedule.use-case';
+import { GetMyWorkoutStreakUseCase } from '../../application/get-my-workout-streak.use-case';
 import { GetStaffDietPlanUseCase } from '../../application/get-staff-diet-plan.use-case';
-import { GetStaffWorkoutPlanUseCase } from '../../application/get-staff-workout-plan.use-case';
+import { GetStaffWorkoutScheduleUseCase } from '../../application/get-staff-workout-schedule.use-case';
+import { GetStaffWorkoutStreakUseCase } from '../../application/get-staff-workout-streak.use-case';
+import { GetWorkoutPlanTemplateUseCase } from '../../application/get-workout-plan-template.use-case';
 import { ListDietPlanTemplatesUseCase } from '../../application/list-diet-plan-templates.use-case';
+import { ListWorkoutPlanTemplatesUseCase } from '../../application/list-workout-plan-templates.use-case';
 import { SearchExercisesUseCase } from '../../application/search-exercises.use-case';
 import { UncompleteDietItemUseCase } from '../../application/uncomplete-diet-item.use-case';
-import { UncompleteWorkoutExerciseUseCase } from '../../application/uncomplete-workout-exercise.use-case';
+import { UncompleteScheduleExerciseUseCase } from '../../application/uncomplete-schedule-exercise.use-case';
 import { UpdateDietPlanTemplateUseCase } from '../../application/update-diet-plan-template.use-case';
+import { UpdateWorkoutPlanTemplateUseCase } from '../../application/update-workout-plan-template.use-case';
+import { UpsertWorkoutScheduleUseCase } from '../../application/upsert-workout-schedule.use-case';
+import { WorkoutTemplatePolicy } from '../../application/workout-template.policy';
 import type { CoachingEntitlementPort } from '../../domain/coaching-entitlement.port';
 import type { DietPlan } from '../../domain/diet-plan.entity';
 import type { DietPlanQueries } from '../../domain/diet-plan.queries';
@@ -47,23 +56,35 @@ import type { LogPrescribedFood } from '../../domain/log-prescribed-food.port';
 import type { PrescribedDiaryQueries } from '../../domain/prescribed-diary.queries';
 import type { SeedCatalogPort } from '../../domain/seed-catalog.port';
 import { toTrainerProfileId } from '../../domain/trainer-profile-id';
+import type { WorkoutPlanTemplate } from '../../domain/workout-plan-template.entity';
+import type { WorkoutPlanTemplateId } from '../../domain/workout-plan-template-id';
+import type {
+  ListWorkoutPlanTemplatesCriteria,
+  WorkoutPlanTemplateQueries,
+  WorkoutPlanTemplateSummary,
+} from '../../domain/workout-plan-template.queries';
+import type { WorkoutPlanTemplateRepository } from '../../domain/workout-plan-template.repository';
 import { CoachingController } from '../../presentation/coaching.controller';
 import { mapCoachingError } from '../../presentation/coaching.error-mapper';
 import {
   createExercisesRouter,
-  createMyWorkoutPlanRouter,
+  createMyWorkoutScheduleRouter,
+  createMyWorkoutStreakRouter,
   createStaffDietPlanRouter,
   createStaffDietTemplateRouter,
-  createStaffWorkoutPlanRouter,
+  createStaffWorkoutScheduleRouter,
+  createStaffWorkoutTemplateRouter,
 } from '../../presentation/coaching.routes';
 import type { Page, Pagination } from '../../../../shared/pagination/pagination';
 import { toPage } from '../../../../shared/pagination/pagination';
 import type { GymOrgId } from '../../../../domain/shared/gym-org-id';
 import { toExerciseItemId } from '../../domain/exercise-item-id';
 import { InMemoryExerciseCatalog } from '../fakes/in-memory-exercise-catalog';
-import { InMemoryWorkoutCompletions } from '../fakes/in-memory-workout-completions';
-import { InMemoryWorkoutPlanQueries } from '../fakes/in-memory-workout-plan.queries';
-import { InMemoryWorkoutPlanRepository } from '../fakes/in-memory-workout-plan.repository';
+import { InMemoryWorkoutScheduleCompletions } from '../fakes/in-memory-workout-schedule-completions';
+import {
+  InMemoryWorkoutScheduleQueries,
+  InMemoryWorkoutScheduleRepository,
+} from '../fakes/in-memory-workout-schedule';
 
 class SilentLogger implements Logger {
   info(): void {}
@@ -166,6 +187,66 @@ function toSummary(row: DietPlanTemplate): DietPlanTemplateSummary {
   };
 }
 
+class MemoryWorkoutTemplates implements WorkoutPlanTemplateRepository {
+  readonly rows = new Map<string, WorkoutPlanTemplate>();
+
+  async findById(id: WorkoutPlanTemplateId, gymOrgIdToFind: GymOrgId) {
+    const row = this.rows.get(id);
+    if (row === undefined || row.gymOrgId !== gymOrgIdToFind || !row.isLive) {
+      return null;
+    }
+    return row;
+  }
+
+  async save(template: WorkoutPlanTemplate): Promise<void> {
+    this.rows.set(template.id, template);
+  }
+
+  async replace(template: WorkoutPlanTemplate): Promise<void> {
+    this.rows.set(template.id, template);
+  }
+}
+
+class MemoryWorkoutTemplateQueries implements WorkoutPlanTemplateQueries {
+  constructor(private readonly store: MemoryWorkoutTemplates) {}
+
+  async findById(id: WorkoutPlanTemplateId, gymOrgIdToFind: GymOrgId) {
+    const row = await this.store.findById(id, gymOrgIdToFind);
+    return row === null ? null : toWorkoutTemplateSummary(row);
+  }
+
+  async list(
+    criteria: ListWorkoutPlanTemplatesCriteria,
+    page: Pagination,
+  ): Promise<Page<WorkoutPlanTemplateSummary>> {
+    const items = [...this.store.rows.values()]
+      .filter((row) => row.isLive && row.gymOrgId === criteria.gymOrgId)
+      .map(toWorkoutTemplateSummary);
+    return toPage(items.slice(page.offset, page.offset + page.limit), items.length, page);
+  }
+}
+
+function toWorkoutTemplateSummary(row: WorkoutPlanTemplate): WorkoutPlanTemplateSummary {
+  return {
+    id: row.id,
+    gymOrgId: row.gymOrgId,
+    trainerId: row.trainerId,
+    title: row.title.value,
+    notes: row.notes,
+    clonedFromId: row.clonedFromId,
+    exercises: row.exercises.map((exercise) => ({
+      id: exercise.id,
+      exerciseItemId: exercise.exerciseItemId,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      notes: exercise.notes,
+      sortOrder: exercise.sortOrder,
+    })),
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
 function createApp(
   actor: AuthenticatedActor,
   options?: {
@@ -219,11 +300,14 @@ function createApp(
     { findLiveProfileId: async () => liveProfileId },
   );
   const templatePolicy = new DietTemplatePolicy(assignPolicy);
+  const workoutTemplatePolicy = new WorkoutTemplatePolicy(assignPolicy);
   const clock = { now: () => new Date('2026-08-17T10:00:00.000Z') };
   const ids = { generate: () => crypto.randomUUID() };
-  const workoutPlans = new InMemoryWorkoutPlanRepository();
-  const workoutQueries = new InMemoryWorkoutPlanQueries(workoutPlans);
-  const workoutCompletions = new InMemoryWorkoutCompletions();
+  const workoutSchedule = new InMemoryWorkoutScheduleRepository();
+  const workoutScheduleQueries = new InMemoryWorkoutScheduleQueries(workoutSchedule);
+  const scheduleCompletions = new InMemoryWorkoutScheduleCompletions();
+  const workoutTemplates = new MemoryWorkoutTemplates();
+  const workoutTemplateQueries = new MemoryWorkoutTemplateQueries(workoutTemplates);
   const exerciseCatalog = new InMemoryExerciseCatalog();
   exerciseCatalog.seedExercise({
     id: toExerciseItemId('e0e00000-0000-4000-8000-000000000001'),
@@ -271,37 +355,86 @@ function createApp(
     new UpdateDietPlanTemplateUseCase(templatePolicy, catalog, templates, clock, ids),
     new DeleteDietPlanTemplateUseCase(templatePolicy, templates, clock),
     new SearchExercisesUseCase(exerciseCatalog),
-    new AssignWorkoutPlanUseCase(
+    new UpsertWorkoutScheduleUseCase(
       assignPolicy,
       entitlement,
-      exerciseCatalog,
-      workoutPlans,
+      workoutTemplates,
+      workoutSchedule,
       gymClock,
       clock,
       ids,
     ),
-    new GetStaffWorkoutPlanUseCase(assignPolicy, entitlement, workoutQueries),
-    new GetMyWorkoutPlanUseCase(
+    new GetStaffWorkoutScheduleUseCase(
+      assignPolicy,
+      entitlement,
+      workoutScheduleQueries,
+      scheduleCompletions,
+      {
+        async loadForActiveMembership() {
+          return { classGrants: ['WORKOUT_PLANS'] };
+        },
+      },
+    ),
+    new GetMyWorkoutScheduleUseCase(
       new DietClientPolicy(),
       entitlement,
-      workoutQueries,
-      workoutCompletions,
+      workoutScheduleQueries,
+      scheduleCompletions,
       gymClock,
       clock,
     ),
-    new CompleteWorkoutExerciseUseCase(
+    new CompleteScheduleExerciseUseCase(
       new DietClientPolicy(),
       entitlement,
-      workoutPlans,
-      workoutCompletions,
+      workoutSchedule,
+      scheduleCompletions,
       gymClock,
       clock,
     ),
-    new UncompleteWorkoutExerciseUseCase(
+    new UncompleteScheduleExerciseUseCase(
       new DietClientPolicy(),
       entitlement,
-      workoutPlans,
-      workoutCompletions,
+      workoutSchedule,
+      scheduleCompletions,
+      gymClock,
+      clock,
+    ),
+    new CreateWorkoutPlanTemplateUseCase(
+      workoutTemplatePolicy,
+      exerciseCatalog,
+      workoutTemplates,
+      clock,
+      ids,
+    ),
+    new ListWorkoutPlanTemplatesUseCase(workoutTemplatePolicy, workoutTemplateQueries),
+    new GetWorkoutPlanTemplateUseCase(workoutTemplatePolicy, workoutTemplateQueries),
+    new DuplicateWorkoutPlanTemplateUseCase(workoutTemplatePolicy, workoutTemplates, clock, ids),
+    new UpdateWorkoutPlanTemplateUseCase(
+      workoutTemplatePolicy,
+      exerciseCatalog,
+      workoutTemplates,
+      clock,
+      ids,
+    ),
+    new DeleteWorkoutPlanTemplateUseCase(workoutTemplatePolicy, workoutTemplates, clock),
+    new GetMyWorkoutStreakUseCase(
+      new DietClientPolicy(),
+      entitlement,
+      workoutScheduleQueries,
+      scheduleCompletions,
+      gymClock,
+      clock,
+    ),
+    new GetStaffWorkoutStreakUseCase(
+      assignPolicy,
+      entitlement,
+      workoutScheduleQueries,
+      scheduleCompletions,
+      {
+        async loadForActiveMembership() {
+          return { classGrants: ['WORKOUT_PLANS'] };
+        },
+      },
       gymClock,
       clock,
     ),
@@ -321,17 +454,25 @@ function createApp(
     '/gym-orgs/:gymOrgId/diet-plan-templates',
     createStaffDietTemplateRouter(controller, authenticate),
   );
+  app.use(
+    '/gym-orgs/:gymOrgId/workout-plan-templates',
+    createStaffWorkoutTemplateRouter(controller, authenticate),
+  );
   app.use('/exercises', createExercisesRouter(controller, authenticate));
   app.use(
     '/gym-orgs/:gymOrgId/clients/:clientUserId',
-    createStaffWorkoutPlanRouter(controller, authenticate),
+    createStaffWorkoutScheduleRouter(controller, authenticate),
   );
   app.use(
-    '/gym-orgs/:gymOrgId/my-workout-plan',
-    createMyWorkoutPlanRouter(controller, authenticate),
+    '/gym-orgs/:gymOrgId/my-workout-schedule',
+    createMyWorkoutScheduleRouter(controller, authenticate),
+  );
+  app.use(
+    '/gym-orgs/:gymOrgId/my-workout-streak',
+    createMyWorkoutStreakRouter(controller, authenticate),
   );
   app.use(createErrorHandlerMiddleware(new SilentLogger(), [mapCoachingError]));
-  return { app, templates };
+  return { app, templates, workoutTemplates };
 }
 
 describe('POST diet-plans', () => {
@@ -410,36 +551,107 @@ describe('diet-plan-templates', () => {
   });
 });
 
-describe('POST workout-plans', () => {
-  it('rejects a body without days', async () => {
+describe('PUT workout-schedule', () => {
+  it('rejects a body without entries', async () => {
     const { app } = createApp(trainer);
     const response = await request(app)
-      .post(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-plans`)
-      .send({ title: 'PPL' });
+      .put(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-schedule`)
+      .send({});
     expect(response.status).toBe(422);
   });
 
-  it('assigns a catalog workout plan', async () => {
+  it('upserts REST and TRAINING from templates', async () => {
     const { app } = createApp(trainer);
-    const response = await request(app)
-      .post(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-plans`)
+    const created = await request(app)
+      .post(`/gym-orgs/${gymOrgId}/workout-plan-templates`)
       .send({
-        title: 'PPL',
-        days: [
+        title: 'Circuit',
+        exercises: [
           {
-            dayLabel: 'Push',
-            exercises: [
-              {
-                exerciseItemId: 'e0e00000-0000-4000-8000-000000000001',
-                sets: 3,
-                reps: '8-12',
-              },
-            ],
+            exerciseItemId: 'e0e00000-0000-4000-8000-000000000001',
+            sets: 3,
+            reps: '8-12',
           },
         ],
       });
-    expect(response.status).toBe(201);
-    expect(response.body.workoutPlan.title).toBe('PPL');
-    expect(response.body.workoutPlan.days).toHaveLength(1);
+    expect(created.status).toBe(201);
+    const templateId = created.body.workoutPlanTemplate.id as string;
+
+    const response = await request(app)
+      .put(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-schedule`)
+      .send({
+        entries: [
+          { date: '2026-08-17', kind: 'TRAINING', morningTemplateId: templateId },
+          { date: '2026-08-18', kind: 'REST' },
+        ],
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.days).toHaveLength(2);
+    expect(response.body.days[0].sessions[0].title).toBe('Circuit');
+    expect(response.body.days[1].kind).toBe('REST');
+  });
+});
+
+describe('workout-plan-templates', () => {
+  const body = {
+    title: 'Circuit',
+    exercises: [
+      {
+        exerciseItemId: 'e0e00000-0000-4000-8000-000000000001',
+        sets: 3,
+        reps: '8-12',
+      },
+    ],
+  };
+
+  it('creates and lists templates', async () => {
+    const { app } = createApp(trainer);
+    const created = await request(app)
+      .post(`/gym-orgs/${gymOrgId}/workout-plan-templates`)
+      .send(body);
+    expect(created.status).toBe(201);
+    expect(created.body.workoutPlanTemplate.title).toBe('Circuit');
+
+    const listed = await request(app).get(`/gym-orgs/${gymOrgId}/workout-plan-templates`);
+    expect(listed.status).toBe(200);
+    expect(listed.body.workoutPlanTemplates.items).toHaveLength(1);
+  });
+
+  it('rejects an empty template body', async () => {
+    const { app } = createApp(trainer);
+    const response = await request(app)
+      .post(`/gym-orgs/${gymOrgId}/workout-plan-templates`)
+      .send({ title: 'Circuit' });
+    expect(response.status).toBe(422);
+  });
+});
+
+describe('workout streak routes', () => {
+  it('returns the client streak', async () => {
+    const clientActor: AuthenticatedActor = {
+      userId: toUserId(clientUserId),
+      roleCode: 'CLIENT',
+      lane: 'CLIENT',
+      email: 'c@example.com',
+      staffCode: null,
+    };
+    const { app } = createApp(clientActor);
+    const response = await request(app).get(`/gym-orgs/${gymOrgId}/my-workout-streak`);
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      asOf: '2026-08-17',
+      currentStreak: 0,
+      longestStreak: 0,
+      lookbackDays: 366,
+    });
+  });
+
+  it('returns staff streak when WORKOUT_PLANS is granted', async () => {
+    const { app } = createApp(trainer);
+    const response = await request(app).get(
+      `/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-streak`,
+    );
+    expect(response.status).toBe(200);
+    expect(response.body.lookbackDays).toBe(366);
   });
 });

@@ -27,11 +27,11 @@ Admin-created staff offer to an existing STAFF-lane user (via `staff_code` / QR)
 Post-accept membership (`ACTIVE` | `INACTIVE`). At most one `ACTIVE` per client. Check-in requires ACTIVE + in-date base subscription.
 
 **ClientOwnedRecord**:
-Data whose row is owned by the User (Client), never copied into a gym. Staff at a `GymOrg` may read it only through an explicit grant. Includes: `ClientProfile` (and medical notes), `ProgressLog`, `CalorieLog`, `WearableConnection` (+ metrics), and assigned `DietPlan` / `WorkoutPlan` instances (diet adherence is plan-linked `CalorieLogItem`s; workout still uses `PlanCompletion`). Survives gym changes and rejoin; a new gym sees it only if newly granted. Personal logs/profile carry **no** `gym_org_id` — tenancy for staff access lives on `DataGrant` only. Assigned plan instances may store assigning-gym / trainer as **provenance**, not as owner.
+Data whose row is owned by the User (Client), never copied into a gym. Staff at a `GymOrg` may read it only through an explicit grant. Includes: `ClientProfile` (and medical notes), `ProgressLog`, `CalorieLog`, `WearableConnection` (+ metrics), and assigned `DietPlan` / workout **schedule** instances (diet adherence is plan-linked `CalorieLogItem`s; workout uses schedule `PlanCompletion`). Survives gym changes and rejoin; a new gym sees it only if newly granted. Personal logs/profile carry **no** `gym_org_id` — tenancy for staff access lives on `DataGrant` only. Assigned plan/schedule instances may store assigning-gym / trainer as **provenance**, not as owner.
 _Avoid_: Gym-scoped personal data, per-membership copy of profile/progress/nutrition/health/plans, `gym_org_id` as owner on personal logs
 
 **GymOwnedRecord**:
-Tenant data owned by the `GymOrg`. No client grant required for staff to use it within that org. Includes: `ClientMembership`, `MembershipInvite`, `Subscription`, `Attendance`, `Lead`, `DietPlanTemplate`, and plan catalog / staff ops. `Attendance` is retained after the client leaves; it is the personal-data exception that stays with the gym.
+Tenant data owned by the `GymOrg`. No client grant required for staff to use it within that org. Includes: `ClientMembership`, `MembershipInvite`, `Subscription`, `Attendance`, `Lead`, `DietPlanTemplate`, `WorkoutPlanTemplate`, and plan catalog / staff ops. `Attendance` is retained after the client leaves; it is the personal-data exception that stays with the gym.
 _Avoid_: Calling membership or billing "client-owned"
 
 **Erasure**:
@@ -78,6 +78,14 @@ _Avoid_: Free-text `slot_name`; a second slot list for extras
 Gym-owned reusable diet structure (`gym_org_id` + authoring `trainer_id`). Trainer lists/edits **their** templates; Admin-as-Trainer sees all at that gym and can duplicate into **their** library. Assign copies meals onto a Client-owned `DietPlan` instance (snapshot; `cloned_from_template_id`). Ad-hoc meals-body assign remains (XOR with `templateId`). ADR-0008.
 _Avoid_: Null `diet_plans.client_user_id` for a library row; rewriting assigned instances when the template later changes
 
+**WorkoutPlanTemplate**:
+Gym-owned reusable workout structure (`gym_org_id` + authoring `trainer_id`) — **flat** catalog exercise list only (no day labels, no calendar schedule). Gym-global **read**; author or Admin **mutate**; any trainer may **duplicate** into their library. Assign onto a client calendar via `WorkoutScheduleDay` (snapshot). ADR-0009.
+_Avoid_: Free-text exercise lines; Push/Pull days inside the template; rewriting schedule snapshots when the template later changes
+
+**WorkoutScheduleDay** / **WorkoutScheduleSession**:
+Client-owned calendar day for workouts at an assigning gym (`gym_org_id` provenance). `kind = REST` (no sessions) or `TRAINING` with 1–2 sessions (`MORNING` | `EVENING`). Each TRAINING session snapshots template title + exercises (new UUIDs). Upsert replaces only the listed dates. ADR-0010.
+_Avoid_: Week enums / Day1–N labels as the assign model; exercise body on assign; dual-running old dayLabel `WorkoutPlan` APIs
+
 **CalorieLog**:
 A Client's eaten-today diary (`ClientOwnedRecord`). Each item is `FoodItem` × `FoodServing` × qty, with snapshotted macros, in a `MealSlot`. A plan-linked item is how diet adherence is recorded; a null plan link is extra food.
 _Avoid_: Gym calorie log; a diet completion table separate from the diary; NL/manual lines that skip the catalog
@@ -91,8 +99,12 @@ A Client's body-metrics / weight-trend history. A `ClientOwnedRecord` — not ke
 _Avoid_: Gym-scoped progress, per-stint progress copy, independently writable profile weight that drifts from the log
 
 **PlanCompletion**:
-A per-calendar-day record that a Client completed a **workout** exercise (a catalog `ExerciseItem` on the assigned plan). A `ClientOwnedRecord` child of the assigned workout plan — not a field on the template, and not a logged set of weights. Diet adherence is a plan-linked `CalorieLogItem`, not this entity. Staff read (workout adherence) requires `WORKOUT_PLANS`. Calendar day uses the assigning gym's timezone.
+A per-calendar-day record that a Client completed a **workout** exercise line on their schedule (`workout_schedule_exercise_completions`). A `ClientOwnedRecord` — not a field on the template, and not a logged set of weights. Diet adherence is a plan-linked `CalorieLogItem`, not this entity. Staff read (workout adherence) requires `WORKOUT_PLANS`. Calendar day uses the assigning gym's timezone. Complete window is gym-local today ∈ `[D, D+2]` with `completed_on = schedule date D` (ADR-0011).
 _Avoid_: `completed_at` on template items; a second diet completion table alongside the diary; Hevy-style session set logs in MVP
+
+**WorkoutStreak**:
+Compute-on-read current/longest streak for a client at an assigning gym from schedule days + completions (ADR-0012). REST preserves; TRAINING counts only when dayDone; unscheduled days break; open today (incomplete TRAINING) is skipped for current. Staff read requires `WORKOUT_PLANS`.
+_Avoid_: Persisted streak counters; treating unscheduled days like REST
 
 **SoftDelete**:
 Mutable business entities use `deleted_at timestamptz NULL` (null = live), not a boolean. Repositories exclude non-null `deleted_at` by default. Distinct from lifecycle statuses and from `Erasure`.

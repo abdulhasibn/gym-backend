@@ -409,20 +409,20 @@ export const ROADMAP = {
         {
           id: "3.2",
           num: "3.2",
-          title: "Workout catalog + assign + completions",
-          body: "30-exercise seed + catalog search, assign/replace WorkoutPlan, Client gym-today complete. Gym templates and set logs later. Addon-gated.",
+          title: "Workout catalog + schedule + streaks",
+          body: "30-exercise seed + gym templates + date schedule (templateId snap) + [D, D+2] complete/adherence + compute-on-read streaks. Not set logs. Addon-gated.",
           paths: "src/features/coaching/",
           prd: "C6, T6",
           ownership: "client",
           status: "done",
           detail: {
-            purpose: "Hevy-style ExerciseItem identity under TRAINER_COACHING; still PlanCompletion (not set logs). ADR-0007.",
+            purpose: "ExerciseItem identity under TRAINER_COACHING; schedule completions + streaks (ADR-0007–0012). Not Hevy set logs.",
             howItWorks: [
-              "Search seed catalog (movement × equipment); no typed names.",
-              "Assign while addon in-date; Client completes per calendar day; WORKOUT_PLANS staff adherence overlay later.",
+              "Search seed catalog; gym templates; assign days via morning/evening templateId or REST.",
+              "Client completes in [D, D+2]; staff adherence/streak need WORKOUT_PLANS.",
             ],
-            acceptance: ["Assign from catalog + daily complete works with active addon."],
-            prdRefs: "C6, T6 · PRD §5.5 · ADR-0007",
+            acceptance: ["Template → schedule → complete + streak APIs work with active addon."],
+            prdRefs: "C6, T6 · PRD §5.5 · ADR-0007–0012",
           },
         },
         {

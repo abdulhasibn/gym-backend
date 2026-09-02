@@ -11,10 +11,10 @@ A8b still deferred within 1.5.
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
-| Domain glossary / PRD / architecture docs | Done — ADR-0006 food diary · ADR-0007 exercise catalog · ADR-0008 diet templates |
-| DBML source of truth (`docs/schema.dbml`) | Done — `leads.email` optional (A14) |
-| Supabase project + SQL migrations applied | Done — 24 local + remote; through `20260818100000` (leads email) |
-| Generated `database.types.ts` | Done — `leads.email` |
+| Domain glossary / PRD / architecture docs | Done — ADR-0006–0012 (food diary through workout streak) |
+| DBML source of truth (`docs/schema.dbml`) | Done — `leads.email` optional (A14); workout schedule tables |
+| Supabase project + SQL migrations applied | Done — local + remote; through workout schedule when applied |
+| Generated `database.types.ts` | Done — schedule tables + enums |
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
 | Food catalog seed | Done — 20 foods × 8 units (160 servings), `source=seed` |
@@ -34,13 +34,13 @@ A8b still deferred within 1.5.
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
-| Coaching workout (`src/features/coaching`) | Done — `GET /exercises/search`, assign/replace `WorkoutPlan`, staff GET, Client GET + per-day complete/uncomplete (not set logs; not CustomExercise; no gym workout templates) |
+| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule (ADR-0010), completion window + adherence (ADR-0011), streaks (ADR-0012); legacy dayLabel HTTP retired; not set logs; not CustomExercise |
 | Health sync (`src/features/health-sync`) | Done — connect/disconnect, batch metrics sync (device-push), client list, staff WEARABLES grant read; weight → ProgressLog via users port |
 | Other feature modules under `src/features/*` | Next **3.5** notifications; then audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; 14 folders / 91 requests through **Convert Lead** (3.4) + Health Sync |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; Coaching includes workout templates/schedule/streak (legacy dayLabel workout HTTP removed) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai) |
 
 **Supabase project**
@@ -51,16 +51,15 @@ A8b still deferred within 1.5.
 | Ref | `igcmptpjmagzwoccxcnw` |
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
-| Tables | 36 in `public`; RLS enabled (no policies) |
-| Migrations applied | 24 — remote through `20260818100000_leads_email` |
+| Tables | schedule + template tables in `public` after migrations; RLS enabled (no policies) |
+| Migrations applied | Through `20260902100000_workout_schedule` when applied locally/remote |
 | Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 30 |
 
 ## Next up
 
 1. **Stint 3.5** — notifications + scheduled jobs (T-2, unpaid digest, lead follow-ups).
 2. Then audit (3.6).
-3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs;
-   gym workout templates; T8 `WORKOUT_PLANS` staff adherence overlay.
+3. Later: broader food/exercise seed; CustomFood / CustomExercise APIs.
 4. Optional later within 1.5: A8b addon attach mid-cycle + renew-as-new-row.
 5. Feature-scoped RLS — not needed while the API uses service-role only.
 6. Extra Auth provider/failure-path tests — only when a concrete gap blocks
@@ -72,6 +71,53 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-02 — Sync Postman + docs/Orbit (workout 3.2)
+
+- Postman Coaching: removed legacy `workout-plans` / `my-workout-plan`
+  requests; added templates, schedule, complete window, streaks. Audit pass;
+  git `gym-backend-postman` `6fbd4aa`; cloud put async verified.
+- Status surfaces: README, MVP_ROADMAP 3.2 row, product-flows M7, Orbit
+  `roadmap-data.js` + mirror, `modules-data.js` M7 items → API live.
+- Showcase redeploy: `https://gym-prd-visual.vercel.app`.
+
+### 2026-09-02 — Workout streaks (ADR-0012)
+
+- Compute-on-read `currentStreak` / `longestStreak` over 366 gym-local days.
+- REST preserves; TRAINING requires dayDone; unscheduled breaks; open today
+  grace. Client `GET .../my-workout-streak`; staff
+  `GET .../clients/:id/workout-streak` behind `WORKOUT_PLANS`.
+- Workout master Phases 1–4 complete. Docs: ADR-0012, coaching/api/CONTEXT.
+
+### 2026-09-02 — Workout completion window + adherence (ADR-0011)
+
+- Complete/uncomplete window widened to gym-local today ∈ `[D, D+2]`;
+  `completed_on` always equals schedule date `D`.
+- Client GET overlays `completed` / `dayDone` / `adherencePercent` across range;
+  REST days `dayDone: true`.
+- Staff GET adherence fields only with live `WORKOUT_PLANS` grant (definition
+  still grant-free for assigning trainer). Feature-local `ClientDataGrantGate`.
+- Docs: ADR-0011, ADR-0010 amend, `coaching.md`, `CONTEXT.md`, schema note.
+
+### 2026-09-02 — Workout schedule Phase 2 (ADR-0010)
+
+- Replaced dayLabel client assign with date-based `workout_schedule_days` /
+  `sessions` / `exercises` + `workout_schedule_exercise_completions`.
+  Migration `20260902100000_workout_schedule.sql`.
+- Staff `PUT/GET .../workout-schedule`; client `GET .../my-workout-schedule`
+  (+ optional `date=`); complete/uncomplete on schedule exercise ids when
+  gym-local today === schedule date.
+- Legacy `workout-plans` / `my-workout-plan` HTTP retired (tables left in DB).
+- Docs: `coaching.md`, `api.md`, `CONTEXT.md`; unit/route tests updated.
+
+### 2026-09-02 — Gym workout plan templates (ADR-0009)
+
+- Added `workout_plan_templates` + `workout_plan_template_exercises` (flat
+  exercise library). Migration `20260902090000_workout_plan_templates.sql`.
+- Coaching APIs: CRUD + duplicate under `/gym-orgs/:gymOrgId/workout-plan-templates`.
+- ACL: gym-global read; author/Admin mutate; any trainer may duplicate into
+  their library. No schedule assign; diet unchanged.
+- Docs: ADR-0009, `docs/coaching.md`, `docs/api.md`, `docs/schema.dbml`.
 
 ### 2026-08-29 — fix food search 500 on production catalog bloat
 

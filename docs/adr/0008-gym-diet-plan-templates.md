@@ -19,6 +19,7 @@ Desk PT reuses the same cut/bulk meals across members. Authoring only on the cli
 - **Ad-hoc assign** (meals body on `POST .../diet-plans`) remains; XOR with `templateId`.
 - Creating/duplicating a template does **not** require a client or coaching addon. Seed catalog servings still must match.
 - Workout templates, cross-gym share, and client-to-client clone without a template are out.
+  (Workout templates later: ADR-0009.)
 
 ## Ownership / modules
 

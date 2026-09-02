@@ -175,11 +175,19 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | Method | Path | Guide |
 |--------|------|-------|
 | `GET` | `/exercises/search` | [coaching § Search](coaching.md#search-catalog) |
-| `POST` | `/gym-orgs/:gymOrgId/clients/:clientUserId/workout-plans` | [coaching § Assign](coaching.md#assign) |
-| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/workout-plans` | [coaching § Staff get](coaching.md#staff-get-definition) |
-| `GET` | `/gym-orgs/:gymOrgId/my-workout-plan` | [coaching § Client my plan](coaching.md#client-my-plan) |
-| `POST` | `/gym-orgs/:gymOrgId/my-workout-plan/items/:itemId/complete` | [coaching § Complete](coaching.md#complete--uncomplete) |
-| `DELETE` | `/gym-orgs/:gymOrgId/my-workout-plan/items/:itemId/complete` | [coaching § Complete](coaching.md#complete--uncomplete) |
+| `PUT` | `/gym-orgs/:gymOrgId/clients/:clientUserId/workout-schedule` | [coaching § Upsert schedule](coaching.md#upsert-schedule) |
+| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/workout-schedule` | [coaching § Staff get schedule](coaching.md#staff-get-schedule) |
+| `GET` | `/gym-orgs/:gymOrgId/my-workout-schedule` | [coaching § Client my schedule](coaching.md#client-my-schedule) |
+| `POST` | `/gym-orgs/:gymOrgId/my-workout-schedule/items/:itemId/complete` | [coaching § Complete](coaching.md#complete--uncomplete) |
+| `DELETE` | `/gym-orgs/:gymOrgId/my-workout-schedule/items/:itemId/complete` | [coaching § Complete](coaching.md#complete--uncomplete) |
+| `GET` | `/gym-orgs/:gymOrgId/my-workout-streak` | [coaching § Workout streak](coaching.md#workout-streak) |
+| `GET` | `/gym-orgs/:gymOrgId/clients/:clientUserId/workout-streak` | [coaching § Workout streak](coaching.md#workout-streak) |
+| `POST` | `/gym-orgs/:gymOrgId/workout-plan-templates` | [coaching § Gym workout templates](coaching.md#gym-workout-templates-adr-0009) |
+| `GET` | `/gym-orgs/:gymOrgId/workout-plan-templates` | [coaching § Gym workout templates](coaching.md#gym-workout-templates-adr-0009) |
+| `GET` | `/gym-orgs/:gymOrgId/workout-plan-templates/:templateId` | [coaching § Gym workout templates](coaching.md#gym-workout-templates-adr-0009) |
+| `POST` | `/gym-orgs/:gymOrgId/workout-plan-templates/:templateId/duplicate` | [coaching § Gym workout templates](coaching.md#gym-workout-templates-adr-0009) |
+| `PATCH` | `/gym-orgs/:gymOrgId/workout-plan-templates/:templateId` | [coaching § Gym workout templates](coaching.md#gym-workout-templates-adr-0009) |
+| `DELETE` | `/gym-orgs/:gymOrgId/workout-plan-templates/:templateId` | [coaching § Gym workout templates](coaching.md#gym-workout-templates-adr-0009) |
 
 ### Health sync (3.3)
 
@@ -196,4 +204,4 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 
 ## Not shipped yet
 
-Broader food/exercise seed, CustomFood / CustomExercise APIs, gym workout templates, staff `WORKOUT_PLANS` adherence overlay, push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).
+Broader food/exercise seed, CustomFood / CustomExercise APIs, push/jobs, audit writes, A8b addon attach/renew — see [`MVP_ROADMAP.md`](MVP_ROADMAP.md).

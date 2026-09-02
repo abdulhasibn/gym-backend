@@ -242,6 +242,20 @@ export function composeApp(config: AppConfig): AppDependencies {
         return serving !== null;
       },
     },
+    dataGrantGate: {
+      async loadForActiveMembership(clientUserId, gymOrgId) {
+        const snapshot = await membershipsFeature.dataGrantQueries.listForActiveMembership(
+          clientUserId,
+          gymOrgId,
+        );
+        if (snapshot === null) {
+          return null;
+        }
+        return {
+          classGrants: [...snapshot.classGrants],
+        };
+      },
+    },
   });
 
   const usersFeature = composeUsersFeature(supabaseClient, authFeature.authenticate, {
@@ -328,8 +342,10 @@ export function composeApp(config: AppConfig): AppDependencies {
       coachingFeature.staffDietTemplateRouter,
       coachingFeature.myDietPlanRouter,
       coachingFeature.exercisesRouter,
-      coachingFeature.staffWorkoutPlanRouter,
-      coachingFeature.myWorkoutPlanRouter,
+      coachingFeature.staffWorkoutScheduleRouter,
+      coachingFeature.myWorkoutScheduleRouter,
+      coachingFeature.myWorkoutStreakRouter,
+      coachingFeature.staffWorkoutTemplateRouter,
       healthSyncFeature.meWearableRouter,
       healthSyncFeature.staffClientWearableRouter,
     ),

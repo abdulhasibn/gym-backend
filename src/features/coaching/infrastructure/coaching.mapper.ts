@@ -1,4 +1,5 @@
 import { DataIntegrityError } from '../../../domain/errors/data-integrity.error';
+import { CalendarDate } from '../../../domain/shared/calendar-date.value-object';
 import { toDietPlanMealItemId } from '../../../domain/shared/diet-plan-meal-item-id';
 import { toFoodItemId } from '../../../domain/shared/food-item-id';
 import { toFoodServingId } from '../../../domain/shared/food-serving-id';
@@ -27,6 +28,17 @@ import { toWorkoutPlanId } from '../domain/workout-plan-id';
 import type { WorkoutPlanSummary } from '../domain/workout-plan.queries';
 import { WorkoutDayLabel } from '../domain/workout-day-label.value-object';
 import { WorkoutPlanTitle } from '../domain/workout-plan-title.value-object';
+import { WorkoutPlanTemplate } from '../domain/workout-plan-template.entity';
+import type { WorkoutPlanTemplateSummary } from '../domain/workout-plan-template.queries';
+import { toWorkoutPlanTemplateExerciseId } from '../domain/workout-plan-template-exercise-id';
+import { toWorkoutPlanTemplateId } from '../domain/workout-plan-template-id';
+import { WorkoutScheduleDay } from '../domain/workout-schedule-day.entity';
+import { parseWorkoutScheduleDayKind } from '../domain/workout-schedule-day-kind';
+import { toWorkoutScheduleDayId } from '../domain/workout-schedule-day-id';
+import { toWorkoutScheduleExerciseId } from '../domain/workout-schedule-exercise-id';
+import { toWorkoutScheduleSessionId } from '../domain/workout-schedule-session-id';
+import type { WorkoutScheduleDaySummary } from '../domain/workout-schedule.queries';
+import { parseWorkoutSessionSlot } from '../domain/workout-session-slot';
 
 type PlanRow = Database['public']['Tables']['diet_plans']['Row'];
 type MealRow = Database['public']['Tables']['diet_plan_meals']['Row'];
@@ -360,4 +372,231 @@ function exerciseNameAt(
     return nested[0]?.name ?? null;
   }
   return nested?.name ?? null;
+}
+
+type WorkoutTemplateRow = Database['public']['Tables']['workout_plan_templates']['Row'];
+type WorkoutTemplateExerciseRow =
+  Database['public']['Tables']['workout_plan_template_exercises']['Row'];
+
+export type WorkoutTemplateExerciseWithItem = WorkoutTemplateExerciseRow & {
+  exercise_items: { name: string } | { name: string }[] | null;
+};
+
+export type WorkoutTemplateWithExercises = WorkoutTemplateRow & {
+  workout_plan_template_exercises: WorkoutTemplateExerciseWithItem[] | null;
+};
+
+export function toWorkoutPlanTemplate(row: WorkoutTemplateWithExercises): WorkoutPlanTemplate {
+  try {
+    return WorkoutPlanTemplate.reconstitute({
+      id: toWorkoutPlanTemplateId(row.id),
+      gymOrgId: toGymOrgId(row.gym_org_id),
+      trainerId: toTrainerProfileId(row.trainer_id),
+      title: WorkoutPlanTitle.create(row.title),
+      notes: row.notes,
+      clonedFromId:
+        row.cloned_from_id === null ? null : toWorkoutPlanTemplateId(row.cloned_from_id),
+      exercises: toTemplateExercises(row),
+      deletedAt: row.deleted_at === null ? null : toValidDate(row.deleted_at),
+      createdAt: toValidDate(row.created_at),
+      updatedAt: toValidDate(row.updated_at),
+    });
+  } catch (error) {
+    throw new DataIntegrityError('Stored workout plan template is invalid', { cause: error });
+  }
+}
+
+export function toWorkoutPlanTemplateSummary(
+  row: WorkoutTemplateWithExercises,
+): WorkoutPlanTemplateSummary {
+  return {
+    id: toWorkoutPlanTemplateId(row.id),
+    gymOrgId: toGymOrgId(row.gym_org_id),
+    trainerId: toTrainerProfileId(row.trainer_id),
+    title: row.title,
+    notes: row.notes,
+    clonedFromId: row.cloned_from_id === null ? null : toWorkoutPlanTemplateId(row.cloned_from_id),
+    exercises: toTemplateExercises(row).map((exercise) => ({
+      id: exercise.id,
+      exerciseItemId: exercise.exerciseItemId,
+      name: templateExerciseName(row, exercise.id) ?? exercise.exerciseItemId,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      notes: exercise.notes,
+      sortOrder: exercise.sortOrder,
+    })),
+    createdAt: toValidDate(row.created_at).toISOString(),
+    updatedAt: toValidDate(row.updated_at).toISOString(),
+  };
+}
+
+export function toWorkoutPlanTemplateInsert(
+  template: WorkoutPlanTemplate,
+): Database['public']['Tables']['workout_plan_templates']['Insert'] {
+  return {
+    id: template.id,
+    gym_org_id: template.gymOrgId,
+    trainer_id: template.trainerId,
+    title: template.title.value,
+    notes: template.notes,
+    cloned_from_id: template.clonedFromId,
+    deleted_at: template.deletedAt === null ? null : template.deletedAt.toISOString(),
+    created_at: template.createdAt.toISOString(),
+    updated_at: template.updatedAt.toISOString(),
+  };
+}
+
+function toTemplateExercises(row: WorkoutTemplateWithExercises) {
+  return (row.workout_plan_template_exercises ?? [])
+    .filter((exercise) => exercise.deleted_at === null)
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((exercise) => ({
+      id: toWorkoutPlanTemplateExerciseId(exercise.id),
+      exerciseItemId: toExerciseItemId(exercise.exercise_item_id),
+      sets: exercise.sets,
+      reps: exercise.reps,
+      notes: exercise.notes,
+      sortOrder: exercise.sort_order,
+    }));
+}
+
+function templateExerciseName(
+  row: WorkoutTemplateWithExercises,
+  exerciseId: string,
+): string | null {
+  const exercise = (row.workout_plan_template_exercises ?? []).find(
+    (candidate) => candidate.id === exerciseId,
+  );
+  if (exercise === undefined) {
+    return null;
+  }
+  const nested = exercise.exercise_items;
+  if (Array.isArray(nested)) {
+    return nested[0]?.name ?? null;
+  }
+  return nested?.name ?? null;
+}
+
+type ScheduleDayRow = Database['public']['Tables']['workout_schedule_days']['Row'];
+type ScheduleSessionRow = Database['public']['Tables']['workout_schedule_sessions']['Row'];
+type ScheduleExerciseRow = Database['public']['Tables']['workout_schedule_exercises']['Row'];
+
+export type ScheduleExerciseWithItem = ScheduleExerciseRow & {
+  exercise_items: { name: string } | { name: string }[] | null;
+};
+
+export type ScheduleSessionWithExercises = ScheduleSessionRow & {
+  workout_schedule_exercises: ScheduleExerciseWithItem[] | null;
+};
+
+export type ScheduleDayWithSessions = ScheduleDayRow & {
+  workout_schedule_sessions: ScheduleSessionWithExercises[] | null;
+};
+
+export function toWorkoutScheduleDay(row: ScheduleDayWithSessions): WorkoutScheduleDay {
+  try {
+    return WorkoutScheduleDay.reconstitute({
+      id: toWorkoutScheduleDayId(row.id),
+      clientUserId: toUserId(row.client_user_id),
+      gymOrgId: toGymOrgId(row.gym_org_id),
+      trainerId: toTrainerProfileId(row.trainer_id),
+      scheduleDate: CalendarDate.create(row.schedule_date),
+      kind: parseWorkoutScheduleDayKind(row.kind),
+      sessions: toScheduleSessions(row),
+      deletedAt: row.deleted_at === null ? null : toValidDate(row.deleted_at),
+      createdAt: toValidDate(row.created_at),
+      updatedAt: toValidDate(row.updated_at),
+    });
+  } catch (error) {
+    throw new DataIntegrityError('Stored workout schedule day is invalid', { cause: error });
+  }
+}
+
+export function toWorkoutScheduleDaySummary(
+  row: ScheduleDayWithSessions,
+): WorkoutScheduleDaySummary {
+  return {
+    id: toWorkoutScheduleDayId(row.id),
+    clientUserId: toUserId(row.client_user_id),
+    gymOrgId: toGymOrgId(row.gym_org_id),
+    trainerId: row.trainer_id,
+    scheduleDate: row.schedule_date,
+    kind: parseWorkoutScheduleDayKind(row.kind),
+    sessions: toScheduleSessions(row).map((session) => ({
+      id: session.id,
+      slot: session.slot,
+      title: session.title,
+      clonedFromTemplateId: session.clonedFromTemplateId,
+      exercises: session.exercises.map((exercise) => ({
+        id: exercise.id,
+        exerciseItemId: exercise.exerciseItemId,
+        name: scheduleExerciseName(row, exercise.id) ?? exercise.exerciseItemId,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        notes: exercise.notes,
+        sortOrder: exercise.sortOrder,
+      })),
+    })),
+    createdAt: toValidDate(row.created_at).toISOString(),
+    updatedAt: toValidDate(row.updated_at).toISOString(),
+  };
+}
+
+export function toWorkoutScheduleDayInsert(
+  day: WorkoutScheduleDay,
+): Database['public']['Tables']['workout_schedule_days']['Insert'] {
+  return {
+    id: day.id,
+    client_user_id: day.clientUserId,
+    gym_org_id: day.gymOrgId,
+    trainer_id: day.trainerId,
+    schedule_date: day.scheduleDate.value,
+    kind: day.kind,
+    deleted_at: day.deletedAt === null ? null : day.deletedAt.toISOString(),
+    created_at: day.createdAt.toISOString(),
+    updated_at: day.updatedAt.toISOString(),
+  };
+}
+
+function toScheduleSessions(row: ScheduleDayWithSessions) {
+  return (row.workout_schedule_sessions ?? [])
+    .filter((session) => session.deleted_at === null)
+    .sort((a, b) => a.slot.localeCompare(b.slot))
+    .map((session) => ({
+      id: toWorkoutScheduleSessionId(session.id),
+      slot: parseWorkoutSessionSlot(session.slot),
+      title: session.title,
+      clonedFromTemplateId: toWorkoutPlanTemplateId(session.cloned_from_template_id),
+      exercises: (session.workout_schedule_exercises ?? [])
+        .filter((exercise) => exercise.deleted_at === null)
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((exercise) => ({
+          id: toWorkoutScheduleExerciseId(exercise.id),
+          exerciseItemId: toExerciseItemId(exercise.exercise_item_id),
+          sets: exercise.sets,
+          reps: exercise.reps,
+          notes: exercise.notes,
+          sortOrder: exercise.sort_order,
+        })),
+    }));
+}
+
+function scheduleExerciseName(
+  row: ScheduleDayWithSessions,
+  exerciseId: string,
+): string | null {
+  for (const session of row.workout_schedule_sessions ?? []) {
+    const exercise = (session.workout_schedule_exercises ?? []).find(
+      (candidate) => candidate.id === exerciseId,
+    );
+    if (exercise === undefined) {
+      continue;
+    }
+    const nested = exercise.exercise_items;
+    if (Array.isArray(nested)) {
+      return nested[0]?.name ?? null;
+    }
+    return nested?.name ?? null;
+  }
+  return null;
 }

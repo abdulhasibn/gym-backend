@@ -28,8 +28,10 @@ export function createRouter(
   staffDietTemplateRouter: RequestHandler,
   myDietPlanRouter: RequestHandler,
   exercisesRouter: RequestHandler,
-  staffWorkoutPlanRouter: RequestHandler,
-  myWorkoutPlanRouter: RequestHandler,
+  staffWorkoutScheduleRouter: RequestHandler,
+  myWorkoutScheduleRouter: RequestHandler,
+  myWorkoutStreakRouter: RequestHandler,
+  staffWorkoutTemplateRouter: RequestHandler,
   meWearableRouter: RequestHandler,
   staffClientWearableRouter: RequestHandler,
 ): Router {
@@ -62,10 +64,12 @@ export function createRouter(
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientCalorieLogRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientWearableRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffDietPlanRouter);
-  router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffWorkoutPlanRouter);
+  router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffWorkoutScheduleRouter);
   router.use('/gym-orgs/:gymOrgId/diet-plan-templates', staffDietTemplateRouter);
+  router.use('/gym-orgs/:gymOrgId/workout-plan-templates', staffWorkoutTemplateRouter);
   router.use('/gym-orgs/:gymOrgId/my-diet-plan', myDietPlanRouter);
-  router.use('/gym-orgs/:gymOrgId/my-workout-plan', myWorkoutPlanRouter);
+  router.use('/gym-orgs/:gymOrgId/my-workout-schedule', myWorkoutScheduleRouter);
+  router.use('/gym-orgs/:gymOrgId/my-workout-streak', myWorkoutStreakRouter);
   router.use('/membership-invites', membershipInviteClientRouter);
 
   return router;

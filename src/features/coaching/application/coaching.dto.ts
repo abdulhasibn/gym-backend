@@ -8,6 +8,13 @@ import type { ExerciseSearchHit } from '../domain/exercise-catalog.queries';
 import type { WorkoutPlan } from '../domain/workout-plan.entity';
 import type { WorkoutPlanExerciseId } from '../domain/workout-plan-exercise-id';
 import type { WorkoutPlanSummary } from '../domain/workout-plan.queries';
+import type { WorkoutPlanTemplate } from '../domain/workout-plan-template.entity';
+import type { WorkoutPlanTemplateSummary } from '../domain/workout-plan-template.queries';
+import type { WorkoutScheduleDay } from '../domain/workout-schedule-day.entity';
+import type {
+  WorkoutScheduleDaySummary,
+} from '../domain/workout-schedule.queries';
+import type { WorkoutScheduleExerciseId } from '../domain/workout-schedule-exercise-id';
 
 export interface DietPlanItemDto {
   readonly id: string;
@@ -302,4 +309,239 @@ export function toWorkoutPlanDtoFromSummary(
     createdAt: summary.createdAt,
     updatedAt: summary.updatedAt,
   };
+}
+
+export interface WorkoutPlanTemplateExerciseDto {
+  readonly id: string;
+  readonly exerciseItemId: string;
+  readonly name?: string;
+  readonly sets: number | null;
+  readonly reps: string | null;
+  readonly notes: string | null;
+}
+
+export interface WorkoutPlanTemplateDto {
+  readonly id: string;
+  readonly gymOrgId: string;
+  readonly trainerId: string;
+  readonly title: string;
+  readonly notes: string | null;
+  readonly clonedFromId: string | null;
+  readonly exercises: readonly WorkoutPlanTemplateExerciseDto[];
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export function toWorkoutPlanTemplateDto(template: WorkoutPlanTemplate): WorkoutPlanTemplateDto {
+  return {
+    id: template.id,
+    gymOrgId: template.gymOrgId,
+    trainerId: template.trainerId,
+    title: template.title.value,
+    notes: template.notes,
+    clonedFromId: template.clonedFromId,
+    exercises: template.exercises.map((exercise) => ({
+      id: exercise.id,
+      exerciseItemId: exercise.exerciseItemId,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      notes: exercise.notes,
+    })),
+    createdAt: template.createdAt.toISOString(),
+    updatedAt: template.updatedAt.toISOString(),
+  };
+}
+
+export function toWorkoutPlanTemplateDtoFromSummary(
+  summary: WorkoutPlanTemplateSummary,
+): WorkoutPlanTemplateDto {
+  return {
+    id: summary.id,
+    gymOrgId: summary.gymOrgId,
+    trainerId: summary.trainerId,
+    title: summary.title,
+    notes: summary.notes,
+    clonedFromId: summary.clonedFromId,
+    exercises: summary.exercises.map((exercise) => ({
+      id: exercise.id,
+      exerciseItemId: exercise.exerciseItemId,
+      name: exercise.name,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      notes: exercise.notes,
+    })),
+    createdAt: summary.createdAt,
+    updatedAt: summary.updatedAt,
+  };
+}
+
+// ─── Workout Schedule DTOs ────────────────────────────────────────────────────
+
+export interface WorkoutScheduleExerciseDto {
+  readonly id: string;
+  readonly exerciseItemId: string;
+  readonly name?: string;
+  readonly sets: number | null;
+  readonly reps: string | null;
+  readonly notes: string | null;
+  readonly sortOrder: number;
+  readonly completed?: boolean;
+}
+
+export interface WorkoutScheduleSessionDto {
+  readonly id: string;
+  readonly slot: string;
+  readonly title: string;
+  readonly clonedFromTemplateId: string;
+  readonly exercises: readonly WorkoutScheduleExerciseDto[];
+}
+
+export interface WorkoutScheduleDayDto {
+  readonly id: string;
+  readonly clientUserId: string;
+  readonly gymOrgId: string;
+  readonly trainerId: string;
+  readonly scheduleDate: string;
+  readonly kind: string;
+  readonly sessions: readonly WorkoutScheduleSessionDto[];
+  readonly writable?: boolean;
+  readonly dayDone?: boolean;
+  readonly adherencePercent?: number | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface WorkoutScheduleAdherenceExtras {
+  readonly writable?: boolean;
+  readonly completedExerciseIds?: ReadonlySet<WorkoutScheduleExerciseId>;
+  /** When true, attach dayDone / adherencePercent / completed flags. */
+  readonly includeAdherence?: boolean;
+}
+
+export function toWorkoutScheduleDayDtoFromEntity(
+  day: WorkoutScheduleDay,
+  extras?: WorkoutScheduleAdherenceExtras,
+): WorkoutScheduleDayDto {
+  const includeAdherence = extras?.includeAdherence === true;
+  const completedIds = extras?.completedExerciseIds;
+  const exerciseIds = day.sessions.flatMap((session) => session.exercises.map((ex) => ex.id));
+  const completedCount =
+    completedIds === undefined
+      ? 0
+      : exerciseIds.filter((id) => completedIds.has(id)).length;
+
+  return {
+    id: day.id,
+    clientUserId: day.clientUserId,
+    gymOrgId: day.gymOrgId,
+    trainerId: day.trainerId,
+    scheduleDate: day.scheduleDate.value,
+    kind: day.kind,
+    sessions: day.sessions.map((session) => ({
+      id: session.id,
+      slot: session.slot,
+      title: session.title,
+      clonedFromTemplateId: session.clonedFromTemplateId,
+      exercises: session.exercises.map((exercise) => ({
+        id: exercise.id,
+        exerciseItemId: exercise.exerciseItemId,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        notes: exercise.notes,
+        sortOrder: exercise.sortOrder,
+        completed: includeAdherence
+          ? (completedIds?.has(exercise.id) ?? false)
+          : undefined,
+      })),
+    })),
+    writable: extras?.writable,
+    ...(includeAdherence
+      ? adherenceFields(day.kind, exerciseIds.length, completedCount)
+      : {}),
+    createdAt: day.createdAt.toISOString(),
+    updatedAt: day.updatedAt.toISOString(),
+  };
+}
+
+export function toWorkoutScheduleDayDtoFromSummary(
+  summary: WorkoutScheduleDaySummary,
+  extras?: WorkoutScheduleAdherenceExtras,
+): WorkoutScheduleDayDto {
+  const includeAdherence = extras?.includeAdherence === true;
+  const completedIds = extras?.completedExerciseIds;
+  const exerciseIds = summary.sessions.flatMap((session) =>
+    session.exercises.map((ex) => ex.id),
+  );
+  const completedCount =
+    completedIds === undefined
+      ? 0
+      : exerciseIds.filter((id) => completedIds.has(id)).length;
+
+  return {
+    id: summary.id,
+    clientUserId: summary.clientUserId,
+    gymOrgId: summary.gymOrgId,
+    trainerId: summary.trainerId,
+    scheduleDate: summary.scheduleDate,
+    kind: summary.kind,
+    sessions: summary.sessions.map((session) => ({
+      id: session.id,
+      slot: session.slot,
+      title: session.title,
+      clonedFromTemplateId: session.clonedFromTemplateId,
+      exercises: session.exercises.map((exercise) => ({
+        id: exercise.id,
+        exerciseItemId: exercise.exerciseItemId,
+        name: exercise.name,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        notes: exercise.notes,
+        sortOrder: exercise.sortOrder,
+        completed: includeAdherence
+          ? (completedIds?.has(exercise.id) ?? false)
+          : undefined,
+      })),
+    })),
+    writable: extras?.writable,
+    ...(includeAdherence
+      ? adherenceFields(summary.kind, exerciseIds.length, completedCount)
+      : {}),
+    createdAt: summary.createdAt,
+    updatedAt: summary.updatedAt,
+  };
+}
+
+function adherenceFields(
+  kind: string,
+  exerciseCount: number,
+  completedCount: number,
+): { dayDone: boolean; adherencePercent: number | null } {
+  if (kind === 'REST') {
+    return { dayDone: true, adherencePercent: null };
+  }
+  const dayDone = exerciseCount > 0 && completedCount === exerciseCount;
+  const adherencePercent =
+    exerciseCount === 0 ? 0 : Math.round((completedCount / exerciseCount) * 100);
+  return { dayDone, adherencePercent };
+}
+
+export function collectScheduleExerciseIds(
+  summaries: readonly WorkoutScheduleDaySummary[],
+): WorkoutScheduleExerciseId[] {
+  return summaries.flatMap((day) =>
+    day.sessions.flatMap((session) => session.exercises.map((ex) => ex.id)),
+  );
+}
+
+export function collectScheduleExerciseIdsFromSummary(
+  summary: WorkoutScheduleDaySummary,
+): WorkoutScheduleExerciseId[] {
+  return summary.sessions.flatMap((session) => session.exercises.map((ex) => ex.id));
+}
+
+export interface WorkoutStreakDto {
+  readonly asOf: string;
+  readonly currentStreak: number;
+  readonly longestStreak: number;
+  readonly lookbackDays: number;
 }

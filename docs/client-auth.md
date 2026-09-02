@@ -29,7 +29,7 @@ Use lane `CLIENT` on first provision. Staff-only routes (gym create, leads, plan
 | Progress | `GET` / `PUT /me/progress-logs` | Weight history + BMI |
 | Calories | `GET /me/calorie-logs`, extras `POST`/`DELETE …/items` | [`nutrition.md`](nutrition.md) |
 | Diet | `GET /gym-orgs/:gymOrgId/my-diet-plan`; complete prescribed | [`nutrition.md`](nutrition.md) |
-| Workout | `GET /exercises/search`; `GET /gym-orgs/:gymOrgId/my-workout-plan`; complete per day | [`coaching.md`](coaching.md) |
+| Workout | `GET /exercises/search`; `GET /gym-orgs/:gymOrgId/my-workout-schedule`; complete per schedule line; `GET .../my-workout-streak` | [`coaching.md`](coaching.md) |
 | Health sync | `GET/POST/DELETE /me/wearable-connections`; `POST /me/wearable-metrics/sync`; `GET /me/wearable-metrics` | [`health-sync.md`](health-sync.md) |
 | Health | `GET /health` | Liveness |
 

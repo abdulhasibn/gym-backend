@@ -108,7 +108,7 @@ deferred within 1.5.
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
 | 3.1 | Catalog seed + diet assign + gym templates + unified diary | `nutrition/` + `coaching/` (diet) | C5, C9, T5, T7 | Client-owned diary/plans; gym-owned templates | Done |
-| 3.2 | Exercise catalog seed + workout assign + per-day completions | `src/features/coaching/` (workout) | C6, T6 | Client-owned plans; platform catalog | Done |
+| 3.2 | Exercise catalog + templates + schedule + streaks | `src/features/coaching/` (workout) | C6, T6 | Client schedule; gym templates; platform catalog | Done |
 | 3.3 | Health sync ingest/read APIs (provider adapters) | `src/features/health-sync/` | C12 | Client-owned | Done |
 | 3.4 | CRM remainder: A14 convert lead → membership invite; follow-up *delivery* via 3.5 | `leads` + invites | A14 (+ A13 push) | Gym-owned / platform | Done (convert); delivery in 3.5 |
 | 3.5 | Notifications + scheduled jobs (T-2 renewals, unpaid digest, lead follow-ups) | `src/features/notifications/` + jobs | C11, A10, A10b, M12 | Platform | Todo |

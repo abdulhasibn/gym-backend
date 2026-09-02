@@ -47,7 +47,22 @@ describe('GET /gym-orgs/:gymOrgId/trainers vs coaching mounts', () => {
 
     const myWorkout = Router({ mergeParams: true });
     myWorkout.get('/', (_req, res) => {
-      res.status(200).json({ workoutPlan: null });
+      res.status(200).json({ days: [], writable: false, today: '2026-08-17' });
+    });
+
+    const myStreak = Router({ mergeParams: true });
+    myStreak.get('/', (_req, res) => {
+      res.status(200).json({
+        asOf: '2026-08-17',
+        currentStreak: 0,
+        longestStreak: 0,
+        lookbackDays: 366,
+      });
+    });
+
+    const workoutTemplates = Router({ mergeParams: true });
+    workoutTemplates.get('/', (_req, res) => {
+      res.status(200).json({ workoutPlanTemplates: { items: [] } });
     });
 
     const app = express();
@@ -79,6 +94,8 @@ describe('GET /gym-orgs/:gymOrgId/trainers vs coaching mounts', () => {
         exercises,
         unused(),
         myWorkout,
+        myStreak,
+        workoutTemplates,
         unused(),
         unused(),
       ),
@@ -93,13 +110,21 @@ describe('GET /gym-orgs/:gymOrgId/trainers vs coaching mounts', () => {
     const listed = await supertest(app).get(`/gym-orgs/${gymOrgId}/diet-plan-templates`);
     expect(listed.status).toBe(200);
 
+    const workoutListed = await supertest(app).get(`/gym-orgs/${gymOrgId}/workout-plan-templates`);
+    expect(workoutListed.status).toBe(200);
+
     const mine = await supertest(app).get(`/gym-orgs/${gymOrgId}/my-diet-plan`);
     expect(mine.status).toBe(200);
 
     const search = await supertest(app).get('/exercises/search');
     expect(search.status).toBe(200);
 
-    const myWorkoutPlan = await supertest(app).get(`/gym-orgs/${gymOrgId}/my-workout-plan`);
-    expect(myWorkoutPlan.status).toBe(200);
+    const myWorkoutSchedule = await supertest(app).get(
+      `/gym-orgs/${gymOrgId}/my-workout-schedule?from=2026-08-01&to=2026-08-31`,
+    );
+    expect(myWorkoutSchedule.status).toBe(200);
+
+    const myWorkoutStreak = await supertest(app).get(`/gym-orgs/${gymOrgId}/my-workout-streak`);
+    expect(myWorkoutStreak.status).toBe(200);
   });
 });
