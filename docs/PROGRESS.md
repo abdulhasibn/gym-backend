@@ -72,13 +72,17 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
-### 2026-09-05 — Expose serving id on food search DTO
+### 2026-09-05 — Expose serving id on food search DTO + sync Postman & docs
 
 - Added `id` (serving UUID) to `FoodUnitDto` and `toFoodSearchDto` so clients
   and staff can directly retrieve valid `servingId`s from `GET /foods/search`.
 - Updated Postman collection `Search Foods`: description, example response
   with unit `id`s, and test script to set `{{servingId}}` from default unit.
-- Updated `docs/nutrition.md` with the new units shape.
+- Postman sync: audit passed (0 gaps); git commit `98af797` pushed to
+  `gym-backend-postman`; cloud `putCollection` async completed (`status: "successful"`).
+- Sync docs: verified `docs/nutrition.md`, Orbit `roadmap-data.js` and mirror
+  `docs/mvp-roadmap/roadmap-data.js` are in sync; verified live showcase lede
+  and node statuses at `https://gym-prd-visual.vercel.app` (Stint 3.4 shipped · next 3.5).
 - Excluded `src/app/tests/e2e/**/*.e2e.test.ts` from default offline
   `vitest.config.ts`; fixed unused imports in `src/app/tests/e2e/harness.ts`.
 
