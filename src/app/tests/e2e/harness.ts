@@ -92,7 +92,9 @@ export async function createIronCorePlans(
     .set(header)
     .send(IRONCORE_BASE_PLAN);
   if (base.status !== 201) {
-    throw new Error(`Create IronCore BASE plan failed (${base.status}): ${JSON.stringify(base.body)}`);
+    throw new Error(
+      `Create IronCore BASE plan failed (${base.status}): ${JSON.stringify(base.body)}`,
+    );
   }
 
   const addon = await supertest(app)
@@ -382,7 +384,9 @@ export async function getMyDataGrants(
     .get(`/gym-orgs/${world.gymOrgId}/my-data-grants`)
     .set(authHeader(client.accessToken));
   if (response.status !== 200) {
-    throw new Error(`Get data grants failed (${response.status}): ${JSON.stringify(response.body)}`);
+    throw new Error(
+      `Get data grants failed (${response.status}): ${JSON.stringify(response.body)}`,
+    );
   }
   return {
     profileAttributes: response.body.dataGrants.profileAttributes as string[],
@@ -410,20 +414,22 @@ export async function expectActiveMembership(
   const subscriptions = await listMySubscriptions(world, client);
   const base = subscriptions.find((row) => row.kind === 'BASE');
   expect(base, `${label}: BASE subscription missing`).toBeDefined();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   expect(base!.priceAmount).toBe(options.basePrice ?? IRONCORE_BASE_PLAN.price);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   expect(base!.durationDays).toBe(IRONCORE_BASE_PLAN.durationDays);
 
   if (options.expectAddon !== false) {
     const addon = subscriptions.find((row) => row.kind === 'ADDON');
     expect(addon, `${label}: ADDON subscription missing`).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(addon!.priceAmount).toBe(options.addonPrice ?? IRONCORE_ADDON_PLAN.price);
   }
 
   const grants = await getMyDataGrants(world, client);
-  expect(grants.profileAttributes).toEqual(
-    expect.arrayContaining(['DOB', 'HEIGHT', 'WEIGHT']),
-  );
+  expect(grants.profileAttributes).toEqual(expect.arrayContaining(['DOB', 'HEIGHT', 'WEIGHT']));
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return { membershipId: active[0]!.membershipId };
 }
 
@@ -437,9 +443,7 @@ export async function setCheckInBlock(
     .set(authHeader(world.owner.accessToken))
     .send({ blocked });
   if (response.status !== 200) {
-    throw new Error(
-      `Check-in block failed (${response.status}): ${JSON.stringify(response.body)}`,
-    );
+    throw new Error(`Check-in block failed (${response.status}): ${JSON.stringify(response.body)}`);
   }
 }
 
@@ -478,9 +482,7 @@ export async function markSubscriptionPayment(
     .set(authHeader(world.owner.accessToken))
     .send(body);
   if (response.status !== 200) {
-    throw new Error(
-      `Mark payment failed (${response.status}): ${JSON.stringify(response.body)}`,
-    );
+    throw new Error(`Mark payment failed (${response.status}): ${JSON.stringify(response.body)}`);
   }
 }
 
@@ -494,8 +496,6 @@ export async function assignTrainerToMember(
     .set(authHeader(world.owner.accessToken))
     .send({ trainerProfileId });
   if (response.status !== 200) {
-    throw new Error(
-      `Assign trainer failed (${response.status}): ${JSON.stringify(response.body)}`,
-    );
+    throw new Error(`Assign trainer failed (${response.status}): ${JSON.stringify(response.body)}`);
   }
 }

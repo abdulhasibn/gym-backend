@@ -29,13 +29,13 @@ function journeyFromModuleId(moduleId: string): string {
   return base;
 }
 
-function formatErrors(errors: ReadonlyArray<{ message?: string; name?: string }> | undefined): string {
+function formatErrors(
+  errors: ReadonlyArray<{ message?: string; name?: string }> | undefined,
+): string {
   if (errors === undefined || errors.length === 0) {
     return 'Assertion failed';
   }
-  return errors
-    .map((error) => error.message?.split('\n')[0] ?? error.name ?? 'Error')
-    .join('; ');
+  return errors.map((error) => error.message?.split('\n')[0] ?? error.name ?? 'Error').join('; ');
 }
 
 export default class IronCoreE2eReporter implements Reporter {
@@ -54,8 +54,7 @@ export default class IronCoreE2eReporter implements Reporter {
         const flowIds = parseFlowIdsFromTitle(title);
         const resultState = testCase.result().state;
         const diagnostic = testCase.diagnostic();
-        const durationMs =
-          diagnostic !== undefined ? Math.round(diagnostic.duration) : null;
+        const durationMs = diagnostic !== undefined ? Math.round(diagnostic.duration) : null;
 
         let result: FlowReportRow['result'] = 'NOT_RUN';
         let actualBehaviour: string;
@@ -166,6 +165,7 @@ export default class IronCoreE2eReporter implements Reporter {
     for (const row of rows.filter((item) => item.result === 'FAIL')) {
       lines.push(`  ✗ ${row.flowId}: ${row.failureReason}`);
     }
+    // eslint-disable-next-line no-console
     console.log(lines.join('\n'));
   }
 }

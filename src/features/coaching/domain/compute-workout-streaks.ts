@@ -34,9 +34,7 @@ export function computeWorkoutStreaks(input: ComputeWorkoutStreaksInput): Workou
 
   const asOfStatus = input.days.get(input.asOf.value);
   const skipAsOf =
-    asOfStatus !== undefined &&
-    asOfStatus.kind === 'TRAINING' &&
-    asOfStatus.dayDone === false;
+    asOfStatus !== undefined && asOfStatus.kind === 'TRAINING' && asOfStatus.dayDone === false;
 
   const currentEnd = skipAsOf ? input.asOf.addDays(-1) : input.asOf;
   if (currentEnd.value < lookbackStart.value) {
@@ -78,6 +76,7 @@ function currentRunEndingAt(
 ): number {
   let run = 0;
   for (let i = datesAsc.length - 1; i >= 0; i -= 1) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const date = datesAsc[i]!;
     const outcome = classify(date, days);
     if (outcome === 'break') {

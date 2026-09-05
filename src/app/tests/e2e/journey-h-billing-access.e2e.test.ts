@@ -101,6 +101,7 @@ describe('Journey H — Billing, block, and offboard access (Sameer)', () => {
     const subscriptions = await listClientSubscriptions(iron, sameer.client.userId);
     const base = subscriptions.find((row) => row.kind === 'BASE');
     expect(base).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await markSubscriptionPayment(iron, base!.id, 'unpaid');
 
     const afterUnpaid = await listClientSubscriptions(iron, sameer.client.userId);
@@ -123,14 +124,17 @@ describe('Journey H — Billing, block, and offboard access (Sameer)', () => {
     const base = subscriptions.find((row) => row.kind === 'BASE');
     expect(base).toBeDefined();
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await markSubscriptionPayment(iron, base!.id, 'partial', 500);
     const afterPartial = await listClientSubscriptions(iron, sameer.client.userId);
     expect(afterPartial.find((row) => row.kind === 'BASE')?.paymentStatus).toBe('partial');
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await markSubscriptionPayment(iron, base!.id, 'paid');
 
     const startDate = new Date().toISOString().slice(0, 10);
     const started = await supertest(app)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       .post(`/gym-orgs/${iron.gymOrgId}/subscriptions/${base!.id}/start-override`)
       .set(admin)
       .send({ startDate });
@@ -150,9 +154,7 @@ describe('Journey H — Billing, block, and offboard access (Sameer)', () => {
     await offboardMember(iron, sameer.membershipId);
 
     const activeRoster = await listMembers(iron, 'ACTIVE');
-    expect(
-      activeRoster.filter((row) => row.clientUserId === sameer.client.userId),
-    ).toHaveLength(0);
+    expect(activeRoster.filter((row) => row.clientUserId === sameer.client.userId)).toHaveLength(0);
     const inactiveRoster = await listMembers(iron, 'INACTIVE');
     expect(
       inactiveRoster.some(

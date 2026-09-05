@@ -67,9 +67,7 @@ export class SupabaseWorkoutScheduleRepository implements WorkoutScheduleReposit
     }
 
     const session = exerciseRow.workout_schedule_sessions as
-      | { schedule_day_id: string }
-      | { schedule_day_id: string }[]
-      | null;
+      { schedule_day_id: string } | { schedule_day_id: string }[] | null;
     const scheduleDayId = Array.isArray(session)
       ? session[0]?.schedule_day_id
       : session?.schedule_day_id;
@@ -102,9 +100,13 @@ export class SupabaseWorkoutScheduleRepository implements WorkoutScheduleReposit
       return;
     }
 
+    // days[0] is safe: early return above guards against empty array
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const clientUserId = days[0]!.clientUserId;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const gymOrgId = days[0]!.gymOrgId;
     const dates = days.map((day) => day.scheduleDate.value);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const nowIso = days[0]!.updatedAt.toISOString();
 
     const { error: softDeleteError } = await this.client

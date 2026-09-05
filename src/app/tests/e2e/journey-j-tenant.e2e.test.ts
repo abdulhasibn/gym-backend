@@ -55,9 +55,7 @@ describe('Journey J — Tenant isolation (IronCore vs Titan)', () => {
 
     const arif = authHeader(iron.owner.accessToken);
 
-    const rosterLeak = await supertest(app)
-      .get(`/gym-orgs/${titan.gymOrgId}/members`)
-      .set(arif);
+    const rosterLeak = await supertest(app).get(`/gym-orgs/${titan.gymOrgId}/members`).set(arif);
     expect(rosterLeak.status).toBeGreaterThanOrEqual(400);
 
     const leadLeak = await supertest(app)
@@ -85,6 +83,7 @@ describe('Journey J — Tenant isolation (IronCore vs Titan)', () => {
     expect(subLeak.status).toBeGreaterThanOrEqual(400);
 
     const paymentLeak = await supertest(app)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       .patch(`/gym-orgs/${titan.gymOrgId}/subscriptions/${titanBase!.id}/payment`)
       .set(arif)
       .send({ paymentStatus: 'paid' });
@@ -120,9 +119,7 @@ describe('Journey J — Tenant isolation (IronCore vs Titan)', () => {
       });
     expect(coachingLeak.status).toBeGreaterThanOrEqual(400);
 
-    const ironMembers = await supertest(app)
-      .get(`/gym-orgs/${iron.gymOrgId}/members`)
-      .set(arif);
+    const ironMembers = await supertest(app).get(`/gym-orgs/${iron.gymOrgId}/members`).set(arif);
     expect(ironMembers.status).toBe(200);
     expect(
       ironMembers.body.members.some(

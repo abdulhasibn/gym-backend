@@ -284,7 +284,10 @@ export class CoachingController {
     try {
       const { gymOrgId, clientUserId } = gymAndClientUserIdParamSchema.parse(req.params);
       const query = workoutScheduleRangeQuerySchema.parse(req.query);
+      // superRefine on the schema guarantees from/to are defined when date is absent
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const from = query.date ?? query.from!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const to = query.date ?? query.to!;
       const days = await this.getStaffWorkoutSchedule.execute(
         requireAuthenticatedActor(req),
@@ -303,7 +306,10 @@ export class CoachingController {
     try {
       const { gymOrgId } = gymOrgIdParamSchema.parse(req.params);
       const query = workoutScheduleRangeQuerySchema.parse(req.query);
+      // superRefine on the schema guarantees from/to are defined when date is absent
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const from = query.date ?? query.from!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const to = query.date ?? query.to!;
       const result = await this.getMyWorkoutSchedule.execute(
         requireAuthenticatedActor(req),
