@@ -132,6 +132,7 @@ describe('GET /foods/search', () => {
     const response = await request(createApp(client)).get('/foods/search?q=idli');
     expect(response.status).toBe(200);
     expect(response.body.foods[0]?.name).toBe('Idli');
+    expect(response.body.foods[0]?.units[0]?.id).toBe('f00d5e04-0000-4000-8000-000000010003');
     expect(response.body.foods[0]?.units[0]?.unit).toBe('PIECE');
     expect(response.body.foods[0]?.defaultUnit).toBe('PIECE');
   });

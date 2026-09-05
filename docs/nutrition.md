@@ -18,7 +18,7 @@ Frozen units (same keys on every food): `G` · `ML` · `PIECE` · `KATORI` · `C
 
 Any authenticated user. Seed catalog only (20 staples for now). Empty `q` returns the full bootstrap list.
 
-**200:** `{ "foods": [ { id, name, aliases, caloriesPer100g, proteinGPer100g, carbsGPer100g, fatGPer100g, defaultUnit, units: [{ unit, label, grams, calories, proteinG, carbsG, fatG, isDefault }] } ] }`
+**200:** `{ "foods": [ { id, name, aliases, caloriesPer100g, proteinGPer100g, carbsGPer100g, fatGPer100g, defaultUnit, units: [{ id, unit, label, grams, calories, proteinG, carbsG, fatG, isDefault }] } ] }`
 
 ---
 

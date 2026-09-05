@@ -41,6 +41,10 @@ describe('nutrition diary HTTP (local Supabase)', () => {
     expect(search.status).toBe(200);
     expect(search.body.foods[0]?.name).toBe('Idli');
     expect(search.body.foods[0]?.defaultUnit).toBe('PIECE');
+    const pieceUnit = search.body.foods[0]?.units.find(
+      (u: { unit: string }) => u.unit === 'PIECE',
+    );
+    expect(pieceUnit?.id).toBe(SEED_FOOD_IDLI_PIECE_SERVING_ID);
 
     const logged = await supertest(app).post('/me/calorie-logs/items').set(header).send({
       foodItemId: SEED_FOOD_IDLI_ID,

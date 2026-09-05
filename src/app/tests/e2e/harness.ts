@@ -5,10 +5,7 @@ import { expect } from 'vitest';
 import {
   authHeader,
   createGymOrg,
-  loadIntegrationApp,
-  resetLocalDb,
   signupViaOtp,
-  uniqueEmail,
   type IntegrationSession,
 } from '../integration/harness';
 

@@ -6,6 +6,7 @@ import type { CalorieLogDaySummary, CalorieLogItemSummary } from '../domain/calo
 import type { FoodSearchHit } from '../domain/food-catalog.queries';
 
 export interface FoodUnitDto {
+  readonly id: string;
   readonly unit: FoodServingUnit;
   readonly label: string;
   readonly grams: number;
@@ -66,6 +67,7 @@ export function toFoodSearchDto(hit: FoodSearchHit): FoodSearchDto {
     .map((serving) => {
       const scaled = scaleNutrients(hit.per100g, serving.grams, 1);
       return {
+        id: serving.id,
         unit: serving.unit,
         label: serving.label,
         grams: serving.grams,

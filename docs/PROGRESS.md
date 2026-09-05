@@ -52,7 +52,7 @@ A8b still deferred within 1.5.
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | schedule + template tables in `public` after migrations; RLS enabled (no policies) |
-| Migrations applied | Through `20260902100000_workout_schedule` when applied locally/remote |
+| Migrations applied | Through `20260902100000_workout_schedule` on local + remote (`igcmptpjmagzwoccxcnw`) |
 | Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 30 |
 
 ## Next up
@@ -71,6 +71,23 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-05 — Expose serving id on food search DTO
+
+- Added `id` (serving UUID) to `FoodUnitDto` and `toFoodSearchDto` so clients
+  and staff can directly retrieve valid `servingId`s from `GET /foods/search`.
+- Updated Postman collection `Search Foods`: description, example response
+  with unit `id`s, and test script to set `{{servingId}}` from default unit.
+- Updated `docs/nutrition.md` with the new units shape.
+- Excluded `src/app/tests/e2e/**/*.e2e.test.ts` from default offline
+  `vitest.config.ts`; fixed unused imports in `src/app/tests/e2e/harness.ts`.
+
+### 2026-09-02 — Apply workout migrations remote + smoke pass
+
+- Applied remote migrations `workout_plan_templates` + `workout_schedule`
+  on `igcmptpjmagzwoccxcnw` (tables were missing; APIs returned 503).
+- Re-ran live workout smoke against prod: **22/22 PASS** (templates,
+  schedule, complete window, streaks, soft-delete assign 404).
 
 ### 2026-09-02 — Sync Postman + docs/Orbit (workout 3.2)
 
