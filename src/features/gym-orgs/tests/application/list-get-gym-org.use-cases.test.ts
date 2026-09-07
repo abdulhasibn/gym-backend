@@ -6,6 +6,8 @@ import { toUserId } from '../../../../domain/shared/user-id';
 import { CreateGymOrgPolicy } from '../../application/create-gym-org.policy';
 import { CreateGymOrgUseCase } from '../../application/create-gym-org.use-case';
 import { GetGymOrgUseCase } from '../../application/get-gym-org.use-case';
+import { GetMyGymUseCase } from '../../application/get-my-gym.use-case';
+import { GymOrgReadForbiddenError } from '../../application/gym-org-read-forbidden.error';
 import { ListMyGymOrgsUseCase } from '../../application/list-my-gym-orgs.use-case';
 import { toGymOrgId } from '../../domain/gym-org-id';
 import { GymOrgName } from '../../domain/gym-org-name.value-object';
@@ -93,5 +95,36 @@ describe('ListMyGymOrgsUseCase / GetGymOrgUseCase client membership', () => {
       roleCode: 'TRAINER',
     });
     expect(listed).toEqual([]);
+  });
+});
+
+describe('GetMyGymUseCase', () => {
+  it('returns the ACTIVE membership gym for a CLIENT without a gymOrgId', async () => {
+    const gymOrgs = new InMemoryGymOrgRepository();
+    const created = await seedGym(gymOrgs);
+    gymOrgs.seedClientMembership(toGymOrgId(created.id), client.userId);
+
+    const detail = await new GetMyGymUseCase(gymOrgs).execute(client);
+    expect(detail).toMatchObject({
+      id: created.id,
+      name: 'Iron Temple',
+      address: '12 Lift St',
+      isOwner: false,
+    });
+  });
+
+  it('returns 404 when the CLIENT has no ACTIVE membership', async () => {
+    const gymOrgs = new InMemoryGymOrgRepository();
+    await seedGym(gymOrgs);
+
+    await expect(new GetMyGymUseCase(gymOrgs).execute(client)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it('forbids staff actors', async () => {
+    const gymOrgs = new InMemoryGymOrgRepository();
+
+    await expect(new GetMyGymUseCase(gymOrgs).execute(owner)).rejects.toBeInstanceOf(
+      GymOrgReadForbiddenError,
+    );
   });
 });

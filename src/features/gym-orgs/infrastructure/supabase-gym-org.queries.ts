@@ -175,6 +175,16 @@ export class SupabaseGymOrgQueries implements GymOrgQueries {
     return data !== null;
   }
 
+  async getCurrentForClient(userId: UserId): Promise<GymOrgDetail | null> {
+    const gymOrgIds = await this.loadActiveClientGymOrgIds(userId);
+    const gymOrgId = gymOrgIds[0];
+    if (gymOrgId === undefined) {
+      return null;
+    }
+
+    return this.getForClient(userId, toGymOrgId(gymOrgId));
+  }
+
   private async loadAffiliationMap(userId: UserId): Promise<Map<string, { isOwner: boolean }>> {
     const [adminsResult, trainersResult] = await Promise.all([
       this.client

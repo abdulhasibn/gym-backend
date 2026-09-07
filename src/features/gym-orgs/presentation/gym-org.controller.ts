@@ -4,6 +4,7 @@ import type { AcceptStaffInviteUseCase } from '../application/accept-staff-invit
 import type { CreateGymOrgUseCase } from '../application/create-gym-org.use-case';
 import type { CreateStaffInviteUseCase } from '../application/create-staff-invite.use-case';
 import type { GetGymOrgUseCase } from '../application/get-gym-org.use-case';
+import type { GetMyGymUseCase } from '../application/get-my-gym.use-case';
 import type { ListGymStaffInvitesUseCase } from '../application/list-gym-staff-invites.use-case';
 import type { ListGymTrainersUseCase } from '../application/list-gym-trainers.use-case';
 import type { ListMyGymOrgsUseCase } from '../application/list-my-gym-orgs.use-case';
@@ -27,6 +28,7 @@ export class GymOrgController {
     private readonly createGymOrg: CreateGymOrgUseCase,
     private readonly listMyGymOrgs: ListMyGymOrgsUseCase,
     private readonly getGymOrg: GetGymOrgUseCase,
+    private readonly getMyGym: GetMyGymUseCase,
     private readonly updateGymOrg: UpdateGymOrgUseCase,
     private readonly createStaffInvite: CreateStaffInviteUseCase,
     private readonly listGymStaffInvites: ListGymStaffInvitesUseCase,
@@ -62,6 +64,15 @@ export class GymOrgController {
         requireAuthenticatedActor(req),
         toGymOrgId(gymOrgId),
       );
+      res.status(200).json({ gymOrg });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getMyGymHandler: RequestHandler = async (req, res, next) => {
+    try {
+      const gymOrg = await this.getMyGym.execute(requireAuthenticatedActor(req));
       res.status(200).json({ gymOrg });
     } catch (error) {
       next(error);

@@ -35,3 +35,14 @@ export function createGymTrainersRouter(
   router.get('/', controller.listTrainers);
   return router;
 }
+
+/** Mount at `/me` so CLIENT gym lookup needs no gymOrgId. */
+export function createMyGymRouter(
+  controller: GymOrgController,
+  authenticate: RequestHandler,
+): Router {
+  const router = Router();
+  router.use(authenticate);
+  router.get('/gym', controller.getMyGymHandler);
+  return router;
+}

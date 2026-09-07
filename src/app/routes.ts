@@ -34,6 +34,7 @@ export function createRouter(
   staffWorkoutTemplateRouter: RequestHandler,
   meWearableRouter: RequestHandler,
   staffClientWearableRouter: RequestHandler,
+  meGymRouter: RequestHandler,
 ): Router {
   const router = Router();
 
@@ -58,6 +59,7 @@ export function createRouter(
   router.use('/me', meUsersRouter);
   router.use('/me', meCalorieLogRouter);
   router.use('/me', meWearableRouter);
+  router.use('/me', meGymRouter);
   router.use('/foods', foodsRouter);
   router.use('/exercises', exercisesRouter);
   router.use('/gym-orgs/:gymOrgId/clients/:clientUserId', staffClientUsersRouter);

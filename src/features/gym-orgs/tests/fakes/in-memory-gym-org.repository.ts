@@ -145,4 +145,15 @@ export class InMemoryGymOrgRepository implements GymOrgRepository, GymOrgQueries
       updatedAt: gymOrg.updatedAt.toISOString(),
     };
   }
+
+  async getCurrentForClient(userId: UserId): Promise<GymOrgDetail | null> {
+    const gymOrg = this.gymOrgs.find((item) =>
+      (this.clientMemberships.get(item.id) ?? []).includes(userId),
+    );
+    if (gymOrg === undefined) {
+      return null;
+    }
+
+    return this.getForClient(userId, gymOrg.id);
+  }
 }

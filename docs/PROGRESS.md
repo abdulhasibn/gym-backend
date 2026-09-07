@@ -27,7 +27,7 @@ A8b still deferred within 1.5.
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
-| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (dedicated mount so coaching catch-alls cannot 404 it); **CLIENT `GET /gym-orgs` + `GET /gym-orgs/:id`** keyed off ACTIVE membership |
+| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (dedicated mount so coaching catch-alls cannot 404 it); **CLIENT `GET /gym-orgs` + `GET /gym-orgs/:id`** keyed off ACTIVE membership; **CLIENT `GET /me/gym`** (token-only current gym) |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A14: CRUD, pipeline, optional email, convert → PENDING membership invite. Push reminders deferred (3.5) |
 | Memberships feature (`src/features/memberships`) | Phase 1–5 + 2.4 renewals due-list done — plans, invites, accept/grants, subscriptions, roster/assign/offboard/block, `GET .../subscriptions/renewals-due`; A8b attach/renew deferred |
 | Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
@@ -71,6 +71,15 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-07 — CLIENT GET /me/gym (token-only current gym)
+
+- `GET /me/gym` resolves the CLIENT’s ACTIVE membership gym from the Bearer
+  token — no `gymOrgId` in the path. Staff → 403 `GYM_ORG_READ_FORBIDDEN`; no
+  ACTIVE membership → 404. Same `gymOrg` detail shape as `GET /gym-orgs/:id`.
+- Paths: `GetMyGymUseCase`, `createMyGymRouter` mounted at `/me`, query
+  `GymOrgQueries.getCurrentForClient`. Existing list/get by id kept.
+- Docs: `client-auth.md` (CLIENT surface + Get my gym), `api.md` index.
 
 ### 2026-09-07 — Sync docs + Postman for CLIENT gym list/get
 

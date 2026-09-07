@@ -348,6 +348,7 @@ export function composeApp(config: AppConfig): AppDependencies {
       coachingFeature.staffWorkoutTemplateRouter,
       healthSyncFeature.meWearableRouter,
       healthSyncFeature.staffClientWearableRouter,
+      gymOrgFeature.myGymRouter,
     ),
   );
 

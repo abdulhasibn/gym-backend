@@ -11,6 +11,7 @@ import { CreateGymOrgPolicy } from './application/create-gym-org.policy';
 import { CreateGymOrgUseCase } from './application/create-gym-org.use-case';
 import { CreateStaffInviteUseCase } from './application/create-staff-invite.use-case';
 import { GetGymOrgUseCase } from './application/get-gym-org.use-case';
+import { GetMyGymUseCase } from './application/get-my-gym.use-case';
 import { GymOrgAdminPolicy } from './application/gym-org-admin.policy';
 import { ListGymStaffInvitesUseCase } from './application/list-gym-staff-invites.use-case';
 import { ListGymTrainersUseCase } from './application/list-gym-trainers.use-case';
@@ -27,7 +28,7 @@ import { SupabaseTrainerProfileDirectory } from './infrastructure/supabase-train
 import { SupabaseTrainerProfileQueries } from './infrastructure/supabase-trainer-profile.queries';
 import { GymOrgController } from './presentation/gym-org.controller';
 import { mapGymOrgError } from './presentation/gym-org.error-mapper';
-import { createGymOrgRouter, createGymTrainersRouter } from './presentation/gym-org.routes';
+import { createGymOrgRouter, createGymTrainersRouter, createMyGymRouter } from './presentation/gym-org.routes';
 
 export function composeGymOrgFeature(
   dataClient: SupabaseClient<Database>,
@@ -48,6 +49,7 @@ export function composeGymOrgFeature(
     new CreateGymOrgUseCase(gymOrgs, new CreateGymOrgPolicy()),
     new ListMyGymOrgsUseCase(gymOrgQueries),
     new GetGymOrgUseCase(gymOrgQueries),
+    new GetMyGymUseCase(gymOrgQueries),
     new UpdateGymOrgUseCase(gymOrgs, adminPolicy, clock),
     new CreateStaffInviteUseCase(adminPolicy, staffInvites, staffUsers, clock, ids),
     new ListGymStaffInvitesUseCase(adminPolicy, staffInviteQueries),
@@ -60,6 +62,7 @@ export function composeGymOrgFeature(
   return {
     router: createGymOrgRouter(controller, authenticate),
     trainersRouter: createGymTrainersRouter(controller, authenticate),
+    myGymRouter: createMyGymRouter(controller, authenticate),
     errorMapper: mapGymOrgError,
     isLiveAdmin: (userId: UserId, gymOrgId: GymOrgId) => gymOrgs.isLiveAdmin(userId, gymOrgId),
     findLiveTrainerProfileId: (userId: UserId, gymOrgId: GymOrgId) =>

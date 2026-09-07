@@ -11,6 +11,7 @@ import { CreateGymOrgPolicy } from '../../application/create-gym-org.policy';
 import { CreateGymOrgUseCase } from '../../application/create-gym-org.use-case';
 import { CreateStaffInviteUseCase } from '../../application/create-staff-invite.use-case';
 import { GetGymOrgUseCase } from '../../application/get-gym-org.use-case';
+import { GetMyGymUseCase } from '../../application/get-my-gym.use-case';
 import { GymOrgAdminPolicy } from '../../application/gym-org-admin.policy';
 import { ListGymStaffInvitesUseCase } from '../../application/list-gym-staff-invites.use-case';
 import { ListGymTrainersUseCase } from '../../application/list-gym-trainers.use-case';
@@ -24,7 +25,7 @@ import { IanaTimezone } from '../../domain/iana-timezone.value-object';
 import { StaffCode } from '../../domain/staff-code.value-object';
 import { GymOrgController } from '../../presentation/gym-org.controller';
 import { mapGymOrgError } from '../../presentation/gym-org.error-mapper';
-import { createGymOrgRouter, createGymTrainersRouter } from '../../presentation/gym-org.routes';
+import { createGymOrgRouter, createGymTrainersRouter, createMyGymRouter } from '../../presentation/gym-org.routes';
 import { FixedClock } from '../fakes/fixed-clock';
 import { InMemoryGymOrgRepository } from '../fakes/in-memory-gym-org.repository';
 import { InMemoryStaffInviteRepository } from '../fakes/in-memory-staff-invite.repository';
@@ -61,6 +62,7 @@ function createTestApp(
     new CreateGymOrgUseCase(gymOrgs, new CreateGymOrgPolicy()),
     new ListMyGymOrgsUseCase(gymOrgs),
     new GetGymOrgUseCase(gymOrgs),
+    new GetMyGymUseCase(gymOrgs),
     new UpdateGymOrgUseCase(gymOrgs, policy, clock),
     new CreateStaffInviteUseCase(policy, staffInvites, staffUsers, clock, {
       generate: () => {
@@ -90,6 +92,7 @@ function createTestApp(
   app.use(express.json());
   app.use('/gym-orgs', createGymOrgRouter(controller, authenticate));
   app.use('/gym-orgs/:gymOrgId/trainers', createGymTrainersRouter(controller, authenticate));
+  app.use('/me', createMyGymRouter(controller, authenticate));
   app.use(createErrorHandlerMiddleware(new SilentLogger(), [mapGymOrgError]));
 
   return { app, gymOrgs, staffInvites, staffUsers, trainers, clock };
@@ -206,6 +209,41 @@ describe('gym-org routes', () => {
     expect(list.body.gymOrgs).toEqual([]);
 
     await supertest(app).get(`/gym-orgs/${created.id}`).expect(404);
+  });
+
+  it('returns the subscribed gym on GET /me/gym for a CLIENT', async () => {
+    const { app, gymOrgs } = createTestApp('CLIENT');
+    const created = await gymOrgs.createOwnedGymOrg({
+      ownerUserId: toUserId('cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+      name: GymOrgName.create('Iron Temple'),
+      address: '12 Lift St',
+      contactPhone: '+15550001111',
+      contactEmail: 'desk@irontemple.example',
+      logoUrl: null,
+      timezone: IanaTimezone.create('Asia/Kolkata'),
+    });
+    gymOrgs.seedClientMembership(created.id, toUserId('11111111-1111-4111-8111-111111111111'));
+
+    const mine = await supertest(app).get('/me/gym').expect(200);
+    expect(mine.body.gymOrg).toMatchObject({
+      id: created.id,
+      name: 'Iron Temple',
+      address: '12 Lift St',
+      contactPhone: '+15550001111',
+      contactEmail: 'desk@irontemple.example',
+      isOwner: false,
+    });
+  });
+
+  it('returns 404 on GET /me/gym when the CLIENT has no ACTIVE membership', async () => {
+    const { app } = createTestApp('CLIENT');
+    await supertest(app).get('/me/gym').expect(404);
+  });
+
+  it('forbids GET /me/gym for staff', async () => {
+    const { app } = createTestApp('ADMIN');
+    const response = await supertest(app).get('/me/gym').expect(403);
+    expect(response.body.error.code).toBe('GYM_ORG_READ_FORBIDDEN');
   });
 
   it('returns validation errors for an invalid timezone', async () => {
@@ -443,6 +481,7 @@ describe('gym-org routes', () => {
       new CreateGymOrgUseCase(gymOrgs, new CreateGymOrgPolicy()),
       new ListMyGymOrgsUseCase(gymOrgs),
       new GetGymOrgUseCase(gymOrgs),
+      new GetMyGymUseCase(gymOrgs),
       new UpdateGymOrgUseCase(gymOrgs, policy, clock),
       new CreateStaffInviteUseCase(policy, staffInvites, staffUsers, clock, {
         generate: () => 'cccccccc-cccc-4ccc-8ccc-cccccccccccd',
