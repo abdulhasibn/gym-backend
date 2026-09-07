@@ -99,6 +99,7 @@ function seedCatalog() {
     primaryMuscle: 'CHEST',
     equipment: 'BARBELL',
     measurement: 'WEIGHT_REPS',
+    illustrationSlug: null,
   });
   return catalog;
 }
@@ -492,7 +493,11 @@ describe('schedule complete overlay', () => {
       entitlement,
       new InMemoryWorkoutScheduleQueries(schedule),
       completions,
-      { async loadForActiveMembership() { return { classGrants: [] }; } },
+      {
+        async loadForActiveMembership() {
+          return { classGrants: [] };
+        },
+      },
     ).execute(trainer, gymOrgId, clientId, '2026-08-17', '2026-08-17');
 
     expect(withoutGrant[0]?.sessions[0]?.exercises[0]?.completed).toBeUndefined();
@@ -503,7 +508,11 @@ describe('schedule complete overlay', () => {
       entitlement,
       new InMemoryWorkoutScheduleQueries(schedule),
       completions,
-      { async loadForActiveMembership() { return { classGrants: ['WORKOUT_PLANS'] }; } },
+      {
+        async loadForActiveMembership() {
+          return { classGrants: ['WORKOUT_PLANS'] };
+        },
+      },
     ).execute(trainer, gymOrgId, clientId, '2026-08-17', '2026-08-17');
 
     expect(withGrant[0]?.sessions[0]?.exercises[0]?.completed).toBe(true);
@@ -589,7 +598,11 @@ describe('workout streak', () => {
         entitlement,
         queries,
         completions,
-        { async loadForActiveMembership() { return { classGrants: [] }; } },
+        {
+          async loadForActiveMembership() {
+            return { classGrants: [] };
+          },
+        },
         gymClock,
         clock,
       ).execute(trainer, gymOrgId, clientId),
@@ -600,7 +613,11 @@ describe('workout streak', () => {
       entitlement,
       queries,
       completions,
-      { async loadForActiveMembership() { return { classGrants: ['WORKOUT_PLANS'] }; } },
+      {
+        async loadForActiveMembership() {
+          return { classGrants: ['WORKOUT_PLANS'] };
+        },
+      },
       gymClock,
       clock,
     ).execute(trainer, gymOrgId, clientId);

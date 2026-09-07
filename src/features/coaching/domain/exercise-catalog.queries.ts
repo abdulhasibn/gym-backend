@@ -29,6 +29,8 @@ export interface ExerciseSearchHit {
   readonly primaryMuscle: ExerciseMuscle;
   readonly equipment: ExerciseEquipment;
   readonly measurement: ExerciseMeasurement;
+  /** Slug into @bryllim/workout-guide@1.0.0. Null if no illustration is available. */
+  readonly illustrationSlug: string | null;
 }
 
 export interface ExerciseCatalogQueries {

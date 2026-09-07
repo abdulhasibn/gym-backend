@@ -11,9 +11,7 @@ import type { WorkoutPlanSummary } from '../domain/workout-plan.queries';
 import type { WorkoutPlanTemplate } from '../domain/workout-plan-template.entity';
 import type { WorkoutPlanTemplateSummary } from '../domain/workout-plan-template.queries';
 import type { WorkoutScheduleDay } from '../domain/workout-schedule-day.entity';
-import type {
-  WorkoutScheduleDaySummary,
-} from '../domain/workout-schedule.queries';
+import type { WorkoutScheduleDaySummary } from '../domain/workout-schedule.queries';
 import type { WorkoutScheduleExerciseId } from '../domain/workout-schedule-exercise-id';
 
 export interface DietPlanItemDto {
@@ -188,6 +186,17 @@ export function toDietPlanTemplateDtoFromSummary(
   };
 }
 
+const WORKOUT_GUIDE_CDN = 'https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets';
+
+const WORKOUT_GUIDE_ATTRIBUTION =
+  'Exercise artwork by Everkinetic & Bryl Lim — CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)';
+
+export interface ExerciseIllustrationDto {
+  /** Three sequential pose frames: start, mid, end. Each is a pinned jsDelivr CDN URL. */
+  readonly frames: readonly [string, string, string];
+  readonly attribution: string;
+}
+
 export interface ExerciseSearchDto {
   readonly id: string;
   readonly name: string;
@@ -195,16 +204,29 @@ export interface ExerciseSearchDto {
   readonly primaryMuscle: string;
   readonly equipment: string;
   readonly measurement: string;
+  /** Null when the exercise has no mapped illustration slug. */
+  readonly illustration: ExerciseIllustrationDto | null;
 }
 
 export function toExerciseSearchDto(hit: ExerciseSearchHit): ExerciseSearchDto {
+  const illustration: ExerciseIllustrationDto | null = hit.illustrationSlug
+    ? {
+        frames: [
+          `${WORKOUT_GUIDE_CDN}/${hit.illustrationSlug}/frame-1.svg`,
+          `${WORKOUT_GUIDE_CDN}/${hit.illustrationSlug}/frame-2.svg`,
+          `${WORKOUT_GUIDE_CDN}/${hit.illustrationSlug}/frame-3.svg`,
+        ],
+        attribution: WORKOUT_GUIDE_ATTRIBUTION,
+      }
+    : null;
   return {
     id: hit.id,
     name: hit.name,
-    aliases: hit.aliases,
+    aliases: [...hit.aliases],
     primaryMuscle: hit.primaryMuscle,
     equipment: hit.equipment,
     measurement: hit.measurement,
+    illustration,
   };
 }
 
@@ -426,9 +448,7 @@ export function toWorkoutScheduleDayDtoFromEntity(
   const completedIds = extras?.completedExerciseIds;
   const exerciseIds = day.sessions.flatMap((session) => session.exercises.map((ex) => ex.id));
   const completedCount =
-    completedIds === undefined
-      ? 0
-      : exerciseIds.filter((id) => completedIds.has(id)).length;
+    completedIds === undefined ? 0 : exerciseIds.filter((id) => completedIds.has(id)).length;
 
   return {
     id: day.id,
@@ -449,15 +469,11 @@ export function toWorkoutScheduleDayDtoFromEntity(
         reps: exercise.reps,
         notes: exercise.notes,
         sortOrder: exercise.sortOrder,
-        completed: includeAdherence
-          ? (completedIds?.has(exercise.id) ?? false)
-          : undefined,
+        completed: includeAdherence ? (completedIds?.has(exercise.id) ?? false) : undefined,
       })),
     })),
     writable: extras?.writable,
-    ...(includeAdherence
-      ? adherenceFields(day.kind, exerciseIds.length, completedCount)
-      : {}),
+    ...(includeAdherence ? adherenceFields(day.kind, exerciseIds.length, completedCount) : {}),
     createdAt: day.createdAt.toISOString(),
     updatedAt: day.updatedAt.toISOString(),
   };
@@ -469,13 +485,9 @@ export function toWorkoutScheduleDayDtoFromSummary(
 ): WorkoutScheduleDayDto {
   const includeAdherence = extras?.includeAdherence === true;
   const completedIds = extras?.completedExerciseIds;
-  const exerciseIds = summary.sessions.flatMap((session) =>
-    session.exercises.map((ex) => ex.id),
-  );
+  const exerciseIds = summary.sessions.flatMap((session) => session.exercises.map((ex) => ex.id));
   const completedCount =
-    completedIds === undefined
-      ? 0
-      : exerciseIds.filter((id) => completedIds.has(id)).length;
+    completedIds === undefined ? 0 : exerciseIds.filter((id) => completedIds.has(id)).length;
 
   return {
     id: summary.id,
@@ -497,15 +509,11 @@ export function toWorkoutScheduleDayDtoFromSummary(
         reps: exercise.reps,
         notes: exercise.notes,
         sortOrder: exercise.sortOrder,
-        completed: includeAdherence
-          ? (completedIds?.has(exercise.id) ?? false)
-          : undefined,
+        completed: includeAdherence ? (completedIds?.has(exercise.id) ?? false) : undefined,
       })),
     })),
     writable: extras?.writable,
-    ...(includeAdherence
-      ? adherenceFields(summary.kind, exerciseIds.length, completedCount)
-      : {}),
+    ...(includeAdherence ? adherenceFields(summary.kind, exerciseIds.length, completedCount) : {}),
     createdAt: summary.createdAt,
     updatedAt: summary.updatedAt,
   };

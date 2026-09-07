@@ -645,6 +645,7 @@ Table exercise_items {
   equipment           exercise_equipment      [not null]
   measurement         exercise_measurement    [not null]
   source              exercise_source         [not null, default: 'seed']
+  illustration_slug   varchar(120)            [null, note: 'Slug into @bryllim/workout-guide@1.0.0. CDN: cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/<slug>/frame-<1|2|3>.svg. Attribution: Everkinetic & Bryl Lim, CC BY-SA 4.0.']
   created_by_user_id  uuid                    [ref: > users.id, note: 'Null for seed. Required for source=manual (CustomExercise).']
   gym_org_id          uuid                    [ref: > gym_orgs.id, note: 'Set with created_by for gym-scoped custom; null for Client-owned custom and seed.']
   active              boolean                 [not null, default: true]

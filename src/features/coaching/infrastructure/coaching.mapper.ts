@@ -264,6 +264,7 @@ export function toExerciseSearchHit(row: ExerciseRow): ExerciseSearchHit {
     primaryMuscle: row.primary_muscle,
     equipment: row.equipment,
     measurement: row.measurement,
+    illustrationSlug: row.illustration_slug ?? null,
   };
 }
 
@@ -581,10 +582,7 @@ function toScheduleSessions(row: ScheduleDayWithSessions) {
     }));
 }
 
-function scheduleExerciseName(
-  row: ScheduleDayWithSessions,
-  exerciseId: string,
-): string | null {
+function scheduleExerciseName(row: ScheduleDayWithSessions, exerciseId: string): string | null {
   for (const session of row.workout_schedule_sessions ?? []) {
     const exercise = (session.workout_schedule_exercises ?? []).find(
       (candidate) => candidate.id === exerciseId,

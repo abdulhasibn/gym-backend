@@ -316,6 +316,7 @@ function createApp(
     primaryMuscle: 'CHEST',
     equipment: 'BARBELL',
     measurement: 'WEIGHT_REPS',
+    illustrationSlug: null,
   });
   const controller = new CoachingController(
     new AssignDietPlanUseCase(assignPolicy, entitlement, catalog, plans, gymClock, clock, ids),

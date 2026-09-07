@@ -125,6 +125,7 @@ catalog.seedExercise({
   primaryMuscle: 'CHEST',
   equipment: 'BARBELL',
   measurement: 'WEIGHT_REPS',
+  illustrationSlug: null,
 });
 
 const exercises = [
@@ -335,7 +336,9 @@ describe('WorkoutPlanTemplate use cases', () => {
     const adminPolicy = new WorkoutTemplatePolicy(
       new DietAssignPolicy(
         { isLiveAdmin: async () => true },
-        { findLiveProfileId: async () => toTrainerProfileId('dddddddd-dddd-4ddd-8ddd-dddddddddddd') },
+        {
+          findLiveProfileId: async () => toTrainerProfileId('dddddddd-dddd-4ddd-8ddd-dddddddddddd'),
+        },
       ),
     );
     const updated = await new UpdateWorkoutPlanTemplateUseCase(

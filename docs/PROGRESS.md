@@ -18,7 +18,7 @@ A8b still deferred within 1.5.
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
 | Food catalog seed | Done — 20 foods × 8 units (160 servings), `source=seed` |
-| Exercise catalog seed | Done — 30 movements, `source=seed` (ADR-0007) |
+| Exercise catalog seed | Done — 302 movements, `source=seed`; `illustration_slug` column; CDN frames in search DTO (ADR-0007) |
 | Feature RLS policies (beyond deny-all) | Not started — 36 public tables RLS on, no policies |
 | Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; access tokens verified locally (`getClaims` JWKS / jose HS256), not `auth.getUser` per request; **temp master OTP `123456`** |
 | Auth automated tests | Partial — refresh use-case + route coverage added; Google provider E2E and remaining failure-path coverage still deferred |
@@ -52,8 +52,8 @@ A8b still deferred within 1.5.
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | schedule + template tables in `public` after migrations; RLS enabled (no policies) |
-| Migrations applied | Through `20260902100000_workout_schedule` on local + remote (`igcmptpjmagzwoccxcnw`) |
-| Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 30 |
+| Migrations applied | Through `20260907130000_seed_exercise_catalog_v2` on remote (`igcmptpjmagzwoccxcnw`) via Supabase MCP |
+| Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 324 (all with `illustration_slug`) |
 
 ## Next up
 
@@ -71,6 +71,41 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-07 — Exercise illustration layer: 302 exercises + CDN frames in search API
+
+- Added `illustration_slug varchar(120) NULL` to `exercise_items`
+  (`supabase/migrations/20260907120000_exercise_illustration_slug.sql`).
+- Updated all 30 bootstrap seed rows with curated `@bryllim/workout-guide@1.0.0` slugs.
+- Wrote `scripts/generate-exercise-seed.ts`: reads package manifest (302 exercises,
+  CC BY-SA 4.0), applies enum mapping, emits SQL INSERT statements.
+- Generated and committed `supabase/migrations/20260907130000_seed_exercise_catalog_v2.sql`
+  (302 rows, `ON CONFLICT DO NOTHING` skips the 30 existing bootstrap rows).
+- Installed `@bryllim/workout-guide@1.0.0` as dev dependency (seed/tooling only).
+- Extended `ExerciseSearchHit.illustrationSlug: string | null` (domain read model).
+- Extended `ExerciseSearchDto.illustration: { frames: [string,string,string], attribution }
+  | null` — built in `toExerciseSearchDto` from pinned jsDelivr CDN URLs. No new routes;
+  existing `GET /exercises/search` response enriched.
+- Updated `database.types.ts` with `illustration_slug: string | null` on exercise_items.
+  (Needs `supabase gen types` after remote push once DB password is available.)
+- `docs/schema.dbml` updated with `illustration_slug` column.
+- 290 tests pass, 0 TypeScript errors.
+- Next up unchanged: 3.5 notifications.
+- Deferred: remote `supabase db push` (requires `SUPABASE_DB_PASSWORD`).
+
+### 2026-09-07 — Research: @bryllim/workout-guide as illustration layer
+
+- Evaluated `@bryllim/workout-guide@1.0.0` (302 exercises, 3 frames each,
+  CC BY-SA 4.0) as a lawful illustration source for the demo-asset gap
+  deferred in ADR-0007. Confirmed not derived from Hevy; derives from
+  Everkinetic (independently CC BY-SA 4.0).
+- All 30 seed `exercise_items` rows map to package slugs (25 exact,
+  5 close-match); enum vocabulary mapping documented.
+- Recommended shape: nullable `illustration_slug` column on `exercise_items`;
+  Infrastructure mapper builds CDN frame URLs + inline attribution string.
+  No third-party SoR; no ADR change required.
+- Full primary-source findings in `docs/research-workout-guide.md`.
+- Implementation deferred; Next up unchanged (3.5 notifications).
 
 ### 2026-09-05 — Expose serving id on food search DTO + sync Postman & docs
 

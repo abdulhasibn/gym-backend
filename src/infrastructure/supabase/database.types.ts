@@ -4,7 +4,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.15';
+    PostgrestVersion: '14.5';
   };
   public: {
     Tables: {
@@ -724,6 +724,7 @@ export type Database = {
           equipment: Database['public']['Enums']['exercise_equipment'];
           gym_org_id: string | null;
           id: string;
+          illustration_slug: string | null;
           measurement: Database['public']['Enums']['exercise_measurement'];
           name: string;
           primary_muscle: Database['public']['Enums']['exercise_muscle'];
@@ -739,6 +740,7 @@ export type Database = {
           equipment: Database['public']['Enums']['exercise_equipment'];
           gym_org_id?: string | null;
           id?: string;
+          illustration_slug?: string | null;
           measurement: Database['public']['Enums']['exercise_measurement'];
           name: string;
           primary_muscle: Database['public']['Enums']['exercise_muscle'];
@@ -754,6 +756,7 @@ export type Database = {
           equipment?: Database['public']['Enums']['exercise_equipment'];
           gym_org_id?: string | null;
           id?: string;
+          illustration_slug?: string | null;
           measurement?: Database['public']['Enums']['exercise_measurement'];
           name?: string;
           primary_muscle?: Database['public']['Enums']['exercise_muscle'];
@@ -1970,6 +1973,77 @@ export type Database = {
           },
         ];
       };
+      workout_plans: {
+        Row: {
+          client_user_id: string;
+          cloned_from_id: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          gym_org_id: string;
+          id: string;
+          notes: string | null;
+          status: Database['public']['Enums']['coaching_plan_status'];
+          title: string;
+          trainer_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          client_user_id: string;
+          cloned_from_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          gym_org_id: string;
+          id?: string;
+          notes?: string | null;
+          status?: Database['public']['Enums']['coaching_plan_status'];
+          title: string;
+          trainer_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          client_user_id?: string;
+          cloned_from_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          gym_org_id?: string;
+          id?: string;
+          notes?: string | null;
+          status?: Database['public']['Enums']['coaching_plan_status'];
+          title?: string;
+          trainer_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workout_plans_client_user_id_fkey';
+            columns: ['client_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_plans_cloned_from_id_fkey';
+            columns: ['cloned_from_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_plans';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_plans_gym_org_id_fkey';
+            columns: ['gym_org_id'];
+            isOneToOne: false;
+            referencedRelation: 'gym_orgs';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workout_plans_trainer_id_fkey';
+            columns: ['trainer_id'];
+            isOneToOne: false;
+            referencedRelation: 'trainer_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       workout_schedule_days: {
         Row: {
           client_user_id: string;
@@ -2052,17 +2126,17 @@ export type Database = {
         };
         Relationships: [
           {
+            foreignKeyName: 'workout_schedule_exercise_com_workout_schedule_exercise_id_fkey';
+            columns: ['workout_schedule_exercise_id'];
+            isOneToOne: false;
+            referencedRelation: 'workout_schedule_exercises';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'workout_schedule_exercise_completions_client_user_id_fkey';
             columns: ['client_user_id'];
             isOneToOne: false;
             referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'workout_schedule_exercise_completions_workout_schedule_exercise_id_fkey';
-            columns: ['workout_schedule_exercise_id'];
-            isOneToOne: false;
-            referencedRelation: 'workout_schedule_exercises';
             referencedColumns: ['id'];
           },
         ];
@@ -2165,77 +2239,6 @@ export type Database = {
             columns: ['schedule_day_id'];
             isOneToOne: false;
             referencedRelation: 'workout_schedule_days';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
-      workout_plans: {
-        Row: {
-          client_user_id: string;
-          cloned_from_id: string | null;
-          created_at: string;
-          deleted_at: string | null;
-          gym_org_id: string;
-          id: string;
-          notes: string | null;
-          status: Database['public']['Enums']['coaching_plan_status'];
-          title: string;
-          trainer_id: string;
-          updated_at: string;
-        };
-        Insert: {
-          client_user_id: string;
-          cloned_from_id?: string | null;
-          created_at?: string;
-          deleted_at?: string | null;
-          gym_org_id: string;
-          id?: string;
-          notes?: string | null;
-          status?: Database['public']['Enums']['coaching_plan_status'];
-          title: string;
-          trainer_id: string;
-          updated_at?: string;
-        };
-        Update: {
-          client_user_id?: string;
-          cloned_from_id?: string | null;
-          created_at?: string;
-          deleted_at?: string | null;
-          gym_org_id?: string;
-          id?: string;
-          notes?: string | null;
-          status?: Database['public']['Enums']['coaching_plan_status'];
-          title?: string;
-          trainer_id?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'workout_plans_client_user_id_fkey';
-            columns: ['client_user_id'];
-            isOneToOne: false;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'workout_plans_cloned_from_id_fkey';
-            columns: ['cloned_from_id'];
-            isOneToOne: false;
-            referencedRelation: 'workout_plans';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'workout_plans_gym_org_id_fkey';
-            columns: ['gym_org_id'];
-            isOneToOne: false;
-            referencedRelation: 'gym_orgs';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'workout_plans_trainer_id_fkey';
-            columns: ['trainer_id'];
-            isOneToOne: false;
-            referencedRelation: 'trainer_profiles';
             referencedColumns: ['id'];
           },
         ];
