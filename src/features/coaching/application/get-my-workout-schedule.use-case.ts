@@ -10,10 +10,7 @@ import type {
   WorkoutScheduleQueries,
 } from '../domain/workout-schedule.queries';
 import type { WorkoutScheduleExerciseId } from '../domain/workout-schedule-exercise-id';
-import {
-  toWorkoutScheduleDayDtoFromSummary,
-  type WorkoutScheduleDayDto,
-} from './coaching.dto';
+import { toWorkoutScheduleDayDtoFromSummary, type WorkoutScheduleDayDto } from './coaching.dto';
 import { DietClientPolicy } from './diet-client.policy';
 import { parseRange } from './get-staff-workout-schedule.use-case';
 
@@ -46,11 +43,7 @@ export class GetMyWorkoutScheduleUseCase {
 
     const { from, to } = parseRange(fromRaw, toRaw);
     const today = await this.gymClock.today(gymOrgId, this.clock.now());
-    const writable = await this.entitlement.hasInDateCoachingAddon(
-      actor.userId,
-      gymOrgId,
-      today,
-    );
+    const writable = await this.entitlement.hasInDateCoachingAddon(actor.userId, gymOrgId, today);
 
     const summaries = await this.queries.listRange({
       clientUserId: actor.userId,

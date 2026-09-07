@@ -20,11 +20,11 @@ describe('assertScheduleCompletionWindow', () => {
   });
 
   it('rejects future D and days before the window', () => {
-    expect(() =>
-      assertScheduleCompletionWindow(CalendarDate.create('2026-08-18'), today),
-    ).toThrow(InvalidWorkoutScheduleError);
-    expect(() =>
-      assertScheduleCompletionWindow(CalendarDate.create('2026-08-14'), today),
-    ).toThrow(InvalidWorkoutScheduleError);
+    expect(() => assertScheduleCompletionWindow(CalendarDate.create('2026-08-18'), today)).toThrow(
+      InvalidWorkoutScheduleError,
+    );
+    expect(() => assertScheduleCompletionWindow(CalendarDate.create('2026-08-14'), today)).toThrow(
+      InvalidWorkoutScheduleError,
+    );
   });
 });

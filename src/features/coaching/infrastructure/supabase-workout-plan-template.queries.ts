@@ -11,10 +11,7 @@ import type {
   WorkoutPlanTemplateQueries,
   WorkoutPlanTemplateSummary,
 } from '../domain/workout-plan-template.queries';
-import {
-  toWorkoutPlanTemplateSummary,
-  type WorkoutTemplateWithExercises,
-} from './coaching.mapper';
+import { toWorkoutPlanTemplateSummary, type WorkoutTemplateWithExercises } from './coaching.mapper';
 
 const TEMPLATE_SELECT = '*, workout_plan_template_exercises(*, exercise_items(name))';
 

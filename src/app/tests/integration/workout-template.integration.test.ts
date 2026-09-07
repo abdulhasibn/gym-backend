@@ -44,7 +44,9 @@ describe('workout plan templates HTTP (local Supabase)', () => {
       .send(templateBody);
     expect(created.status).toBe(201);
     const templateId = created.body.workoutPlanTemplate.id as string;
-    expect(created.body.workoutPlanTemplate.exercises[0].exerciseItemId).toBe(SEED_EXERCISE_BENCH_ID);
+    expect(created.body.workoutPlanTemplate.exercises[0].exerciseItemId).toBe(
+      SEED_EXERCISE_BENCH_ID,
+    );
 
     const listed = await supertest(app)
       .get(`/gym-orgs/${gymOrgId}/workout-plan-templates`)
@@ -81,9 +83,7 @@ describe('workout plan templates HTTP (local Supabase)', () => {
     expect(deleted.status).toBe(204);
 
     const afterDelete = await supertest(app)
-      .get(
-        `/gym-orgs/${gymOrgId}/workout-plan-templates/${duplicated.body.workoutPlanTemplate.id}`,
-      )
+      .get(`/gym-orgs/${gymOrgId}/workout-plan-templates/${duplicated.body.workoutPlanTemplate.id}`)
       .set(admin);
     expect(afterDelete.status).toBe(404);
   });

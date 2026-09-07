@@ -73,17 +73,9 @@ describe('Journey B — Client onboarding (Sameer)', () => {
         grants: { profileAttributes: string[]; classGrants: string[] };
       }
     ).grants;
-    expect(grants.profileAttributes).toEqual(
-      expect.arrayContaining(['DOB', 'HEIGHT', 'WEIGHT']),
-    );
+    expect(grants.profileAttributes).toEqual(expect.arrayContaining(['DOB', 'HEIGHT', 'WEIGHT']));
     expect(grants.classGrants).toEqual(
-      expect.arrayContaining([
-        'PROGRESS',
-        'CALORIES',
-        'WEARABLES',
-        'DIET_PLANS',
-        'WORKOUT_PLANS',
-      ]),
+      expect.arrayContaining(['PROGRESS', 'CALORIES', 'WEARABLES', 'DIET_PLANS', 'WORKOUT_PLANS']),
     );
     expect(grants.classGrants).not.toContain('MEDICAL_NOTES');
   });

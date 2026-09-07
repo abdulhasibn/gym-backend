@@ -19,10 +19,7 @@ import type { WorkoutScheduleRepository } from '../domain/workout-schedule.repos
 import type { WorkoutSessionSlot } from '../domain/workout-session-slot';
 import { CoachingAddonRequiredError } from './coaching-addon-required.error';
 import { CoachingForbiddenError } from './coaching-forbidden.error';
-import {
-  toWorkoutScheduleDayDtoFromEntity,
-  type WorkoutScheduleDayDto,
-} from './coaching.dto';
+import { toWorkoutScheduleDayDtoFromEntity, type WorkoutScheduleDayDto } from './coaching.dto';
 import type { DietAssignPolicy } from './diet-assign.policy';
 
 export interface UpsertWorkoutScheduleRestEntry {
@@ -38,8 +35,7 @@ export interface UpsertWorkoutScheduleTrainingEntry {
 }
 
 export type UpsertWorkoutScheduleEntry =
-  | UpsertWorkoutScheduleRestEntry
-  | UpsertWorkoutScheduleTrainingEntry;
+  UpsertWorkoutScheduleRestEntry | UpsertWorkoutScheduleTrainingEntry;
 
 export interface UpsertWorkoutScheduleCommand {
   readonly gymOrgId: GymOrgId;

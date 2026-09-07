@@ -44,7 +44,7 @@ curl http://localhost:3000/health
 | [`docs/health-sync.md`](./docs/health-sync.md)               | Wearable connect, metrics sync, staff WEARABLES read                                    |
 | [`docs/api.md`](./docs/api.md)                               | Endpoint catalogue (trainers, attendance, profile/progress, diet, workout, health sync) |
 | [`docs/PROGRESS.md`](./docs/PROGRESS.md)                     | Current stage / next up                                                                 |
-| [`docs/e2e-flow-catalogue.md`](./docs/e2e-flow-catalogue.md) | IronCore story E2E flow IDs (implemented / future)                                  |
+| [`docs/e2e-flow-catalogue.md`](./docs/e2e-flow-catalogue.md) | IronCore story E2E flow IDs (implemented / future)                                      |
 | [`docs/MVP_ROADMAP.md`](./docs/MVP_ROADMAP.md)               | Build order (Orbit tab visualizes this)                                                 |
 | Postman                                                      | [gym-backend-postman](https://github.com/abdulhasibn/gym-backend-postman)               |
 

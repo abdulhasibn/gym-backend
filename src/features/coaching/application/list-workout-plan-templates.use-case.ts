@@ -2,10 +2,7 @@ import type { AuthenticatedActor } from '../../../domain/shared/authenticated-ac
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { Page, Pagination } from '../../../shared/pagination/pagination';
 import type { WorkoutPlanTemplateQueries } from '../domain/workout-plan-template.queries';
-import {
-  toWorkoutPlanTemplateDtoFromSummary,
-  type WorkoutPlanTemplateDto,
-} from './coaching.dto';
+import { toWorkoutPlanTemplateDtoFromSummary, type WorkoutPlanTemplateDto } from './coaching.dto';
 import type { WorkoutTemplatePolicy } from './workout-template.policy';
 
 export class ListWorkoutPlanTemplatesUseCase {

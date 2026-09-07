@@ -10,9 +10,7 @@ import {
   type WorkoutScheduleExerciseId,
 } from '../domain/workout-schedule-exercise-id';
 
-export class SupabaseWorkoutScheduleCompletionQueries
-  implements WorkoutScheduleCompletionQueries
-{
+export class SupabaseWorkoutScheduleCompletionQueries implements WorkoutScheduleCompletionQueries {
   constructor(private readonly client: SupabaseClient<Database>) {}
 
   async findCompletedExerciseIds(
@@ -37,8 +35,6 @@ export class SupabaseWorkoutScheduleCompletionQueries
       });
     }
 
-    return (data ?? []).map((row) =>
-      toWorkoutScheduleExerciseId(row.workout_schedule_exercise_id),
-    );
+    return (data ?? []).map((row) => toWorkoutScheduleExerciseId(row.workout_schedule_exercise_id));
   }
 }

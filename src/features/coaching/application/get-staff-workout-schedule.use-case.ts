@@ -8,10 +8,7 @@ import type { CoachingEntitlementPort } from '../domain/coaching-entitlement.por
 import { InvalidWorkoutScheduleError } from '../domain/invalid-workout-schedule.error';
 import type { WorkoutScheduleCompletionQueries } from '../domain/workout-schedule-completion.queries';
 import type { WorkoutScheduleQueries } from '../domain/workout-schedule.queries';
-import {
-  toWorkoutScheduleDayDtoFromSummary,
-  type WorkoutScheduleDayDto,
-} from './coaching.dto';
+import { toWorkoutScheduleDayDtoFromSummary, type WorkoutScheduleDayDto } from './coaching.dto';
 import type { DietAssignPolicy } from './diet-assign.policy';
 import { CoachingForbiddenError } from './coaching-forbidden.error';
 import { loadCompletionsByScheduleDate } from './get-my-workout-schedule.use-case';
@@ -76,7 +73,10 @@ export class GetStaffWorkoutScheduleUseCase {
   }
 }
 
-export function parseRange(fromRaw: string, toRaw: string): {
+export function parseRange(
+  fromRaw: string,
+  toRaw: string,
+): {
   from: CalendarDate;
   to: CalendarDate;
 } {
@@ -91,9 +91,7 @@ export function parseRange(fromRaw: string, toRaw: string): {
     cursor = cursor.addDays(1);
     days += 1;
     if (days > MAX_RANGE_DAYS) {
-      throw new InvalidWorkoutScheduleError(
-        `Schedule range cannot exceed ${MAX_RANGE_DAYS} days`,
-      );
+      throw new InvalidWorkoutScheduleError(`Schedule range cannot exceed ${MAX_RANGE_DAYS} days`);
     }
   }
   return { from, to };

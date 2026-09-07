@@ -62,8 +62,7 @@ export function toStreakDayStatuses(
       map.set(summary.scheduleDate, { kind: 'REST', dayDone: true });
       continue;
     }
-    const dayDone =
-      exerciseIds.length > 0 && exerciseIds.every((id) => completed.has(id));
+    const dayDone = exerciseIds.length > 0 && exerciseIds.every((id) => completed.has(id));
     map.set(summary.scheduleDate, { kind: 'TRAINING', dayDone });
   }
   return map;

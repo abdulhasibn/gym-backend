@@ -47,15 +47,15 @@ describe('WorkoutScheduleDay', () => {
   });
 
   it('rejects REST with sessions', () => {
-    expect(() =>
-      WorkoutScheduleDay.create({ ...base, kind: 'REST', sessions: [morning] }),
-    ).toThrow(InvalidWorkoutScheduleError);
+    expect(() => WorkoutScheduleDay.create({ ...base, kind: 'REST', sessions: [morning] })).toThrow(
+      InvalidWorkoutScheduleError,
+    );
   });
 
   it('requires 1–2 TRAINING sessions with unique slots', () => {
-    expect(() =>
-      WorkoutScheduleDay.create({ ...base, kind: 'TRAINING', sessions: [] }),
-    ).toThrow(InvalidWorkoutScheduleError);
+    expect(() => WorkoutScheduleDay.create({ ...base, kind: 'TRAINING', sessions: [] })).toThrow(
+      InvalidWorkoutScheduleError,
+    );
 
     const day = WorkoutScheduleDay.create({
       ...base,

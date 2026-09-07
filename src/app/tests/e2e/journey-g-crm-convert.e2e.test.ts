@@ -30,17 +30,14 @@ describe('Journey G — CRM convert to ACTIVE member (Fahad)', () => {
     const admin = authHeader(iron.owner.accessToken);
     const fahadEmail = uniqueEmail('fahad');
 
-    const created = await supertest(app)
-      .post(`/gym-orgs/${iron.gymOrgId}/leads`)
-      .set(admin)
-      .send({
-        name: 'Fahad Noor',
-        phone: '9876501234',
-        email: fahadEmail,
-        source: 'walk-in',
-        interest: 'personal training',
-        notes: 'Asked about PT package',
-      });
+    const created = await supertest(app).post(`/gym-orgs/${iron.gymOrgId}/leads`).set(admin).send({
+      name: 'Fahad Noor',
+      phone: '9876501234',
+      email: fahadEmail,
+      source: 'walk-in',
+      interest: 'personal training',
+      notes: 'Asked about PT package',
+    });
     expect(created.status).toBe(201);
     expect(created.body.lead.status).toBe('NEW');
     const leadId = created.body.lead.id as string;
@@ -103,9 +100,9 @@ describe('Journey G — CRM convert to ACTIVE member (Fahad)', () => {
       .get('/membership-invites/inbox')
       .set(authHeader(fahad.accessToken));
     expect(inbox.status).toBe(200);
-    expect(inbox.body.membershipInvites.items.some((item: { id: string }) => item.id === inviteId)).toBe(
-      true,
-    );
+    expect(
+      inbox.body.membershipInvites.items.some((item: { id: string }) => item.id === inviteId),
+    ).toBe(true);
 
     const accepted = await acceptInviteWithGrants(iron, {
       client: fahad,

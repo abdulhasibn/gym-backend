@@ -8,9 +8,7 @@ import { AlreadyCompletedWorkoutExerciseError } from '../domain/already-complete
 import type { WorkoutScheduleCompletionRepository } from '../domain/workout-schedule-completion.repository';
 import type { WorkoutScheduleExerciseId } from '../domain/workout-schedule-exercise-id';
 
-export class SupabaseWorkoutScheduleCompletionRepository
-  implements WorkoutScheduleCompletionRepository
-{
+export class SupabaseWorkoutScheduleCompletionRepository implements WorkoutScheduleCompletionRepository {
   constructor(private readonly client: SupabaseClient<Database>) {}
 
   async complete(input: {
