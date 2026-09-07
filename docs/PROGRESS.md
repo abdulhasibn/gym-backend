@@ -27,7 +27,7 @@ A8b still deferred within 1.5.
 | Supabase Google provider | Done — enabled on `igcmptpjmagzwoccxcnw`; Google OAuth E2E smoke ok |
 | Custom SMTP + OTP email templates | Done — Gmail SMTP (`smtp.gmail.com:587` as `abdulhasibn@gmail.com`); templates still OTP `{{ .Token }}` |
 | Email OTP E2E smoke | Done — OTP request/verify working with Gmail SMTP; App Password rotation deferred by choice |
-| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (dedicated mount so coaching catch-alls cannot 404 it) |
+| Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (dedicated mount so coaching catch-alls cannot 404 it); **CLIENT `GET /gym-orgs` + `GET /gym-orgs/:id`** keyed off ACTIVE membership |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A14: CRUD, pipeline, optional email, convert → PENDING membership invite. Push reminders deferred (3.5) |
 | Memberships feature (`src/features/memberships`) | Phase 1–5 + 2.4 renewals due-list done — plans, invites, accept/grants, subscriptions, roster/assign/offboard/block, `GET .../subscriptions/renewals-due`; A8b attach/renew deferred |
 | Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
@@ -71,6 +71,15 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-07 — CLIENT gym list/get via ACTIVE membership
+
+- `GET /gym-orgs` and `GET /gym-orgs/:gymOrgId` now resolve for CLIENT lane from
+  live `client_memberships` (ACTIVE, `deleted_at` IS NULL). Staff affiliation
+  path unchanged. CLIENT summaries always `isOwner: false`.
+- Query methods: `listForClient` / `getForClient` on `GymOrgQueries`.
+- Docs: `client-auth.md` CLIENT surface + list/get + UX checklist.
+- Next up unchanged: 3.5 notifications.
 
 ### 2026-09-07 — Fix exercise CDN frames: `.png` not `.svg`
 

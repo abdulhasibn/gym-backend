@@ -11,7 +11,10 @@ export class GetGymOrgUseCase {
     actor: AuthenticatedActor,
     gymOrgId: GymOrgId,
   ): Promise<GymOrgDto & { isOwner: boolean }> {
-    const detail = await this.gymOrgQueries.getForUser(actor.userId, gymOrgId);
+    const detail =
+      actor.lane === 'CLIENT'
+        ? await this.gymOrgQueries.getForClient(actor.userId, gymOrgId)
+        : await this.gymOrgQueries.getForUser(actor.userId, gymOrgId);
     if (detail === null) {
       throw new NotFoundError('Gym organization not found');
     }

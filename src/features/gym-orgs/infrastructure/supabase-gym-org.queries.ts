@@ -76,6 +76,105 @@ export class SupabaseGymOrgQueries implements GymOrgQueries {
     };
   }
 
+  async listForClient(userId: UserId): Promise<readonly GymOrgSummary[]> {
+    const gymOrgIds = await this.loadActiveClientGymOrgIds(userId);
+    if (gymOrgIds.length === 0) {
+      return [];
+    }
+
+    const { data: gymOrgs, error: gymOrgError } = await this.client
+      .from('gym_orgs')
+      .select('id, name, timezone')
+      .in('id', gymOrgIds)
+      .is('deleted_at', null);
+
+    if (gymOrgError !== null) {
+      throw new TransientDatabaseFailureError('Unable to read gym organizations', {
+        cause: gymOrgError,
+      });
+    }
+
+    return gymOrgs.map((gymOrg) => ({
+      id: toGymOrgId(gymOrg.id),
+      name: gymOrg.name,
+      timezone: gymOrg.timezone,
+      isOwner: false,
+    }));
+  }
+
+  async getForClient(userId: UserId, gymOrgId: GymOrgId): Promise<GymOrgDetail | null> {
+    const hasMembership = await this.hasActiveClientMembership(userId, gymOrgId);
+    if (!hasMembership) {
+      return null;
+    }
+
+    const { data, error } = await this.client
+      .from('gym_orgs')
+      .select('*')
+      .eq('id', gymOrgId)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (error !== null) {
+      throw new TransientDatabaseFailureError('Unable to read gym organization', {
+        cause: error,
+      });
+    }
+    if (data === null) {
+      return null;
+    }
+
+    return {
+      id: toGymOrgId(data.id),
+      name: data.name,
+      address: data.address,
+      contactPhone: data.contact_phone,
+      contactEmail: data.contact_email,
+      logoUrl: data.logo_url,
+      timezone: data.timezone,
+      ownerUserId: toUserId(data.owner_user_id),
+      isOwner: false,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private async loadActiveClientGymOrgIds(userId: UserId): Promise<readonly string[]> {
+    const { data, error } = await this.client
+      .from('client_memberships')
+      .select('gym_org_id')
+      .eq('client_user_id', userId)
+      .eq('status', 'ACTIVE')
+      .is('deleted_at', null);
+
+    if (error !== null) {
+      throw new TransientDatabaseFailureError('Unable to read client memberships', {
+        cause: error,
+      });
+    }
+
+    return [...new Set((data ?? []).map((row) => row.gym_org_id))];
+  }
+
+  private async hasActiveClientMembership(userId: UserId, gymOrgId: GymOrgId): Promise<boolean> {
+    const { data, error } = await this.client
+      .from('client_memberships')
+      .select('id')
+      .eq('client_user_id', userId)
+      .eq('gym_org_id', gymOrgId)
+      .eq('status', 'ACTIVE')
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (error !== null) {
+      throw new TransientDatabaseFailureError('Unable to read client membership', {
+        cause: error,
+      });
+    }
+
+    return data !== null;
+  }
+
   private async loadAffiliationMap(userId: UserId): Promise<Map<string, { isOwner: boolean }>> {
     const [adminsResult, trainersResult] = await Promise.all([
       this.client

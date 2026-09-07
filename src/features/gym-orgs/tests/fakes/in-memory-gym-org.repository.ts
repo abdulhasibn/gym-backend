@@ -9,6 +9,7 @@ export class InMemoryGymOrgRepository implements GymOrgRepository, GymOrgQueries
   private readonly gymOrgs: GymOrg[] = [];
   private readonly adminAffiliations = new Map<string, { userId: UserId; isOwner: boolean }[]>();
   private readonly trainerAffiliations = new Map<string, UserId[]>();
+  private readonly clientMemberships = new Map<string, UserId[]>();
   private nextId = 1;
 
   async createOwnedGymOrg(command: CreateOwnedGymOrg): Promise<GymOrg> {
@@ -57,6 +58,11 @@ export class InMemoryGymOrgRepository implements GymOrgRepository, GymOrgQueries
     this.adminAffiliations.set(gymOrgId, [...current, { userId, isOwner }]);
   }
 
+  seedClientMembership(gymOrgId: GymOrgId, userId: UserId): void {
+    const current = this.clientMemberships.get(gymOrgId) ?? [];
+    this.clientMemberships.set(gymOrgId, [...current, userId]);
+  }
+
   async listForUser(userId: UserId): Promise<readonly GymOrgSummary[]> {
     const summaries: GymOrgSummary[] = [];
 
@@ -100,6 +106,41 @@ export class InMemoryGymOrgRepository implements GymOrgRepository, GymOrgQueries
       timezone: gymOrg.timezone.value,
       ownerUserId: gymOrg.ownerUserId,
       isOwner: admin?.isOwner ?? false,
+      createdAt: gymOrg.createdAt.toISOString(),
+      updatedAt: gymOrg.updatedAt.toISOString(),
+    };
+  }
+
+  async listForClient(userId: UserId): Promise<readonly GymOrgSummary[]> {
+    return this.gymOrgs
+      .filter((gymOrg) => (this.clientMemberships.get(gymOrg.id) ?? []).includes(userId))
+      .map((gymOrg) => ({
+        id: gymOrg.id,
+        name: gymOrg.name.value,
+        timezone: gymOrg.timezone.value,
+        isOwner: false,
+      }));
+  }
+
+  async getForClient(userId: UserId, gymOrgId: GymOrgId): Promise<GymOrgDetail | null> {
+    const gymOrg = await this.findById(gymOrgId);
+    if (gymOrg === null) {
+      return null;
+    }
+    if (!(this.clientMemberships.get(gymOrgId) ?? []).includes(userId)) {
+      return null;
+    }
+
+    return {
+      id: gymOrg.id,
+      name: gymOrg.name.value,
+      address: gymOrg.address,
+      contactPhone: gymOrg.contactPhone,
+      contactEmail: gymOrg.contactEmail,
+      logoUrl: gymOrg.logoUrl,
+      timezone: gymOrg.timezone.value,
+      ownerUserId: gymOrg.ownerUserId,
+      isOwner: false,
       createdAt: gymOrg.createdAt.toISOString(),
       updatedAt: gymOrg.updatedAt.toISOString(),
     };

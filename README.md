@@ -35,7 +35,7 @@ curl http://localhost:3000/health
 
 | Guide                                                        | Audience                                                                                |
 | ------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [`docs/client-auth.md`](./docs/client-auth.md)               | Auth + **CLIENT** surface map (inbox / accept / grants / subs)                          |
+| [`docs/client-auth.md`](./docs/client-auth.md)               | Auth + **CLIENT** surface map (my gym / inbox / accept / grants / subs)                 |
 | [`docs/membership-invites.md`](./docs/membership-invites.md) | Admin invites + Client accept + DataGrants                                              |
 | [`docs/subscriptions.md`](./docs/subscriptions.md)           | Admin payment / start override + Client subscription list                               |
 | [`docs/roster.md`](./docs/roster.md)                         | Roster, gym trainer list, trainer assign, offboard, check-in block                      |

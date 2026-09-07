@@ -19,6 +19,7 @@ Use lane `CLIENT` on first provision. Staff-only routes (gym create, leads, plan
 | Area | Endpoints | Notes |
 |------|-----------|--------|
 | Auth | `POST /auth/otp/request`, `/otp/verify`, `/refresh`; Google start/complete; `GET /auth/me` | This guide |
+| My gym | `GET /gym-orgs`, `GET /gym-orgs/:gymOrgId` | ACTIVE membership at gym (`isOwner` is always `false`) |
 | Invite inbox | `GET /membership-invites/inbox` | Pending invites by user/email + gym profile |
 | Accept join | `POST /membership-invites/:id/accept` | ACTIVE membership + sub snapshots; one ACTIVE max |
 | DataGrants | `GET` / `PUT /gym-orgs/:gymOrgId/my-data-grants` | Required DOB/HEIGHT/WEIGHT sticky; optional toggles |
@@ -330,7 +331,7 @@ Errors: **403** `GYM_ORG_CREATION_FORBIDDEN` (e.g. CLIENT lane) · **422** `VALI
 
 ### List gym orgs
 
-`GET /gym-orgs` — Bearer affiliated staff
+`GET /gym-orgs` — Bearer affiliated staff **or** CLIENT with an ACTIVE membership
 
 **200**
 
@@ -356,11 +357,11 @@ Errors: **403** `GYM_ORG_CREATION_FORBIDDEN` (e.g. CLIENT lane) · **422** `VALI
 | `timezone` | string (IANA) | Gym timezone | `"Asia/Kolkata"` |
 | `isOwner` | boolean | Whether the actor owns this gym | `true` |
 
-May be `[]` if the staff user has no affiliations yet.
+May be `[]` if the staff user has no affiliations yet, or if the CLIENT has no ACTIVE membership. CLIENT items always have `isOwner: false`. Policy is one ACTIVE membership per client, so CLIENT lists are empty or a single gym.
 
 ### Get gym org
 
-`GET /gym-orgs/:gymOrgId` — Bearer affiliated staff
+`GET /gym-orgs/:gymOrgId` — Bearer affiliated staff **or** CLIENT with an ACTIVE membership at that gym
 
 **Path params**
 
@@ -368,7 +369,7 @@ May be `[]` if the staff user has no affiliations yet.
 |----------|----------|------|-------------|------------------|
 | `gymOrgId` | yes | string (uuid) | Gym to load | `"33333333-3333-4333-8333-333333333333"` |
 
-**200** `{ "gymOrg": { …detail…, "isOwner": true } }` — see [gymOrg](#shared-response-shapes).
+**200** `{ "gymOrg": { …detail…, "isOwner": true } }` — see [gymOrg](#shared-response-shapes). CLIENT responses use `isOwner: false`. **404** `NOT_FOUND` if the actor is not staff-affiliated and has no ACTIVE membership at that gym.
 
 ### Update gym org
 
@@ -542,6 +543,6 @@ Useful errors: `STAFF_INVITE_FORBIDDEN` · `INVALID_STAFF_INVITEE` · `STAFF_ALR
 3. On `LANE_MISMATCH`, tell the user this email belongs to the other account type.
 4. On `OTP_EXPIRED`, send them back to request a new code.
 5. On API `401`, try `POST /auth/refresh` once with the stored refresh token; replace both tokens on success; re-login if refresh fails.
-6. After login: poll **`GET /membership-invites/inbox`**; on accept use the Sharing checklist (required vitals locked on) — see [`membership-invites.md`](membership-invites.md).
+6. After login: **`GET /gym-orgs`** for the current gym (`gymOrgId` for later routes); poll **`GET /membership-invites/inbox`** for pending joins. On accept use the Sharing checklist (required vitals locked on) — see [`membership-invites.md`](membership-invites.md).
 7. Treat any non-2xx as `{ error.code }` — branch UI on `code`, show `message` as fallback.
 8. Prefer Postman **Examples** on each request when generating clients.

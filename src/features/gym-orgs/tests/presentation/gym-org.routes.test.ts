@@ -155,6 +155,59 @@ describe('gym-org routes', () => {
     expect(response.body.error.code).toBe('GYM_ORG_CREATION_FORBIDDEN');
   });
 
+  it('lists and gets the subscribed gym for a CLIENT with an ACTIVE membership', async () => {
+    const { app, gymOrgs } = createTestApp('CLIENT');
+    const created = await gymOrgs.createOwnedGymOrg({
+      ownerUserId: toUserId('cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+      name: GymOrgName.create('Iron Temple'),
+      address: '12 Lift St',
+      contactPhone: '+15550001111',
+      contactEmail: 'desk@irontemple.example',
+      logoUrl: null,
+      timezone: IanaTimezone.create('Asia/Kolkata'),
+    });
+    gymOrgs.seedClientMembership(created.id, toUserId('11111111-1111-4111-8111-111111111111'));
+
+    const list = await supertest(app).get('/gym-orgs').expect(200);
+    expect(list.body.gymOrgs).toEqual([
+      {
+        id: created.id,
+        name: 'Iron Temple',
+        timezone: 'Asia/Kolkata',
+        isOwner: false,
+      },
+    ]);
+
+    const get = await supertest(app).get(`/gym-orgs/${created.id}`).expect(200);
+    expect(get.body.gymOrg).toMatchObject({
+      id: created.id,
+      name: 'Iron Temple',
+      address: '12 Lift St',
+      contactPhone: '+15550001111',
+      contactEmail: 'desk@irontemple.example',
+      timezone: 'Asia/Kolkata',
+      isOwner: false,
+    });
+  });
+
+  it('returns an empty list and 404 when the CLIENT has no ACTIVE membership', async () => {
+    const { app, gymOrgs } = createTestApp('CLIENT');
+    const created = await gymOrgs.createOwnedGymOrg({
+      ownerUserId: toUserId('cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+      name: GymOrgName.create('Iron Temple'),
+      address: null,
+      contactPhone: null,
+      contactEmail: null,
+      logoUrl: null,
+      timezone: IanaTimezone.create('Asia/Kolkata'),
+    });
+
+    const list = await supertest(app).get('/gym-orgs').expect(200);
+    expect(list.body.gymOrgs).toEqual([]);
+
+    await supertest(app).get(`/gym-orgs/${created.id}`).expect(404);
+  });
+
   it('returns validation errors for an invalid timezone', async () => {
     const { app } = createTestApp();
     const response = await supertest(app)

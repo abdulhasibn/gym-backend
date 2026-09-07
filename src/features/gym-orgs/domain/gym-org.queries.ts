@@ -25,4 +25,6 @@ export interface GymOrgDetail {
 export interface GymOrgQueries {
   listForUser(userId: UserId): Promise<readonly GymOrgSummary[]>;
   getForUser(userId: UserId, gymOrgId: GymOrgId): Promise<GymOrgDetail | null>;
+  listForClient(userId: UserId): Promise<readonly GymOrgSummary[]>;
+  getForClient(userId: UserId, gymOrgId: GymOrgId): Promise<GymOrgDetail | null>;
 }

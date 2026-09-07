@@ -7,7 +7,10 @@ export class ListMyGymOrgsUseCase {
   constructor(private readonly gymOrgQueries: GymOrgQueries) {}
 
   async execute(actor: AuthenticatedActor): Promise<readonly GymOrgSummaryDto[]> {
-    const gymOrgs = await this.gymOrgQueries.listForUser(actor.userId);
+    const gymOrgs =
+      actor.lane === 'CLIENT'
+        ? await this.gymOrgQueries.listForClient(actor.userId)
+        : await this.gymOrgQueries.listForUser(actor.userId);
     return gymOrgs.map(toGymOrgSummaryDto);
   }
 }
