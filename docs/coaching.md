@@ -12,7 +12,7 @@ Auth: `Authorization: Bearer <accessToken>`. Errors: `{ "error": { "code", "mess
 
 Requires in-date `TRAINER_COACHING` addon to upsert or complete. Assigned Trainer, or Admin-as-Trainer (live trainer profile). **`WORKOUT_PLANS` grant is not required** to author or read the schedule **definition**; it gates staff **adherence** fields (`completed`, `dayDone`, `adherencePercent`).
 
-Seed catalog is 30 movements. Example id: `e0e00000-0000-4000-8000-000000000001` (Barbell Bench Press).
+Seed catalog is **324 movements** (30 bootstrap + 294 from `@bryllim/workout-guide@1.0.0`, CC BY-SA 4.0). Example id: `e0e00000-0000-4000-8000-000000000001` (Barbell Bench Press).
 
 The legacy dayLabel `WorkoutPlan` assign/GET/complete HTTP surface is **retired** (tables may remain unused).
 
@@ -24,9 +24,11 @@ The legacy dayLabel `WorkoutPlan` assign/GET/complete HTTP surface is **retired*
 
 Any authenticated user. Seed catalog only. Empty `q` returns the bootstrap list (capped at 20).
 
-**200:** `{ "exercises": [ { id, name, aliases, primaryMuscle, equipment, measurement } ] }`
+**200:** `{ "exercises": [ { id, name, aliases, primaryMuscle, equipment, measurement, illustration } ] }`
 
 `primaryMuscle` / `equipment` / `measurement` are the frozen catalog enums (ADR-0007).
+
+`illustration` is `null` if no image is mapped; otherwise `{ frames: [url1, url2, url3], attribution }` — three sequential pose SVGs served from pinned jsDelivr CDN (`@bryllim/workout-guide@1.0.0`). Attribution text must be displayed per CC BY-SA 4.0.
 
 ---
 
