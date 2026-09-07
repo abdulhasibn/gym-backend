@@ -28,7 +28,7 @@ Any authenticated user. Seed catalog only. Empty `q` returns the bootstrap list 
 
 `primaryMuscle` / `equipment` / `measurement` are the frozen catalog enums (ADR-0007).
 
-`illustration` is `null` if no image is mapped; otherwise `{ frames: [url1, url2, url3], attribution }` — three sequential pose SVGs served from pinned jsDelivr CDN (`@bryllim/workout-guide@1.0.0`). Attribution text must be displayed per CC BY-SA 4.0.
+`illustration` is `null` if no image is mapped; otherwise `{ frames: [url1, url2, url3], attribution }` — three sequential 512×512 PNG pose frames served from pinned jsDelivr CDN (`@bryllim/workout-guide@1.0.0`). Attribution text must be displayed per CC BY-SA 4.0.
 
 ---
 

@@ -186,13 +186,22 @@ export function toDietPlanTemplateDtoFromSummary(
   };
 }
 
+/** Pinned jsDelivr base. Published @1.0.0 frames are PNG (`frame.path` in the package manifest). */
 const WORKOUT_GUIDE_CDN = 'https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets';
 
 const WORKOUT_GUIDE_ATTRIBUTION =
   'Exercise artwork by Everkinetic & Bryl Lim — CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)';
 
+function toIllustrationFrames(slug: string): readonly [string, string, string] {
+  return [
+    `${WORKOUT_GUIDE_CDN}/${slug}/frame-1.png`,
+    `${WORKOUT_GUIDE_CDN}/${slug}/frame-2.png`,
+    `${WORKOUT_GUIDE_CDN}/${slug}/frame-3.png`,
+  ];
+}
+
 export interface ExerciseIllustrationDto {
-  /** Three sequential pose frames: start, mid, end. Each is a pinned jsDelivr CDN URL. */
+  /** Three sequential PNG pose frames (start, mid, end) on pinned jsDelivr. */
   readonly frames: readonly [string, string, string];
   readonly attribution: string;
 }
@@ -211,11 +220,7 @@ export interface ExerciseSearchDto {
 export function toExerciseSearchDto(hit: ExerciseSearchHit): ExerciseSearchDto {
   const illustration: ExerciseIllustrationDto | null = hit.illustrationSlug
     ? {
-        frames: [
-          `${WORKOUT_GUIDE_CDN}/${hit.illustrationSlug}/frame-1.svg`,
-          `${WORKOUT_GUIDE_CDN}/${hit.illustrationSlug}/frame-2.svg`,
-          `${WORKOUT_GUIDE_CDN}/${hit.illustrationSlug}/frame-3.svg`,
-        ],
+        frames: toIllustrationFrames(hit.illustrationSlug),
         attribution: WORKOUT_GUIDE_ATTRIBUTION,
       }
     : null;

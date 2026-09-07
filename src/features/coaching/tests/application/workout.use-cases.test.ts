@@ -99,7 +99,7 @@ function seedCatalog() {
     primaryMuscle: 'CHEST',
     equipment: 'BARBELL',
     measurement: 'WEIGHT_REPS',
-    illustrationSlug: null,
+    illustrationSlug: 'bench-press',
   });
   return catalog;
 }
@@ -143,6 +143,11 @@ describe('SearchExercisesUseCase', () => {
     const hits = await useCase.execute('bench');
     expect(hits).toHaveLength(1);
     expect(hits[0]?.name).toBe('Barbell Bench Press');
+    expect(hits[0]?.illustration?.frames).toEqual([
+      'https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-1.png',
+      'https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-2.png',
+      'https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-3.png',
+    ]);
   });
 });
 

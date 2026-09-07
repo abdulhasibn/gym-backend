@@ -18,7 +18,7 @@ A8b still deferred within 1.5.
 | Local `.env` with service role key | Done — retrieved from Supabase CLI; ignored by git |
 | Seed roles + permissions | Done — 4 roles, 29 permission rows (verified live) |
 | Food catalog seed | Done — 20 foods × 8 units (160 servings), `source=seed` |
-| Exercise catalog seed | Done — 302 movements, `source=seed`; `illustration_slug` column; CDN frames in search DTO (ADR-0007) |
+| Exercise catalog seed | Done — 302 movements, `source=seed`; `illustration_slug` column; PNG CDN frames in search DTO (ADR-0007) |
 | Feature RLS policies (beyond deny-all) | Not started — 36 public tables RLS on, no policies |
 | Auth feature module (`src/features/auth`) | Done — OTP, Google start/callback/complete, `POST /auth/refresh`, provisioning, query-port reads, feature-scoped Bearer middleware, `/auth/me`; access tokens verified locally (`getClaims` JWKS / jose HS256), not `auth.getUser` per request; **temp master OTP `123456`** |
 | Auth automated tests | Partial — refresh use-case + route coverage added; Google provider E2E and remaining failure-path coverage still deferred |
@@ -71,6 +71,15 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-07 — Fix exercise CDN frames: `.png` not `.svg`
+
+- `GET /exercises/search` was emitting jsDelivr URLs ending in `.svg`.
+  `@bryllim/workout-guide@1.0.0` ships PNG frames (`assets/<slug>/frame-<n>.png`);
+  SVG paths 404. Confirmed PNG returns 200.
+- Fixed `toExerciseSearchDto`; docs (`coaching.md`, `schema.dbml`, research note);
+  Postman Search Exercises example; unit test on search DTO frames.
+- Next up unchanged: 3.5 notifications.
 
 ### 2026-09-07 — Applied migrations via Supabase MCP + synced Postman + docs
 

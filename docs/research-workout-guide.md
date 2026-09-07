@@ -29,7 +29,7 @@ Package manifest inspected at
 | Base artwork | Everkinetic (`github.com/everkinetic/data`) — 76 first-pose frames vector-traced / recoloured |
 | Total exercises | **302** |
 | Frames per exercise | **3** (start, mid, end pose) |
-| Total assets | **906** transparent 512 × 512 SVG/PNG files |
+| Total assets | **906** transparent 512 × 512 PNG files |
 | Delivery options | npm package path · pinned jsDelivr CDN · Expo `require()` |
 | Code license | MIT |
 | Visual asset license | **CC BY-SA 4.0** |
@@ -64,10 +64,12 @@ type Exercise = {
 ### CDN URL pattern
 
 ```
-https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/<slug>/frame-<1|2|3>.svg
+https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/<slug>/frame-<1|2|3>.png
 ```
 
 Pin the version (`@1.0.0`) — do **not** hotlink `@latest`; that would break on new major versions.
+
+The publisher's integration guide still documents `.svg`. Published `@1.0.0` assets are PNG (`format: "png"` in `manifest.json`; `getAssetUrl` uses `frame.path`). `.svg` URLs 404 on jsDelivr.
 
 ---
 
@@ -187,12 +189,12 @@ Package manifest confirmed: all slugs exist in `@bryllim/workout-guide@1.0.0` un
 
 ```
 # Push-up — frame 1 (start position)
-https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/push-up/frame-1.svg
+https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/push-up/frame-1.png
 
 # Bench Press — all 3 frames
-https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-1.svg
-https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-2.svg
-https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-3.svg
+https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-1.png
+https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-2.png
+https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-3.png
 ```
 
 ---
@@ -294,7 +296,7 @@ illustration: slug
   ? {
       frames: [1, 2, 3].map(
         (n) =>
-          `https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/${slug}/frame-${n}.svg`,
+          `https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/${slug}/frame-${n}.png`,
       ),
       attribution:
         'Exercise artwork by Everkinetic & Bryl Lim, CC BY-SA 4.0 — https://creativecommons.org/licenses/by-sa/4.0/',
