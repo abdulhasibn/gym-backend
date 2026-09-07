@@ -41,18 +41,20 @@ window.MODULES_DATA = [
     id: "M2",
     name: "Gym Organization",
     filters: ["admin", "trainer", "client"],
-    tags: ["admin"],
-    personas: "Admin creates and configures; Trainers accept staff invites; Clients only see gym profile on membership invites.",
+    tags: ["admin", "client"],
+    personas: "Admin creates and configures; Trainers accept staff invites; Clients list and get the gym they have subscribed to.",
     summary:
       "Tenant root for the product. Owner creates a Gym Org, then invites staff via staff_code / QR. Client membership invites are issued under M3.",
     howItWorks: [
       "STAFF_UNASSIGNED or ADMIN creates org → owner Admin (+ optional trainer profile).",
       "Admin issues staff invites; invitee inbox embeds gym profile.",
       "Accept upgrades role to TRAINER or desk ADMIN (Admin cap ~3).",
+      "CLIENT with an ACTIVE membership lists/gets that gym’s profile.",
       "MVP UI is single-gym even if an owner can own multiple orgs in data.",
     ],
     items: [
       "GymOrg create / profile / branding / timezone — API live",
+      "CLIENT list/get subscribed gym (ACTIVE membership) — API live",
       "Client membership invites (in-app list) — see M3",
       "Staff invites via staff_code / QR — API live",
       "Ownership: multi-org in DB, single-gym UI",
@@ -63,12 +65,14 @@ window.MODULES_DATA = [
         "Create and configure the gym tenant; issue staff invites; own branding and timezone used for calendar-day rules.",
       howItWorks: [
         "Create/list/get/patch gym profile (name, address, contact, logo, timezone).",
+        "CLIENT GET /gym-orgs and GET /gym-orgs/:id after ACTIVE membership (isOwner false).",
         "Staff invites are in-app codes — not email magic links. Default expiry 14 days.",
         "Invitee must be STAFF lane; cannot accept into a gym they already belong to.",
         "Client join is not a gym code — Admin membership invite only (M3).",
       ],
       acceptance: [
         "Owner can create org and list affiliations.",
+        "CLIENT with ACTIVE membership can list/get that gym.",
         "Staff invite create → inbox → accept updates role and affiliations.",
       ],
       prdRefs: "A1, A2, A2b, T2 · PRD §5.1",

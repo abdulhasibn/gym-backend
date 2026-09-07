@@ -72,6 +72,17 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-09-07 — Sync docs + Postman for CLIENT gym list/get
+
+- Orbit `modules-data.js` M2: CLIENT list/get subscribed gym is API live (was
+  “profile only on membership invites”).
+- Postman Gym Orgs: List My Gym Orgs + Get Gym Org Docs + CLIENT Examples.
+- Showcase deploy: alias https://gym-prd-visual.vercel.app
+  (`dpl_5YMR1a5FgkdhivzxyXiy6fKJCUAY`).
+- Postman cloud putCollection task `70ffe7d4-6336-43c5-9922-d696523ea75a`
+  succeeded; Gym Orgs List/Get Docs + CLIENT Examples live.
+- Next up unchanged: 3.5 notifications.
+
 ### 2026-09-07 — CLIENT gym list/get via ACTIVE membership
 
 - `GET /gym-orgs` and `GET /gym-orgs/:gymOrgId` now resolve for CLIENT lane from
