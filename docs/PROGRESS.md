@@ -72,6 +72,16 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-09-07 — Applied migrations via Supabase MCP + synced Postman + docs
+
+- Applied both illustration migrations via Supabase MCP to remote project (`igcmptpjmagzwoccxcnw`):
+  - Migration A: `illustration_slug` column + UPDATE 30 bootstrap rows.
+  - Migration B: 302-exercise seed (ON CONFLICT DO NOTHING → 324 total, 100% slug coverage).
+- Regenerated `database.types.ts` from live remote schema (`illustration_slug` in Row/Insert/Update).
+- Pushed code to GitHub (`feat(coaching)` + `chore` prettier + `docs(coaching)` commits).
+- Postman `Search Exercises` Docs + Example refreshed (`illustration` field, CDN frames, CC BY-SA attribution). Audit 0 gaps. Cloud synced async task `eca3ea45`.
+- `docs/coaching.md` updated: seed count corrected to 324 movements; `illustration` field documented.
+
 ### 2026-09-07 — Exercise illustration layer: 302 exercises + CDN frames in search API
 
 - Added `illustration_slug varchar(120) NULL` to `exercise_items`
