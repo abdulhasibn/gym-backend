@@ -379,8 +379,15 @@ type WorkoutTemplateRow = Database['public']['Tables']['workout_plan_templates']
 type WorkoutTemplateExerciseRow =
   Database['public']['Tables']['workout_plan_template_exercises']['Row'];
 
+type TemplateExerciseItem = {
+  name: string;
+  primary_muscle: string;
+  equipment: string;
+  illustration_slug: string | null;
+};
+
 export type WorkoutTemplateExerciseWithItem = WorkoutTemplateExerciseRow & {
-  exercise_items: { name: string } | { name: string }[] | null;
+  exercise_items: TemplateExerciseItem | TemplateExerciseItem[] | null;
 };
 
 export type WorkoutTemplateWithExercises = WorkoutTemplateRow & {
@@ -417,15 +424,21 @@ export function toWorkoutPlanTemplateSummary(
     title: row.title,
     notes: row.notes,
     clonedFromId: row.cloned_from_id === null ? null : toWorkoutPlanTemplateId(row.cloned_from_id),
-    exercises: toTemplateExercises(row).map((exercise) => ({
-      id: exercise.id,
-      exerciseItemId: exercise.exerciseItemId,
-      name: templateExerciseName(row, exercise.id) ?? exercise.exerciseItemId,
-      sets: exercise.sets,
-      reps: exercise.reps,
-      notes: exercise.notes,
-      sortOrder: exercise.sortOrder,
-    })),
+    exercises: toTemplateExercises(row).map((exercise) => {
+      const item = templateExerciseCatalogItem(row, exercise.id);
+      return {
+        id: exercise.id,
+        exerciseItemId: exercise.exerciseItemId,
+        name: item?.name ?? exercise.exerciseItemId,
+        primaryMuscle: item?.primary_muscle,
+        equipment: item?.equipment,
+        illustrationSlug: item?.illustration_slug ?? null,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        notes: exercise.notes,
+        sortOrder: exercise.sortOrder,
+      };
+    }),
     createdAt: toValidDate(row.created_at).toISOString(),
     updatedAt: toValidDate(row.updated_at).toISOString(),
   };
@@ -461,10 +474,10 @@ function toTemplateExercises(row: WorkoutTemplateWithExercises) {
     }));
 }
 
-function templateExerciseName(
+function templateExerciseCatalogItem(
   row: WorkoutTemplateWithExercises,
   exerciseId: string,
-): string | null {
+): TemplateExerciseItem | null {
   const exercise = (row.workout_plan_template_exercises ?? []).find(
     (candidate) => candidate.id === exerciseId,
   );
@@ -473,9 +486,9 @@ function templateExerciseName(
   }
   const nested = exercise.exercise_items;
   if (Array.isArray(nested)) {
-    return nested[0]?.name ?? null;
+    return nested[0] ?? null;
   }
-  return nested?.name ?? null;
+  return nested ?? null;
 }
 
 type ScheduleDayRow = Database['public']['Tables']['workout_schedule_days']['Row'];
@@ -516,12 +529,15 @@ export function toWorkoutScheduleDay(row: ScheduleDayWithSessions): WorkoutSched
 export function toWorkoutScheduleDaySummary(
   row: ScheduleDayWithSessions,
 ): WorkoutScheduleDaySummary {
+  // Normalize schedule_date to YYYY-MM-DD regardless of whether the driver
+  // returns a plain date string or an ISO datetime (e.g. '2026-09-07T00:00:00Z').
+  const scheduleDate = CalendarDate.create(row.schedule_date.slice(0, 10)).value;
   return {
     id: toWorkoutScheduleDayId(row.id),
     clientUserId: toUserId(row.client_user_id),
     gymOrgId: toGymOrgId(row.gym_org_id),
     trainerId: row.trainer_id,
-    scheduleDate: row.schedule_date,
+    scheduleDate,
     kind: parseWorkoutScheduleDayKind(row.kind),
     sessions: toScheduleSessions(row).map((session) => ({
       id: session.id,

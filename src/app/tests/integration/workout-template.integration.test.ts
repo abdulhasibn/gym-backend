@@ -59,7 +59,15 @@ describe('workout plan templates HTTP (local Supabase)', () => {
       .set(admin);
     expect(got.status).toBe(200);
     expect(got.body.workoutPlanTemplate.title).toBe('Circuit library');
-    expect(got.body.workoutPlanTemplate.exercises[0].name).toBeTruthy();
+    // G1: catalog fields embedded on template GET
+    const ex = got.body.workoutPlanTemplate.exercises[0];
+    expect(ex.name).toBeTruthy();
+    expect(ex.primaryMuscle).toBeTruthy();
+    expect(ex.equipment).toBeTruthy();
+    expect(ex.sortOrder).toBe(0);
+    expect(ex.illustration).not.toBeNull();
+    expect(Array.isArray(ex.illustration?.frames)).toBe(true);
+    expect(ex.illustration?.frames).toHaveLength(3);
 
     const patched = await supertest(app)
       .patch(`/gym-orgs/${gymOrgId}/workout-plan-templates/${templateId}`)

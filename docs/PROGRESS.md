@@ -34,7 +34,7 @@ A8b still deferred within 1.5.
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
-| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule (ADR-0010), completion window + adherence (ADR-0011), streaks (ADR-0012); legacy dayLabel HTTP retired; not set logs; not CustomExercise |
+| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule (ADR-0010), completion window + adherence (ADR-0011), streaks (ADR-0012); legacy dayLabel HTTP retired; not set logs; not CustomExercise; G1/G2/G10 contract fixes shipped |
 | Health sync (`src/features/health-sync`) | Done — connect/disconnect, batch metrics sync (device-push), client list, staff WEARABLES grant read; weight → ProgressLog via users port |
 | Other feature modules under `src/features/*` | Next **3.5** notifications; then audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
@@ -71,6 +71,46 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-08 — Workout blocking gaps G1 / G2 / G10
+
+Detour from Next up (3.5 notifications) to close mobile v1 contract holes.
+
+- **G1** Template GET/list now embeds `primaryMuscle`, `equipment`, `illustration`
+  (frames + attribution), `sortOrder` on every exercise line. Infra: widened
+  `TEMPLATE_SELECT` in `supabase-workout-plan-template.queries.ts`; new
+  `TemplateExerciseItem` local type + `templateExerciseCatalogItem` helper in
+  `coaching.mapper.ts`; `WorkoutPlanTemplateExerciseSummary` in
+  `workout-plan-template.queries.ts`; `WorkoutPlanTemplateExerciseDto` +
+  `toWorkoutPlanTemplateDtoFromSummary` reuse existing `toIllustrationFrames` /
+  `WORKOUT_GUIDE_ATTRIBUTION`. Write responses (POST/PATCH/duplicate) stay
+  entity-mapped; `illustration: null`.
+- **G2** Schedule day DTOs (PUT + GET) now carry `morningTemplateId` and
+  `eveningTemplateId` derived from `sessions[].slot + clonedFromTemplateId`.
+  `templateIdBySlot` helper added in `coaching.dto.ts`; REST days yield `null`
+  for both. `sessions[].clonedFromTemplateId` preserved.
+- **G10** `toWorkoutScheduleDaySummary` in `coaching.mapper.ts` normalises
+  `schedule_date` to `YYYY-MM-DD` via `CalendarDate.create(slice(0,10))`.
+  Fixes potential ISO datetime from driver. Envelope `{ days }` and sparse
+  omit of unscheduled dates unchanged by design.
+- **G4** reply only: pagination already live — `?limit=&offset=`; documented in
+  `docs/coaching.md`.
+- **G5/G7/G8** declined: contradict ADR-0010 / ADR-0007 / ADR-0011.
+- Tests: 14 new unit assertions (3 in new
+  `tests/infrastructure/coaching.mapper.test.ts`; 11 in existing
+  `workout.use-cases.test.ts`); integration assertions extended in
+  `workout-template.integration.test.ts` and
+  `workout-coaching.integration.test.ts`. All 310 offline tests green.
+- Docs: `docs/coaching.md` updated (template exercise line example, schedule
+  day shape, pagination note).
+
+### 2026-09-07 — Sync Postman for CLIENT GET /me/gym
+
+- gym-backend-postman `108547e`: Gym Orgs **Get My Gym** (`GET /me/gym`) Docs +
+  Examples (200 / 404 / 403). Smoke flow after accept uses Get My Gym.
+- Cloud `putCollection` task `510aa6c2-3909-44d0-9938-c0077cef26f5` succeeded;
+  request sits under Gym Orgs (not collection root).
+- Next up unchanged: 3.5 notifications.
 
 ### 2026-09-07 — CLIENT GET /me/gym (token-only current gym)
 

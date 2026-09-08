@@ -13,7 +13,8 @@ import type {
 } from '../domain/workout-plan-template.queries';
 import { toWorkoutPlanTemplateSummary, type WorkoutTemplateWithExercises } from './coaching.mapper';
 
-const TEMPLATE_SELECT = '*, workout_plan_template_exercises(*, exercise_items(name))';
+const TEMPLATE_SELECT =
+  '*, workout_plan_template_exercises(*, exercise_items(name, primary_muscle, equipment, illustration_slug))';
 
 export class SupabaseWorkoutPlanTemplateQueries implements WorkoutPlanTemplateQueries {
   constructor(private readonly client: SupabaseClient<Database>) {}

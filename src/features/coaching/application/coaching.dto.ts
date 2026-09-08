@@ -342,9 +342,14 @@ export interface WorkoutPlanTemplateExerciseDto {
   readonly id: string;
   readonly exerciseItemId: string;
   readonly name?: string;
+  readonly primaryMuscle?: string;
+  readonly equipment?: string;
   readonly sets: number | null;
   readonly reps: string | null;
   readonly notes: string | null;
+  readonly sortOrder: number;
+  /** null when no illustration is mapped for this exercise. */
+  readonly illustration: ExerciseIllustrationDto | null;
 }
 
 export interface WorkoutPlanTemplateDto {
@@ -367,12 +372,16 @@ export function toWorkoutPlanTemplateDto(template: WorkoutPlanTemplate): Workout
     title: template.title.value,
     notes: template.notes,
     clonedFromId: template.clonedFromId,
+    // Write responses are entity-mapped: catalog fields not available without a query.
+    // GET/list (query path) provides primaryMuscle, equipment, illustration.
     exercises: template.exercises.map((exercise) => ({
       id: exercise.id,
       exerciseItemId: exercise.exerciseItemId,
       sets: exercise.sets,
       reps: exercise.reps,
       notes: exercise.notes,
+      sortOrder: exercise.sortOrder,
+      illustration: null,
     })),
     createdAt: template.createdAt.toISOString(),
     updatedAt: template.updatedAt.toISOString(),
@@ -389,14 +398,26 @@ export function toWorkoutPlanTemplateDtoFromSummary(
     title: summary.title,
     notes: summary.notes,
     clonedFromId: summary.clonedFromId,
-    exercises: summary.exercises.map((exercise) => ({
-      id: exercise.id,
-      exerciseItemId: exercise.exerciseItemId,
-      name: exercise.name,
-      sets: exercise.sets,
-      reps: exercise.reps,
-      notes: exercise.notes,
-    })),
+    exercises: summary.exercises.map((exercise) => {
+      const illustration: ExerciseIllustrationDto | null = exercise.illustrationSlug
+        ? {
+            frames: toIllustrationFrames(exercise.illustrationSlug),
+            attribution: WORKOUT_GUIDE_ATTRIBUTION,
+          }
+        : null;
+      return {
+        id: exercise.id,
+        exerciseItemId: exercise.exerciseItemId,
+        name: exercise.name,
+        primaryMuscle: exercise.primaryMuscle,
+        equipment: exercise.equipment,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        notes: exercise.notes,
+        sortOrder: exercise.sortOrder,
+        illustration,
+      };
+    }),
     createdAt: summary.createdAt,
     updatedAt: summary.updatedAt,
   };
@@ -430,6 +451,10 @@ export interface WorkoutScheduleDayDto {
   readonly trainerId: string;
   readonly scheduleDate: string;
   readonly kind: string;
+  /** Template id used for the MORNING session — mirrors the PUT body field. null when no morning session. */
+  readonly morningTemplateId: string | null;
+  /** Template id used for the EVENING session — mirrors the PUT body field. null when no evening session. */
+  readonly eveningTemplateId: string | null;
   readonly sessions: readonly WorkoutScheduleSessionDto[];
   readonly writable?: boolean;
   readonly dayDone?: boolean;
@@ -443,6 +468,13 @@ export interface WorkoutScheduleAdherenceExtras {
   readonly completedExerciseIds?: ReadonlySet<WorkoutScheduleExerciseId>;
   /** When true, attach dayDone / adherencePercent / completed flags. */
   readonly includeAdherence?: boolean;
+}
+
+function templateIdBySlot(
+  sessions: readonly { slot: string; clonedFromTemplateId: string }[],
+  slot: 'MORNING' | 'EVENING',
+): string | null {
+  return sessions.find((s) => s.slot === slot)?.clonedFromTemplateId ?? null;
 }
 
 export function toWorkoutScheduleDayDtoFromEntity(
@@ -462,6 +494,8 @@ export function toWorkoutScheduleDayDtoFromEntity(
     trainerId: day.trainerId,
     scheduleDate: day.scheduleDate.value,
     kind: day.kind,
+    morningTemplateId: templateIdBySlot(day.sessions, 'MORNING'),
+    eveningTemplateId: templateIdBySlot(day.sessions, 'EVENING'),
     sessions: day.sessions.map((session) => ({
       id: session.id,
       slot: session.slot,
@@ -501,6 +535,8 @@ export function toWorkoutScheduleDayDtoFromSummary(
     trainerId: summary.trainerId,
     scheduleDate: summary.scheduleDate,
     kind: summary.kind,
+    morningTemplateId: templateIdBySlot(summary.sessions, 'MORNING'),
+    eveningTemplateId: templateIdBySlot(summary.sessions, 'EVENING'),
     sessions: summary.sessions.map((session) => ({
       id: session.id,
       slot: session.slot,

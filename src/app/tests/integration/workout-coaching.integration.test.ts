@@ -84,6 +84,14 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
       });
     expect(upserted.status).toBe(200);
     expect(upserted.body.days).toHaveLength(3);
+    // G2: PUT response echoes morningTemplateId on TRAINING days
+    expect(upserted.body.days[0].morningTemplateId).toBe(templateId);
+    expect(upserted.body.days[0].eveningTemplateId).toBeNull();
+    // REST day: both null
+    expect(upserted.body.days[2].morningTemplateId).toBeNull();
+    expect(upserted.body.days[2].eveningTemplateId).toBeNull();
+    // G10: scheduleDate is always YYYY-MM-DD, not an ISO datetime
+    expect(upserted.body.days[0].scheduleDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
     const staffGet = await supertest(app)
       .get(`/gym-orgs/${gymOrgId}/clients/${client.userId}/workout-schedule`)
@@ -91,6 +99,12 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
       .set(admin);
     expect(staffGet.status).toBe(200);
     expect(staffGet.body.days).toHaveLength(2);
+    // G2: GET also echoes morningTemplateId
+    expect(staffGet.body.days[0].morningTemplateId).toBe(templateId);
+    expect(staffGet.body.days[0].eveningTemplateId).toBeNull();
+    // G10: scheduleDate from GET matches YYYY-MM-DD and equals the PUT date
+    expect(staffGet.body.days[0].scheduleDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(staffGet.body.days[0].scheduleDate).toBe(upserted.body.days[0].scheduleDate);
     // No WORKOUT_PLANS grant by default → no adherence fields
     expect(staffGet.body.days[0].dayDone).toBeUndefined();
 

@@ -63,6 +63,13 @@ Idempotent replace of the **listed dates only**. Each TRAINING slot snapshots ti
 
 **200:** `{ "days": [ … ] }` · **409** `COACHING_ADDON_REQUIRED` · **404** missing membership or template · **422** `INVALID_WORKOUT_SCHEDULE`
 
+Each day in `days` carries:
+
+- `scheduleDate` — always `YYYY-MM-DD` (not an ISO datetime)
+- `morningTemplateId` — uuid of the MORNING session's source template, or `null`
+- `eveningTemplateId` — uuid of the EVENING session's source template, or `null`
+- `sessions[].clonedFromTemplateId` — same template uuid per session (redundant but preserved)
+
 ---
 
 ## Staff get schedule
@@ -73,7 +80,9 @@ Optional sugar: `?date=` (single day). Max range **62** days. Trainer must be th
 
 **Definition** always returned. **Adherence** (`completed` / `dayDone` / `adherencePercent`) only when the client has granted `WORKOUT_PLANS` at this gym.
 
-**200:** `{ "days": [ … ] }`
+Unscheduled calendar dates are **omitted** from `days` (sparse); only dates with live rows are returned.
+
+**200:** `{ "days": [ … ] }` — same day shape as PUT response above (with exercise `name` added from catalog join)
 
 ---
 
@@ -128,14 +137,18 @@ Reusable **flat** exercise lists for the gym library. Creating/duplicating does 
 
 **ACL:** any live Trainer / Admin-as-Trainer at the gym may **list/get/duplicate** all live templates. **Update/delete** = author or Admin only. Duplicate lands in the **duplicator’s** library (`clonedFromId` set).
 
+**List is paginated:** `?limit=` (default 20, max 100) `&offset=` → `{ workoutPlanTemplates: { items, total, limit, offset } }`.
+
 | Method | Path |
 |--------|------|
 | `POST` | `/gym-orgs/:gymOrgId/workout-plan-templates` |
-| `GET` | `/gym-orgs/:gymOrgId/workout-plan-templates` |
+| `GET` | `/gym-orgs/:gymOrgId/workout-plan-templates?limit=&offset=` |
 | `GET` | `/gym-orgs/:gymOrgId/workout-plan-templates/:templateId` |
 | `POST` | `/gym-orgs/:gymOrgId/workout-plan-templates/:templateId/duplicate` |
 | `PATCH` | `/gym-orgs/:gymOrgId/workout-plan-templates/:templateId` |
 | `DELETE` | `/gym-orgs/:gymOrgId/workout-plan-templates/:templateId` |
+
+**Write body (POST / PATCH):**
 
 ```json
 {
@@ -149,5 +162,29 @@ Reusable **flat** exercise lists for the gym library. Creating/duplicating does 
       "notes": null
     }
   ]
+}
+```
+
+**GET / list exercise line** — catalog fields are embedded on the query path (GET / list). Write responses (POST / PATCH / duplicate) are entity-mapped: `illustration` is `null` and catalog fields are absent until the client re-GETs.
+
+```json
+{
+  "id": "<uuid>",
+  "exerciseItemId": "e0e00000-0000-4000-8000-000000000001",
+  "name": "Bench Press (Barbell)",
+  "primaryMuscle": "CHEST",
+  "equipment": "BARBELL",
+  "sets": 3,
+  "reps": "8-12",
+  "notes": null,
+  "sortOrder": 0,
+  "illustration": {
+    "frames": [
+      "https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-1.png",
+      "https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-2.png",
+      "https://cdn.jsdelivr.net/npm/@bryllim/workout-guide@1.0.0/assets/bench-press/frame-3.png"
+    ],
+    "attribution": "Exercise artwork by Everkinetic & Bryl Lim — CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)"
+  }
 }
 ```

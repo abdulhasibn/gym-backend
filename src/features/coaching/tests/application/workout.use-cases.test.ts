@@ -7,6 +7,10 @@ import { toGymOrgId } from '../../../../domain/shared/gym-org-id';
 import { toUserId } from '../../../../domain/shared/user-id';
 import { CoachingAddonRequiredError } from '../../application/coaching-addon-required.error';
 import { CoachingForbiddenError } from '../../application/coaching-forbidden.error';
+import {
+  toWorkoutPlanTemplateDtoFromSummary,
+  toWorkoutScheduleDayDtoFromSummary,
+} from '../../application/coaching.dto';
 import { CompleteScheduleExerciseUseCase } from '../../application/complete-schedule-exercise.use-case';
 import { DietAssignPolicy } from '../../application/diet-assign.policy';
 import { DietClientPolicy } from '../../application/diet-client.policy';
@@ -23,6 +27,9 @@ import { toExerciseItemId } from '../../domain/exercise-item-id';
 import type { GymLocalClock } from '../../domain/gym-local-clock.port';
 import { InvalidWorkoutScheduleError } from '../../domain/invalid-workout-schedule.error';
 import { toTrainerProfileId } from '../../domain/trainer-profile-id';
+import type { WorkoutScheduleDayKind } from '../../domain/workout-schedule-day-kind';
+import { toWorkoutScheduleDayId } from '../../domain/workout-schedule-day-id';
+import { toWorkoutScheduleSessionId } from '../../domain/workout-schedule-session-id';
 import { WorkoutPlanTemplate } from '../../domain/workout-plan-template.entity';
 import { toWorkoutPlanTemplateExerciseId } from '../../domain/workout-plan-template-exercise-id';
 import { toWorkoutPlanTemplateId } from '../../domain/workout-plan-template-id';
@@ -177,8 +184,13 @@ describe('UpsertWorkoutScheduleUseCase', () => {
     expect(days[0]?.kind).toBe('TRAINING');
     expect(days[0]?.sessions[0]?.title).toBe('Push AM');
     expect(days[0]?.sessions[0]?.exercises).toHaveLength(1);
+    // G2: day-level template ids echoed on PUT response
+    expect(days[0]?.morningTemplateId).toBe(templateId);
+    expect(days[0]?.eveningTemplateId).toBeNull();
     expect(days[1]?.kind).toBe('REST');
     expect(days[1]?.sessions).toHaveLength(0);
+    expect(days[1]?.morningTemplateId).toBeNull();
+    expect(days[1]?.eveningTemplateId).toBeNull();
   });
 
   it('overwrites a prior day when the same date is upserted again', async () => {
@@ -629,5 +641,164 @@ describe('workout streak', () => {
 
     expect(allowed.currentStreak).toBe(0);
     expect(allowed.asOf).toBe('2026-08-17');
+  });
+});
+
+// ─── G1: Template DTO catalog embed ──────────────────────────────────────────
+
+describe('toWorkoutPlanTemplateDtoFromSummary', () => {
+  it('embeds primaryMuscle, equipment, illustration and sortOrder on exercise lines', () => {
+    const summary = {
+      id: templateId,
+      gymOrgId,
+      trainerId: trainerProfileId,
+      title: 'Push AM',
+      notes: null,
+      clonedFromId: null,
+      exercises: [
+        {
+          id: toWorkoutPlanTemplateExerciseId('te000000-0000-4000-8000-000000000001'),
+          exerciseItemId: exerciseId,
+          name: 'Barbell Bench Press',
+          primaryMuscle: 'CHEST',
+          equipment: 'BARBELL',
+          illustrationSlug: 'bench-press',
+          sets: 3,
+          reps: '8-10',
+          notes: null,
+          sortOrder: 0,
+        },
+      ],
+      createdAt: '2026-08-17T00:00:00.000Z',
+      updatedAt: '2026-08-17T00:00:00.000Z',
+    } as const;
+
+    const dto = toWorkoutPlanTemplateDtoFromSummary(summary);
+    const ex = dto.exercises[0];
+    expect(ex).toBeDefined();
+    expect(ex?.name).toBe('Barbell Bench Press');
+    expect(ex?.primaryMuscle).toBe('CHEST');
+    expect(ex?.equipment).toBe('BARBELL');
+    expect(ex?.sortOrder).toBe(0);
+    expect(ex?.illustration).not.toBeNull();
+    expect(ex?.illustration?.frames).toHaveLength(3);
+    expect(ex?.illustration?.frames[0]).toMatch(/bench-press\/frame-1\.png$/);
+    expect(ex?.illustration?.attribution).toContain('CC BY-SA');
+  });
+
+  it('sets illustration to null when no slug is mapped', () => {
+    const summary = {
+      id: templateId,
+      gymOrgId,
+      trainerId: trainerProfileId,
+      title: 'Cardio',
+      notes: null,
+      clonedFromId: null,
+      exercises: [
+        {
+          id: toWorkoutPlanTemplateExerciseId('te000000-0000-4000-8000-000000000002'),
+          exerciseItemId: exerciseId,
+          name: 'Jump Rope',
+          primaryMuscle: 'CARDIO',
+          equipment: 'NONE',
+          illustrationSlug: null,
+          sets: null,
+          reps: '60s',
+          notes: null,
+          sortOrder: 0,
+        },
+      ],
+      createdAt: '2026-08-17T00:00:00.000Z',
+      updatedAt: '2026-08-17T00:00:00.000Z',
+    } as const;
+
+    const dto = toWorkoutPlanTemplateDtoFromSummary(summary);
+    expect(dto.exercises[0]?.illustration).toBeNull();
+  });
+});
+
+// ─── G2 + G10: Schedule day DTO template ids and date normalization ───────────
+
+function makeScheduleSummary(opts: {
+  morningTemplateId?: string;
+  eveningTemplateId?: string;
+  kind?: WorkoutScheduleDayKind;
+  scheduleDate?: string;
+}) {
+  const sessions: {
+    id: ReturnType<typeof toWorkoutScheduleSessionId>;
+    slot: 'MORNING' | 'EVENING';
+    title: string;
+    clonedFromTemplateId: ReturnType<typeof toWorkoutPlanTemplateId>;
+    exercises: never[];
+  }[] = [];
+  if (opts.morningTemplateId) {
+    sessions.push({
+      id: toWorkoutScheduleSessionId('s1000000-0000-4000-8000-000000000001'),
+      slot: 'MORNING' as const,
+      title: 'Push AM',
+      clonedFromTemplateId: toWorkoutPlanTemplateId(opts.morningTemplateId),
+      exercises: [],
+    });
+  }
+  if (opts.eveningTemplateId) {
+    sessions.push({
+      id: toWorkoutScheduleSessionId('s2000000-0000-4000-8000-000000000002'),
+      slot: 'EVENING' as const,
+      title: 'Pull PM',
+      clonedFromTemplateId: toWorkoutPlanTemplateId(opts.eveningTemplateId),
+      exercises: [],
+    });
+  }
+  return {
+    id: toWorkoutScheduleDayId('d0000000-0000-4000-8000-000000000001'),
+    clientUserId: clientId,
+    gymOrgId,
+    trainerId: trainerProfileId as unknown as string,
+    scheduleDate: opts.scheduleDate ?? '2026-08-17',
+    kind: (opts.kind ?? 'TRAINING') as WorkoutScheduleDayKind,
+    sessions,
+    createdAt: '2026-08-17T00:00:00.000Z',
+    updatedAt: '2026-08-17T00:00:00.000Z',
+  };
+}
+
+describe('toWorkoutScheduleDayDtoFromSummary', () => {
+  it('echoes morningTemplateId and eveningTemplateId from sessions (G2)', () => {
+    const eveningId = 't1111111-1111-4111-8111-111111111111';
+    const summary = makeScheduleSummary({
+      morningTemplateId: templateId,
+      eveningTemplateId: eveningId,
+    });
+
+    const dto = toWorkoutScheduleDayDtoFromSummary(summary);
+    expect(dto.morningTemplateId).toBe(templateId);
+    expect(dto.eveningTemplateId).toBe(eveningId);
+    expect(dto.sessions).toHaveLength(2);
+    expect(dto.sessions[0]?.clonedFromTemplateId).toBe(templateId);
+  });
+
+  it('sets both template ids to null for a REST day (G2)', () => {
+    const summary = makeScheduleSummary({ kind: 'REST' });
+
+    const dto = toWorkoutScheduleDayDtoFromSummary(summary);
+    expect(dto.morningTemplateId).toBeNull();
+    expect(dto.eveningTemplateId).toBeNull();
+    expect(dto.kind).toBe('REST');
+  });
+
+  it('leaves eveningTemplateId null when only morning is scheduled (G2)', () => {
+    const summary = makeScheduleSummary({ morningTemplateId: templateId });
+
+    const dto = toWorkoutScheduleDayDtoFromSummary(summary);
+    expect(dto.morningTemplateId).toBe(templateId);
+    expect(dto.eveningTemplateId).toBeNull();
+  });
+
+  it('passes scheduleDate through unchanged when already YYYY-MM-DD (G10)', () => {
+    const summary = makeScheduleSummary({ scheduleDate: '2026-09-07' });
+
+    const dto = toWorkoutScheduleDayDtoFromSummary(summary);
+    expect(dto.scheduleDate).toBe('2026-09-07');
   });
 });
