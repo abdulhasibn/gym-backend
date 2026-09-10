@@ -72,6 +72,25 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 
 ## Log
 
+### 2026-09-08 — Postman sync for G1 / G2 / G10
+
+Updated `../gym-backend-postman/Gym-Backend-API.postman_collection.json` for the five
+workout requests that changed:
+
+- **Get Workout Plan Template** — Doc + 200 Example now show `primaryMuscle`, `equipment`,
+  `illustration.frames/attribution`, `sortOrder`, `clonedFromId`. Note added: write responses
+  are entity-mapped (re-GET for catalog embed).
+- **List Workout Plan Templates** — Doc + Example corrected to `workoutPlanTemplates.items`
+  pagination envelope (was wrong `templates[]`); exercises show catalog fields.
+- **Upsert Workout Schedule** — Doc + 200 Example fixed: envelope `{ days }` (was `{ today,
+  writable, days }`); day shape now has `scheduleDate`, `morningTemplateId`, `eveningTemplateId`,
+  `clonedFromTemplateId` per session, `sortOrder` on exercises.
+- **Get Staff Workout Schedule** — Same day-shape corrections; envelope fixed to `{ days }`.
+- **Get My Workout Schedule** — Day shape corrected; still `{ today, writable, days }`.
+
+Audit: 0 gaps. Git commit `e863bdf` pushed to `gym-backend-postman`. Cloud sync async task
+`43b3fee9-b758-4454-8b07-b4b22e58cd56` completed successfully (14 folders live).
+
 ### 2026-09-08 — Workout blocking gaps G1 / G2 / G10
 
 Detour from Next up (3.5 notifications) to close mobile v1 contract holes.
