@@ -11,7 +11,7 @@ A8b still deferred within 1.5.
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
-| Domain glossary / PRD / architecture docs | Done — ADR-0006–0012 (food diary through workout streak) |
+| Domain glossary / PRD / architecture docs | Done — ADR-0006–0013 (food diary through attendance visit) |
 | DBML source of truth (`docs/schema.dbml`) | Done — `leads.email` optional (A14); workout schedule tables |
 | Supabase project + SQL migrations applied | Done — local + remote; through workout schedule when applied |
 | Generated `database.types.ts` | Done — schedule tables + enums |
@@ -30,7 +30,7 @@ A8b still deferred within 1.5.
 | Gym organization feature (`src/features/gym-orgs`) | Done for slice 2 — create/list/get/patch; staff invite create/list/inbox/revoke/accept (`staff_code`); inbox embeds gym profile; list unions trainer affiliations; `accept_staff_invite` RPC applied; **`GET .../trainers`** (dedicated mount so coaching catch-alls cannot 404 it); **CLIENT `GET /gym-orgs` + `GET /gym-orgs/:id`** keyed off ACTIVE membership; **CLIENT `GET /me/gym`** (token-only current gym) |
 | Mini-CRM / leads (`src/features/leads`) | Done — A11–A14: CRUD, pipeline, optional email, convert → PENDING membership invite. Push reminders deferred (3.5) |
 | Memberships feature (`src/features/memberships`) | Phase 1–5 + 2.4 renewals due-list done — plans, invites, accept/grants, subscriptions, roster/assign/offboard/block, `GET .../subscriptions/renewals-due`; A8b attach/renew deferred |
-| Attendance feature (`src/features/attendance`) | Done — self check-in, Admin desk mark, gym-day + per-client + my history; FIRST_ATTENDANCE base start; enforces `check_in_blocked` |
+| Attendance feature (`src/features/attendance`) | Done — visit model (ADR-0013): self check-in/out, Admin desk mark/check-out, gym-day + per-client + my history + Admin present; duration on read; one open visit; FIRST_ATTENDANCE on check-in; `check_in_blocked` on check-in only |
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
@@ -40,7 +40,7 @@ A8b still deferred within 1.5.
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; Coaching includes workout templates/schedule/streak (legacy dayLabel workout HTTP removed) |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; Attendance visit check-out/present (8 requests); Coaching includes workout templates/schedule/streak |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai) |
 
 **Supabase project**
@@ -52,7 +52,7 @@ A8b still deferred within 1.5.
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | schedule + template tables in `public` after migrations; RLS enabled (no policies) |
-| Migrations applied | Through `20260907130000_seed_exercise_catalog_v2` on remote (`igcmptpjmagzwoccxcnw`) via Supabase MCP |
+| Migrations applied | Through `attendance_visit_checkout` on remote (`igcmptpjmagzwoccxcnw`) via Supabase MCP; apply the same file locally before `pnpm test:integration` |
 | Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 324 (all with `illustration_slug`) |
 
 ## Next up
@@ -71,6 +71,35 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-10 — Sync Postman + Orbit for attendance visit
+
+- Postman: `gym-backend-postman` `5c3ee88` — Attendance folder Docs/Examples for
+  visit DTO (Self/Desk Check-out, List Present); audit clean; pushed; cloud
+  `putCollection` async successful — 8 Attendance requests verified.
+- Orbit / docs: M5 + roadmap 2.1 copy for check-out/present; README shipped
+  blurb; MVP exit criteria; product-flows M5 UI table; `roadmap-data.js`
+  mirrored; redeploy `https://gym-prd-visual.vercel.app` (`dpl_7QUoYRu4…`).
+- Next up unchanged: 3.5 notifications.
+
+### 2026-09-10 — Attendance visit check-out (ADR-0013)
+
+Detour from Next up (3.5 notifications) to turn Attendance into a visit.
+
+- One row = one visit: `occurred_at` stays check-in; `checked_out_at` +
+  `checkout_recorder_user_id` close it. Duration computed on read.
+- Partial unique: one open visit per `(gym, client)`. Second check-in → 409
+  `ALREADY_CHECKED_IN`. Same-day re-entry after check-out still allowed.
+- HTTP: Client `POST .../check-out`; Admin `POST .../desk-check-out` and
+  `GET .../present`. DTO: `checkedInAt` / `checkedOutAt` / `durationSeconds`
+  (present list uses elapsed-so-far).
+- Check-out not gated by ACTIVE / block / BASE. Offboard does not auto-close.
+- Migration `20260910070000_attendance_visit_checkout` backfills historical
+  pings as zero-duration closed visits (applied remote via MCP).
+- Deferred: midnight auto-close job, duration stats, trainer floor list.
+- Docs: ADR-0013, CONTEXT, PRD §5.6, product-flows M5, api, client-auth.
+- Postman + Orbit sync: see log entry above.
+- Next up unchanged: 3.5 notifications.
 
 ### 2026-09-08 — Postman sync for G1 / G2 / G10
 

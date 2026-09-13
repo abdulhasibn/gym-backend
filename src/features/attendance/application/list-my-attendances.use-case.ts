@@ -21,7 +21,7 @@ export class ListMyAttendancesUseCase {
     const result = await this.queries.listForClient({ gymOrgId, clientUserId: actor.userId }, page);
 
     return {
-      items: result.items.map(toAttendanceDtoFromSummary),
+      items: result.items.map((summary) => toAttendanceDtoFromSummary(summary)),
       total: result.total,
       limit: result.limit,
       offset: result.offset,

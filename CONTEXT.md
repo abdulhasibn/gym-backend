@@ -26,6 +26,10 @@ Admin-created staff offer to an existing STAFF-lane user (via `staff_code` / QR)
 **ClientMembership**:
 Post-accept membership (`ACTIVE` | `INACTIVE`). At most one `ACTIVE` per client. Check-in requires ACTIVE + in-date base subscription.
 
+**Attendance**:
+A gym-owned **visit** at a `GymOrg`: check-in opens the row, check-out closes it. Duration is computed (seconds between the two instants). At most one open visit per client per gym. Retained after the client leaves; the personal-data exception that stays with the gym. Check-out is not gated by membership, block, or BASE dates.
+_Avoid_: Treating attendance as a check-in ping with no session; overlapping open visits; storing duration as a column
+
 **ClientOwnedRecord**:
 Data whose row is owned by the User (Client), never copied into a gym. Staff at a `GymOrg` may read it only through an explicit grant. Includes: `ClientProfile` (and medical notes), `ProgressLog`, `CalorieLog`, `WearableConnection` (+ metrics), and assigned `DietPlan` / workout **schedule** instances (diet adherence is plan-linked `CalorieLogItem`s; workout uses schedule `PlanCompletion`). Survives gym changes and rejoin; a new gym sees it only if newly granted. Personal logs/profile carry **no** `gym_org_id` — tenancy for staff access lives on `DataGrant` only. Assigned plan/schedule instances may store assigning-gym / trainer as **provenance**, not as owner.
 _Avoid_: Gym-scoped personal data, per-membership copy of profile/progress/nutrition/health/plans, `gym_org_id` as owner on personal logs

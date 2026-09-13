@@ -5,11 +5,14 @@ import type { Database } from '../../infrastructure/supabase/database.types';
 import { SystemClock } from '../../shared/clock/clock';
 import { UuidIdGenerator } from '../../shared/ids/id-generator';
 import { AttendanceAccessPolicy } from './application/attendance-access.policy';
+import { DeskCheckOutUseCase } from './application/desk-check-out.use-case';
 import { DeskMarkAttendanceUseCase } from './application/desk-mark-attendance.use-case';
 import { ListClientAttendancesUseCase } from './application/list-client-attendances.use-case';
 import { ListGymDayAttendancesUseCase } from './application/list-gym-day-attendances.use-case';
 import { ListMyAttendancesUseCase } from './application/list-my-attendances.use-case';
+import { ListPresentAttendancesUseCase } from './application/list-present-attendances.use-case';
 import { SelfCheckInUseCase } from './application/self-check-in.use-case';
+import { SelfCheckOutUseCase } from './application/self-check-out.use-case';
 import type { BaseSubscriptionStarter } from './domain/base-subscription-starter.port';
 import type { CheckInMembershipGate } from './domain/check-in-membership.gate';
 import type { GymLocalClock } from './domain/gym-local-clock.port';
@@ -53,6 +56,7 @@ export function composeAttendanceFeature(
       clock,
       ids,
     ),
+    new SelfCheckOutUseCase(policy, attendances, clock),
     new DeskMarkAttendanceUseCase(
       policy,
       attendances,
@@ -62,9 +66,11 @@ export function composeAttendanceFeature(
       clock,
       ids,
     ),
+    new DeskCheckOutUseCase(policy, attendances, clock),
     new ListGymDayAttendancesUseCase(policy, attendanceQueries, ports.gymLocalClock, clock),
     new ListClientAttendancesUseCase(policy, attendanceQueries),
     new ListMyAttendancesUseCase(policy, attendanceQueries),
+    new ListPresentAttendancesUseCase(policy, attendanceQueries, clock),
   );
 
   return {

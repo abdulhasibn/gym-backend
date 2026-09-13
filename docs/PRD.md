@@ -232,7 +232,7 @@ Signup sets **lane** via frozen role (`CLIENT` vs `STAFF_UNASSIGNED`). Gym power
 | C2b | On accept: required profile grants (**DOB, HEIGHT, WEIGHT**) + optional checklist for other profile attributes and class grants (`PROGRESS`, `CALORIES`, `WEARABLES`, `DIET_PLANS`, `WORKOUT_PLANS`); no data copy — grants only | P0 |
 | C2c | Manage DataGrants for each gym (grant/revoke classes and optional profile attributes) while membership is ACTIVE | P0 |
 | C3 | Get assigned to a trainer (by Admin) when an active Trainer addon exists | P0 |
-| C4 | Log attendance (self check-in) | P0 |
+| C4 | Log attendance (self check-in / check-out) | P0 |
 | C5 | View assigned diet plan; mark meals/items complete **per calendar day** (writes catalog foods into today’s diary) — extras via C9 on the same diary; only with active Trainer addon; prior plans read-only after addon expires | P0 |
 | C6 | View assigned workout plan (catalog `ExerciseItem`s); mark exercises/sessions complete **per calendar day** — same entitlement rules as C5 | P0 |
 | C7 | View own progress (attendance history, weight trend, plan adherence) | P0 |
@@ -268,7 +268,7 @@ Trainer **cannot** log attendance in MVP.
 | A2b | Invite additional desk Admins by **`staff_code` / QR** (capped, e.g. max 3 total Admins) | P0 |
 | A3 | View/manage all clients in the gym | P0 |
 | A4 | Assign / reassign a client to a trainer (may assign to self when Admin-as-Trainer) — **requires** active `TRAINER_COACHING` addon | P0 |
-| A5 | View attendance logs (per client, per day, gym-wide); **mark attendance at desk** | P0 |
+| A5 | View attendance logs (per client, per day, gym-wide, currently present); **mark / check out at desk** | P0 |
 | A6 | Create **membership invite** (name, phone, email, **base** plan, payment status; optional Trainer addon) → client invitation list + email/link | P0 |
 | A7 | Define membership plans: Admin-chosen **name**, duration, price; system **`kind`** `BASE` \| `ADDON`; ADDON plans also set **`capability`** (MVP: `TRAINER_COACHING`) | P0 |
 | A8 | Assign **base** subscription (required) and optional **addon** lines; record payment status per line (`paid` / `unpaid` / `partial`) | P0 |
@@ -329,11 +329,12 @@ See ADR-0006 (diet/diary), ADR-0007 (exercise catalog), ADR-0008 (diet templates
 
 ### 5.6 Attendance
 
-- **Client:** in-app Check in → timestamped record for current gym.
-- **Admin:** desk mark present (forgot phone, etc.).
-- **Trainer:** cannot log attendance in MVP.
-- First attendance may start subscription unless Admin already set `start_date`.
-- Admin **block check-in** prevents further check-ins for that client until cleared.
+- **Client:** in-app Check in opens a **visit**; Check out closes it. Duration is the elapsed seconds. At most one open visit per gym; a second check-in while open is rejected. After check-out, another visit the same day is allowed.
+- **Admin:** desk mark present (forgot phone) and desk check-out; **currently in gym** lists open visits.
+- **Trainer:** cannot log attendance in MVP (view history only).
+- First **check-in** may start subscription unless Admin already set `start_date`. Check-out does not start BASE.
+- Admin **block check-in** prevents further check-ins until cleared; check-out remains allowed.
+- Offboard does not auto-close an open visit.
 
 ### 5.7 Subscription renewal reminder
 
@@ -412,7 +413,7 @@ Illustrative entities (see `docs/schema.dbml` for full shape; soft-delete `delet
 - **GymAdmin** / **TrainerProfile** — staff affiliations per gym.
 - **StaffInvite** / **MembershipInvite** / **ClientMembership** — as before; at most one `ACTIVE` membership per client.
 - **MembershipPlan** / **Subscription** — snapshot price/duration on subscription; DB non-overlap (ADR-0004).
-- **Attendance** — gym-owned; retained after leave; no per-day unique in MVP.
+- **Attendance** — gym-owned visit (check-in + optional check-out); retained after leave; one open visit per client per gym; no per-day unique in MVP.
 - **FoodItem** / **FoodServing** — platform seed catalog; `manual` = structured CustomFood (ADR-0006).
 - **ExerciseItem** — platform seed catalog; `manual` = structured CustomExercise (ADR-0007). APIs for custom deferred in 3.2.
 - **Lead** — gym-owned; phone not unique; soft duplicate warning.
@@ -545,7 +546,7 @@ Read-only: steps, workouts, active calories, weight.
 | Pre-claim desk sale | `membership_invite` with plan + payment (not a membership row) |
 | Join | Admin membership invite only; in-app list; **no open join codes** |
 | Sub start | First attendance **or** Admin-set date |
-| Attendance loggers | Client + Admin; no per-day unique (MVP); gym-owned / retained on leave |
+| Attendance loggers | Client + Admin; visit with check-out; one open visit; no per-day unique (MVP); gym-owned / retained on leave |
 | Unpaid access | Entitlement by dates; badge + daily Admin nudge; block check-in manual |
 | Auth | Email OTP primary via Resend SMTP on Supabase Auth; Google + email; `public.users.id` = `auth.users.id` |
 | Roles | Frozen `roles` + `role_permissions`; lane CLIENT\|STAFF; no mixing |

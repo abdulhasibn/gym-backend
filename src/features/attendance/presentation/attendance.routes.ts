@@ -10,7 +10,10 @@ export function createAttendanceRouter(
   router.use(authenticate);
 
   router.post('/check-in', controller.checkIn);
+  router.post('/check-out', controller.checkOut);
   router.post('/desk-mark', controller.deskMarkPresent);
+  router.post('/desk-check-out', controller.deskCheckOut);
+  router.get('/present', controller.listPresent);
   router.get('/', controller.listToday);
   router.get('/clients/:clientUserId', controller.listForClient);
 

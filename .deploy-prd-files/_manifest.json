@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "target": "production",
+    "name": "gym-prd-visual",
+    "teamId": "team_YaNwaQsqm2AabHG3hfU7us46",
+    "projectSettings": {
+      "framework": null,
+      "buildCommand": null,
+      "outputDirectory": null
+    }
+  },
+  "files": [
+    {
+      "file": "reader-modal.js",
+      "bytes": 6287
+    },
+    {
+      "file": "orbit-3d.js",
+      "bytes": 20833
+    },
+    {
+      "file": "modules-data.js",
+      "bytes": 21697
+    },
+    {
+      "file": "roles-data.js",
+      "bytes": 3825
+    },
+    {
+      "file": "index.html",
+      "bytes": 26073
+    },
+    {
+      "file": "reader-modal.css",
+      "bytes": 4059
+    },
+    {
+      "file": "vercel.json",
+      "bytes": 50
+    },
+    {
+      "file": "prd-reader-data.js",
+      "bytes": 9825
+    },
+    {
+      "file": "styles.css",
+      "bytes": 28682
+    },
+    {
+      "file": "orbit.css",
+      "bytes": 12672
+    },
+    {
+      "file": "orbit-app.js",
+      "bytes": 14764
+    },
+    {
+      "file": "orbit-3d.css",
+      "bytes": 7687
+    },
+    {
+      "file": "roadmap-data.js",
+      "bytes": 21837
+    },
+    {
+      "file": "orbit-3d.html",
+      "bytes": 3332
+    },
+    {
+      "file": "app.js",
+      "bytes": 12385
+    }
+  ]
+}

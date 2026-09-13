@@ -1,8 +1,10 @@
+import { UniqueViolationError } from '../../../domain/errors/unique-violation.error';
 import type { AuthenticatedActor } from '../../../domain/shared/authenticated-actor';
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
 import type { UserId } from '../../../domain/shared/user-id';
 import type { Clock } from '../../../shared/clock/clock';
 import type { IdGenerator } from '../../../shared/ids/id-generator';
+import { AlreadyCheckedInError } from '../domain/already-checked-in.error';
 import { Attendance } from '../domain/attendance.entity';
 import { toAttendanceId } from '../domain/attendance-id';
 import type { AttendanceRepository } from '../domain/attendance.repository';
@@ -40,6 +42,11 @@ export class DeskMarkAttendanceUseCase {
     const snapshot = await this.gate.loadActive(command.clientUserId, command.gymOrgId);
     const eligibility = assertCheckInAllowed(snapshot, today);
 
+    const open = await this.attendances.findOpenByClient(command.gymOrgId, command.clientUserId);
+    if (open !== null) {
+      throw new AlreadyCheckedInError();
+    }
+
     let baseStarted = false;
     if (eligibility.needsBaseStart && eligibility.subscriptionId !== null) {
       await this.starter.startFromFirstAttendance(
@@ -60,7 +67,18 @@ export class DeskMarkAttendanceUseCase {
       recorderUserId: actor.userId,
       now,
     });
-    await this.attendances.save(attendance);
+    await this.saveNewVisit(attendance);
     return toAttendanceDto(attendance, baseStarted);
+  }
+
+  private async saveNewVisit(attendance: Attendance): Promise<void> {
+    try {
+      await this.attendances.save(attendance);
+    } catch (error) {
+      if (error instanceof UniqueViolationError) {
+        throw new AlreadyCheckedInError();
+      }
+      throw error;
+    }
   }
 }

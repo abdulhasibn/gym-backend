@@ -92,12 +92,12 @@ deferred within 1.5.
 
 | # | Work item | Paths | PRD | Ownership | Status |
 |---|-----------|-------|-----|-----------|--------|
-| 2.1 | Client self check-in + Admin desk mark + logs | `src/features/attendance/` | C4, A5 | Gym-owned | Done |
+| 2.1 | Client self check-in / check-out + Admin desk mark / check-out + logs + present | `src/features/attendance/` | C4, A5 | Gym-owned | Done |
 | 2.2 | Client profile edit + ProgressLog + BMI | `users` / progress slice | C7, C8, C14 | Client-owned | Done |
 | 2.3 | Grant-gated staff reads of profile/progress | policies on query use cases | T4, A17 | Client-owned (gated) | Done |
 | 2.4 | Renewals due-list / expiring-soon Admin query (read model; no push yet) | `memberships` queries | A9 | Gym-owned | Done |
 
-**Exit criteria:** ACTIVE member with in-date base can check in; Admin can desk-mark and list renewals; staff see Client-owned fields only when granted.
+**Exit criteria:** ACTIVE member with in-date base can check in/out; Admin can desk-mark/check-out, list present, and list renewals; staff see Client-owned fields only when granted.
 
 ---
 

@@ -21,6 +21,9 @@ export function toAttendance(row: AttendanceRow): Attendance {
       occurredAt: toValidDate(row.occurred_at),
       recordedBy: row.recorded_by,
       recorderUserId: toUserId(row.recorder_user_id),
+      checkedOutAt: row.checked_out_at === null ? null : toValidDate(row.checked_out_at),
+      checkoutRecorderUserId:
+        row.checkout_recorder_user_id === null ? null : toUserId(row.checkout_recorder_user_id),
       deletedAt: row.deleted_at === null ? null : toValidDate(row.deleted_at),
       createdAt: toValidDate(row.created_at),
     });
@@ -40,6 +43,9 @@ export function toAttendanceSummary(row: AttendanceRow): AttendanceSummary {
     occurredAt: toValidDate(row.occurred_at).toISOString(),
     recordedBy: row.recorded_by,
     recorderUserId: toUserId(row.recorder_user_id),
+    checkedOutAt:
+      row.checked_out_at === null ? null : toValidDate(row.checked_out_at).toISOString(),
+    checkoutRecorderUserId: row.checkout_recorder_user_id,
     createdAt: toValidDate(row.created_at).toISOString(),
   };
 }
@@ -54,8 +60,20 @@ export function toAttendanceInsert(
     occurred_at: attendance.occurredAt.toISOString(),
     recorded_by: attendance.recordedBy,
     recorder_user_id: attendance.recorderUserId,
+    checked_out_at: attendance.checkedOutAt?.toISOString() ?? null,
+    checkout_recorder_user_id: attendance.checkoutRecorderUserId,
     deleted_at: attendance.deletedAt?.toISOString() ?? null,
     created_at: attendance.createdAt.toISOString(),
+  };
+}
+
+export function toAttendanceUpdate(
+  attendance: Attendance,
+): Database['public']['Tables']['attendances']['Update'] {
+  return {
+    checked_out_at: attendance.checkedOutAt?.toISOString() ?? null,
+    checkout_recorder_user_id: attendance.checkoutRecorderUserId,
+    deleted_at: attendance.deletedAt?.toISOString() ?? null,
   };
 }
 

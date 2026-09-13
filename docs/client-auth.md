@@ -24,8 +24,9 @@ Use lane `CLIENT` on first provision. Staff-only routes (gym create, leads, plan
 | Accept join | `POST /membership-invites/:id/accept` | ACTIVE membership + sub snapshots; one ACTIVE max |
 | DataGrants | `GET` / `PUT /gym-orgs/:gymOrgId/my-data-grants` | Required DOB/HEIGHT/WEIGHT sticky; optional toggles |
 | Subscriptions | `GET /gym-orgs/:gymOrgId/my-subscriptions` | Base + addon lines (C10); see [`subscriptions.md`](subscriptions.md) |
-| Check-in | `POST /gym-orgs/:gymOrgId/attendances/check-in` | ACTIVE + not blocked + in-date (or unstarted) BASE |
-| My attendance | `GET /gym-orgs/:gymOrgId/my-attendances` | Own gym-owned history |
+| Check-in | `POST /gym-orgs/:gymOrgId/attendances/check-in` | ACTIVE + not blocked + in-date (or unstarted) BASE; 409 if already on the floor |
+| Check-out | `POST /gym-orgs/:gymOrgId/attendances/check-out` | Closes own open visit; not gated by block or membership |
+| My attendance | `GET /gym-orgs/:gymOrgId/my-attendances` | Own gym-owned visit history (`checkedInAt`, `checkedOutAt`, `durationSeconds`) |
 | Profile | `GET` / `PATCH /me/profile` | Height, DOB, gender, medical; weight via progress |
 | Progress | `GET` / `PUT /me/progress-logs` | Weight history + BMI |
 | Calories | `GET /me/calorie-logs`, extras `POST`/`DELETE …/items` | [`nutrition.md`](nutrition.md) |

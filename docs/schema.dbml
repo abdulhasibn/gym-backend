@@ -503,22 +503,25 @@ Table subscriptions {
 //
 
 Table attendances {
-  id                uuid                [pk, default: `gen_random_uuid()`]
-  client_user_id    uuid                [not null, ref: > users.id]
-  gym_org_id        uuid                [not null, ref: > gym_orgs.id]
-  occurred_at       timestamptz         [not null, default: `now()`, note: 'UTC instant. Query local days via UTC bounds for gym TZ — do not wrap column in AT TIME ZONE in WHERE.']
-  recorded_by       attendance_recorder [not null]
-  recorder_user_id  uuid                [not null, ref: > users.id]
-  deleted_at        timestamptz
-  created_at        timestamptz         [not null, default: `now()`]
+  id                         uuid                [pk, default: `gen_random_uuid()`]
+  client_user_id             uuid                [not null, ref: > users.id]
+  gym_org_id                 uuid                [not null, ref: > gym_orgs.id]
+  occurred_at                timestamptz         [not null, default: `now()`, note: 'UTC check-in instant. Query local days via UTC bounds for gym TZ — do not wrap column in AT TIME ZONE in WHERE.']
+  recorded_by                attendance_recorder [not null]
+  recorder_user_id           uuid                [not null, ref: > users.id]
+  checked_out_at             timestamptz         [note: 'UTC check-out instant. Null = open visit. Duration computed on read.']
+  checkout_recorder_user_id  uuid                [ref: > users.id, note: 'Who closed the visit. Null iff checked_out_at is null.']
+  deleted_at                 timestamptz
+  created_at                 timestamptz         [not null, default: `now()`]
 
   indexes {
     (gym_org_id, occurred_at)
     (client_user_id, occurred_at)
     recorder_user_id
+    (gym_org_id, client_user_id) [unique, note: 'Partial: deleted_at IS NULL AND checked_out_at IS NULL — one open visit.']
   }
 
-  Note: 'GymOwned. Retained after leave; anonymize client_user_id on Erasure. No per-day uniqueness in MVP. CHECK (recorded_by = CLIENT) ⇒ recorder_user_id = client_user_id. First check-in may set base subscription start when start_date is null.'
+  Note: 'GymOwned visit (ADR-0013). Retained after leave; anonymize client_user_id on Erasure. One open visit per (gym, client). No per-day uniqueness. CHECK checkout pair both-null or both-set; checked_out_at >= occurred_at. CHECK (recorded_by = CLIENT) ⇒ recorder_user_id = client_user_id. First check-in may set base subscription start when start_date is null.'
 }
 
 //

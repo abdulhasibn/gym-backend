@@ -40,7 +40,7 @@ export class ListGymDayAttendancesUseCase {
     );
 
     return {
-      items: result.items.map(toAttendanceDtoFromSummary),
+      items: result.items.map((summary) => toAttendanceDtoFromSummary(summary)),
       total: result.total,
       limit: result.limit,
       offset: result.offset,

@@ -1,6 +1,6 @@
 # Gym SaaS — Product Flows & UI Requirements Brief
 
-**Source of truth:** PRD v2.3 · `CONTEXT.md` · ADRs 0002–0007   
+**Source of truth:** PRD v2.3 · `CONTEXT.md` · ADRs 0002–0007, 0013   
 **Audience:** Product/design/implementation of Client mobile, Trainer mobile, and Admin web  
 **Geography / language:** India-first · English UI only  
 **Stack surfaces:** React Native (Client + Trainer; light Admin) · Next.js (Admin-primary)
@@ -363,39 +363,43 @@ A7, A8, A8b, A9, A10, A10b, A19, C10, C11 · non-overlap · snapshot · unpaid n
 
 ### Purpose
 
-Record presence; optionally start base subscription on first check-in; gym-owned history retained after leave.
+Record visits (check-in + check-out); optionally start base subscription on first check-in; gym-owned history retained after leave.
 
-**API status:** Self check-in, Admin desk mark, gym-day / per-client / my history **shipped** (2.1). Enforces `check_in_blocked`. Integration: [`api.md`](api.md) · [`client-auth.md`](client-auth.md).
+**API status:** Self check-in / check-out, Admin desk mark / desk check-out, gym-day / per-client / my history, Admin currently present **shipped** (2.1 + visit). Enforces `check_in_blocked` on check-in only. Integration: [`api.md`](api.md) · [`client-auth.md`](client-auth.md). ADR-0013.
 
 ### Screens
 
 | Screen | Persona | Contents |
 |---|---|---|
-| Check in | Client | Primary CTA when ACTIVE, not blocked, base in-date (or start_date null) |
-| Desk mark present | Admin | Search member → mark present now |
-| Attendance today (gym-wide) | Admin | List for local gym day |
-| Per-client attendance | Admin, Trainer (view) | History list |
-| My attendance | Client | Own history at current gym |
+| Check in / Check out | Client | Check in when no open visit and ACTIVE, not blocked, base in-date (or start_date null). Check out when an open visit exists. |
+| Desk mark / desk check-out | Admin | Search member → mark present now, or close their open visit |
+| Currently in gym | Admin | Open visits with elapsed duration |
+| Attendance today (gym-wide) | Admin | List for local gym day (bucketed by check-in) |
+| Per-client attendance | Admin, Trainer (view) | History list with duration |
+| My attendance | Client | Own history at current gym with duration |
 
 ### Flows
 
 **F5.1 Client self check-in**
 
-1. Tap Check in → success toast + timestamp.
+1. Tap Check in → success toast + timestamp; visit is open.
 2. If base `start_date` was null → period starts (end computed from snapshotted duration); confirm messaging.
-3. Failures: blocked, inactive, no ACTIVE membership, base out of date (when start already set and today outside range).
+3. Failures: already checked in, blocked, inactive, no ACTIVE membership, base out of date (when start already set and today outside range).
 
 **F5.2 Admin desk mark** — same record with `recorded_by = ADMIN`; use when member forgot phone.  
-**F5.3 Trainer** — view only; **no** log CTA.
+**F5.3 Trainer** — view history only; **no** log or check-out CTA.  
+**F5.4 Client / Admin check-out** — closes the open visit; duration = seconds from check-in. Not blocked by membership or check-in block. No open visit → 409.  
+**F5.5 Currently present** — Admin lists open visits; elapsed duration from check-in to now.
 
 ### Rules for UI
 
-- Multiple check-ins same day **allowed** in MVP (no per-day unique).
-- Attendance stays with the gym after offboard; Client viewing “my attendance” is for current/past gym context as product allows — prior gym attendance is **not** shown to a new gym’s staff.
+- At most **one open visit** per client per gym. Show Check out (not Check in) while open.
+- Multiple visits same day **allowed** after check-out (no per-day unique).
+- Attendance stays with the gym after offboard; an open visit is not auto-closed. Client viewing “my attendance” is for current/past gym context as product allows — prior gym attendance is **not** shown to a new gym’s staff.
 
 ### Requirements
 
-C4, A5 · Trainer cannot log · block check-in interaction with M3.
+C4, A5 · Trainer cannot log · block check-in interaction with M3 · ADR-0013.
 
 ---
 
@@ -514,7 +518,7 @@ Client-owned weight history and BMI; staff see progress only with `PROGRESS` gra
 | Progress | Weight chart/list by date; add/edit weigh-in |
 | Profile | Height, weight, DOB, gender, medical notes |
 | BMI display | On profile/progress |
-| Attendance history | Own check-ins |
+| Attendance history | Own visits (check-in / check-out + duration) |
 | Plan adherence (own) | Always visible to Client for their completions |
 
 **Trainer / Admin**
@@ -752,7 +756,7 @@ Not a user-facing “module,” but UI must respect:
 4. Plan catalog  
 5. Renewals inbox  
 6. Unpaid inbox  
-7. Attendance (desk + logs)  
+7. Attendance (desk in/out + present + logs)  
 8. Leads CRM  
 9. Staff invites / team  
 10. Gym settings  
@@ -779,7 +783,7 @@ Not a user-facing “module,” but UI must respect:
 
 ## Priority legend for build order (UI)
 
-**P0 — ship first:** Auth, create gym, plans catalog, membership invite/accept + grants checklist, roster, check-in + desk mark, subscriptions/renewals/unpaid badges, trainer assign, catalog foods + diet assign + diary (complete + extras), workout templates/schedule/complete/streak, progress/profile/BMI, health connect, notifications for invites/renewals/assign, offboard, block check-in, privacy management.
+**P0 — ship first:** Auth, create gym, plans catalog, membership invite/accept + grants checklist, roster, check-in/out + desk mark/out, subscriptions/renewals/unpaid badges, trainer assign, catalog foods + diet assign + diary (complete + extras), workout templates/schedule/complete/streak, progress/profile/BMI, health connect, notifications for invites/renewals/assign, offboard, block check-in, privacy management.
 
 **P1 — next:** Dashboard widgets, workout clone/template, adherence % for staff, account erasure UX, richer unpaid digest layout.
 
@@ -796,7 +800,7 @@ Use these terms consistently in labels:
 | Invite | Membership invite (Client) or staff invite (Trainer/Admin) |
 | Base plan / Addon | Catalog kinds; addon capability “Personal training” for TRAINER_COACHING |
 | Sharing / Privacy | DataGrants UI |
-| Check-in | Attendance |
+| Check-in / Check-out | Attendance visit (open / closed) |
 | Offboard | Set membership INACTIVE (not account delete) |
 | Delete account | Erasure (P1) |
 

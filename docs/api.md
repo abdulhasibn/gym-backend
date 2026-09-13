@@ -111,7 +111,10 @@ Thin catalogue of shipped HTTP endpoints. Property-level docs (enums, examples) 
 | Method | Path | Guide |
 |--------|------|-------|
 | `POST` | `/gym-orgs/:gymOrgId/attendances/check-in` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |
+| `POST` | `/gym-orgs/:gymOrgId/attendances/check-out` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |
 | `POST` | `/gym-orgs/:gymOrgId/attendances/desk-mark` | Admin desk mark (2.1) |
+| `POST` | `/gym-orgs/:gymOrgId/attendances/desk-check-out` | Admin desk check-out |
+| `GET` | `/gym-orgs/:gymOrgId/attendances/present` | Admin currently in gym |
 | `GET` | `/gym-orgs/:gymOrgId/attendances` | Gym-day list (2.1) |
 | `GET` | `/gym-orgs/:gymOrgId/attendances/clients/:clientUserId` | Per-client history (2.1) |
 | `GET` | `/gym-orgs/:gymOrgId/my-attendances` | [client-auth § CLIENT surface](client-auth.md#client-surface-available-now) |

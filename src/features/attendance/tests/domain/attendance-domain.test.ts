@@ -55,6 +55,70 @@ describe('Attendance entity', () => {
     });
     expect(attendance.recorderUserId).toBe(adminId);
   });
+
+  it('opens a visit with null duration and checks out with floor seconds', () => {
+    const attendance = Attendance.create({
+      id: toAttendanceId('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+      clientUserId: clientId,
+      gymOrgId,
+      occurredAt: now,
+      recordedBy: 'CLIENT',
+      recorderUserId: clientId,
+      now,
+    });
+    expect(attendance.isOpen).toBe(true);
+    expect(attendance.durationSeconds()).toBeNull();
+
+    attendance.checkOut({
+      at: new Date('2026-08-11T11:00:30.400Z'),
+      recorderUserId: clientId,
+      recordedBy: 'CLIENT',
+    });
+    expect(attendance.isOpen).toBe(false);
+    expect(attendance.durationSeconds()).toBe(3630);
+    expect(attendance.checkoutRecorderUserId).toBe(clientId);
+  });
+
+  it('rejects check-out when already closed, before check-in, or CLIENT recorder mismatch', () => {
+    const attendance = Attendance.create({
+      id: toAttendanceId('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+      clientUserId: clientId,
+      gymOrgId,
+      occurredAt: now,
+      recordedBy: 'CLIENT',
+      recorderUserId: clientId,
+      now,
+    });
+
+    expect(() =>
+      attendance.checkOut({
+        at: new Date('2026-08-11T09:00:00.000Z'),
+        recorderUserId: clientId,
+        recordedBy: 'CLIENT',
+      }),
+    ).toThrow(InvalidAttendanceError);
+
+    expect(() =>
+      attendance.checkOut({
+        at: new Date('2026-08-11T11:00:00.000Z'),
+        recorderUserId: adminId,
+        recordedBy: 'CLIENT',
+      }),
+    ).toThrow(InvalidAttendanceError);
+
+    attendance.checkOut({
+      at: new Date('2026-08-11T11:00:00.000Z'),
+      recorderUserId: clientId,
+      recordedBy: 'CLIENT',
+    });
+    expect(() =>
+      attendance.checkOut({
+        at: new Date('2026-08-11T12:00:00.000Z'),
+        recorderUserId: clientId,
+        recordedBy: 'CLIENT',
+      }),
+    ).toThrow(InvalidAttendanceError);
+  });
 });
 
 describe('assertCheckInAllowed', () => {

@@ -11,6 +11,8 @@ export interface AttendanceSummary {
   readonly occurredAt: string;
   readonly recordedBy: AttendanceRecorder;
   readonly recorderUserId: UserId;
+  readonly checkedOutAt: string | null;
+  readonly checkoutRecorderUserId: string | null;
   readonly createdAt: string;
 }
 
@@ -27,6 +29,10 @@ export interface ListClientAttendancesCriteria {
   readonly clientUserId: UserId;
 }
 
+export interface ListPresentAttendancesCriteria {
+  readonly gymOrgId: GymOrgId;
+}
+
 export interface AttendanceQueries {
   listForGymDay(
     criteria: ListGymDayAttendancesCriteria,
@@ -35,6 +41,11 @@ export interface AttendanceQueries {
 
   listForClient(
     criteria: ListClientAttendancesCriteria,
+    page: Pagination,
+  ): Promise<Page<AttendanceSummary>>;
+
+  listPresent(
+    criteria: ListPresentAttendancesCriteria,
     page: Pagination,
   ): Promise<Page<AttendanceSummary>>;
 }

@@ -10,6 +10,8 @@ export type Database = {
     Tables: {
       attendances: {
         Row: {
+          checked_out_at: string | null;
+          checkout_recorder_user_id: string | null;
           client_user_id: string;
           created_at: string;
           deleted_at: string | null;
@@ -20,6 +22,8 @@ export type Database = {
           recorder_user_id: string;
         };
         Insert: {
+          checked_out_at?: string | null;
+          checkout_recorder_user_id?: string | null;
           client_user_id: string;
           created_at?: string;
           deleted_at?: string | null;
@@ -30,6 +34,8 @@ export type Database = {
           recorder_user_id: string;
         };
         Update: {
+          checked_out_at?: string | null;
+          checkout_recorder_user_id?: string | null;
           client_user_id?: string;
           created_at?: string;
           deleted_at?: string | null;
@@ -40,6 +46,13 @@ export type Database = {
           recorder_user_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'attendances_checkout_recorder_user_id_fkey';
+            columns: ['checkout_recorder_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'attendances_client_user_id_fkey';
             columns: ['client_user_id'];

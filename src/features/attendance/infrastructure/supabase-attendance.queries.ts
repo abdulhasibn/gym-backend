@@ -8,6 +8,7 @@ import type {
   AttendanceSummary,
   ListClientAttendancesCriteria,
   ListGymDayAttendancesCriteria,
+  ListPresentAttendancesCriteria,
 } from '../domain/attendance.queries';
 import { toAttendanceSummary } from './attendance.mapper';
 
@@ -58,6 +59,31 @@ export class SupabaseAttendanceQueries implements AttendanceQueries {
 
     if (error !== null) {
       throw new TransientDatabaseFailureError('Unable to list client attendances', {
+        cause: error,
+      });
+    }
+
+    return toPage((data ?? []).map(toAttendanceSummary), count ?? 0, page);
+  }
+
+  async listPresent(
+    criteria: ListPresentAttendancesCriteria,
+    page: Pagination,
+  ): Promise<Page<AttendanceSummary>> {
+    const from = page.offset;
+    const to = page.offset + page.limit - 1;
+
+    const { data, error, count } = await this.client
+      .from('attendances')
+      .select('*', { count: 'exact' })
+      .eq('gym_org_id', criteria.gymOrgId)
+      .is('deleted_at', null)
+      .is('checked_out_at', null)
+      .order('occurred_at', { ascending: false })
+      .range(from, to);
+
+    if (error !== null) {
+      throw new TransientDatabaseFailureError('Unable to list present attendances', {
         cause: error,
       });
     }

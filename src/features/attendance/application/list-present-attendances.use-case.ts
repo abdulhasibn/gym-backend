@@ -1,32 +1,30 @@
 import type { AuthenticatedActor } from '../../../domain/shared/authenticated-actor';
 import type { GymOrgId } from '../../../domain/shared/gym-org-id';
-import { toUserId } from '../../../domain/shared/user-id';
+import type { Clock } from '../../../shared/clock/clock';
 import type { Page, Pagination } from '../../../shared/pagination/pagination';
 import type { AttendanceQueries } from '../domain/attendance.queries';
 import { AttendanceAccessPolicy } from './attendance-access.policy';
 import { toAttendanceDtoFromSummary, type AttendanceDto } from './attendance.dto';
 
-export class ListClientAttendancesUseCase {
+export class ListPresentAttendancesUseCase {
   constructor(
     private readonly policy: AttendanceAccessPolicy,
     private readonly queries: AttendanceQueries,
+    private readonly clock: Clock,
   ) {}
 
   async execute(
     actor: AuthenticatedActor,
     gymOrgId: GymOrgId,
-    clientUserId: string,
     page: Pagination,
   ): Promise<Page<AttendanceDto>> {
-    await this.policy.requireStaffRead(actor, gymOrgId);
+    await this.policy.requireAdmin(actor, gymOrgId);
 
-    const result = await this.queries.listForClient(
-      { gymOrgId, clientUserId: toUserId(clientUserId) },
-      page,
-    );
+    const now = this.clock.now();
+    const result = await this.queries.listPresent({ gymOrgId }, page);
 
     return {
-      items: result.items.map((summary) => toAttendanceDtoFromSummary(summary)),
+      items: result.items.map((summary) => toAttendanceDtoFromSummary(summary, { asOf: now })),
       total: result.total,
       limit: result.limit,
       offset: result.offset,

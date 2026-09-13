@@ -68,6 +68,44 @@ describe('attendance HTTP (local Supabase)', () => {
       .set(authHeader(client.accessToken));
     expect(mine.status).toBe(200);
     expect(mine.body.attendances.total).toBeGreaterThanOrEqual(1);
+    expect(mine.body.attendances.items[0].checkedInAt).toBeDefined();
+    expect(mine.body.attendances.items[0].checkedOutAt).toBeNull();
+
+    const secondCheckIn = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/attendances/check-in`)
+      .set(authHeader(client.accessToken));
+    expect(secondCheckIn.status).toBe(409);
+    expect(secondCheckIn.body.error.code).toBe('ALREADY_CHECKED_IN');
+
+    const present = await supertest(app)
+      .get(`/gym-orgs/${gymOrgId}/attendances/present`)
+      .set(admin);
+    expect(present.status).toBe(200);
+    expect(present.body.attendances.total).toBeGreaterThanOrEqual(2);
+
+    const checkOut = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/attendances/check-out`)
+      .set(authHeader(client.accessToken));
+    expect(checkOut.status).toBe(200);
+    expect(checkOut.body.attendance.checkedOutAt).toBeDefined();
+    expect(checkOut.body.attendance.durationSeconds).toBeGreaterThanOrEqual(0);
+
+    const deskCheckOut = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/attendances/desk-check-out`)
+      .set(admin)
+      .send({ clientUserId: otherClient.userId });
+    expect(deskCheckOut.status).toBe(200);
+
+    const presentAfter = await supertest(app)
+      .get(`/gym-orgs/${gymOrgId}/attendances/present`)
+      .set(admin);
+    expect(presentAfter.status).toBe(200);
+    expect(presentAfter.body.attendances.total).toBe(0);
+
+    const reCheckIn = await supertest(app)
+      .post(`/gym-orgs/${gymOrgId}/attendances/check-in`)
+      .set(authHeader(client.accessToken));
+    expect(reCheckIn.status).toBe(201);
   });
 
   it('forbids a client from desk-marking attendance', async () => {
