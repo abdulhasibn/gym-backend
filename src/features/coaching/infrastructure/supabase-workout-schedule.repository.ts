@@ -162,12 +162,13 @@ export class SupabaseWorkoutScheduleRepository implements WorkoutScheduleReposit
     }
 
     const exercises = days.flatMap((day) => {
-      if (day.sessionId === null) {
+      const sessionId = day.sessionId;
+      if (sessionId === null) {
         return [];
       }
       return day.exercises.map((exercise) => ({
         id: exercise.id,
-        session_id: day.sessionId,
+        session_id: sessionId,
         exercise_item_id: exercise.exerciseItemId,
         sets: exercise.sets,
         reps: exercise.reps,
