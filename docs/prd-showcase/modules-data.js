@@ -239,7 +239,7 @@ window.MODULES_DATA = [
       "Staff adherence + streak need WORKOUT_PLANS; definition is grant-free for assigning trainer.",
     ],
     items: [
-      "Catalog search (movement × equipment) — API live (3.2); 30 seed rows",
+      "Catalog search (movement × equipment) — API live (3.2); 324 seed rows",
       "Gym workout templates CRUD/duplicate — API live (ADR-0009)",
       "Date schedule upsert/read (one snapshot per date) — API live (ADR-0010 + 0014)",
       "Complete window [D, D+2] + adherence — API live (ADR-0011)",
@@ -252,7 +252,7 @@ window.MODULES_DATA = [
         "Completions hang on schedule exercise ids; streaks are read-time over 366 gym-local days.",
       ],
       acceptance: ["Template → schedule → complete window + streak APIs work with active addon."],
-      prdRefs: "C6, T6, T7, T8 · PRD §5.5 · §5.13 · ADR-0007–0012",
+      prdRefs: "C6, T6, T7, T8 · PRD §5.5 · §5.13 · ADR-0007–0014",
     },
   },
   {

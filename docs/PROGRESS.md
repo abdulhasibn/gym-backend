@@ -39,7 +39,7 @@ A8b still deferred within 1.5.
 | Other feature modules under `src/features/*` | Next **3.5** notifications; then audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
-| PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
+| PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted); 3.2 body + M7 snapshot copy live |
 | Postman collection shared via git | Done — `../gym-backend-postman` `2b310b6` + cloud `Gym Backend API`; Coaching schedule Docs/Examples use flattened snapshot (PUT + staff/client GET) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai) |
 
@@ -71,6 +71,19 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-14 — Sync Postman + Orbit for schedule snapshot
+
+- Postman: structure matches cloud (no new routes). Audit 0 gaps.
+  Coaching Upsert / staff GET / client GET already document the flattened
+  snapshot (ADR-0014). Git `2b310b6` unchanged; cloud already aligned
+  (updated 2026-09-13).
+- Docs / Orbit: 3.2 body no longer says `templateId snap`; M7 catalog
+  count 324; product-flows M7 API status + README shipped blurb mention
+  the date-schedule snapshot. `roadmap-data.js` mirrored.
+- Showcase: `https://gym-prd-visual.vercel.app` (`dpl_9mkzRg6EcDG3ywAPsTjHmbVvs4Ri`).
+  Lede still 3.1–3.4 lit · next 3.5. Live 3.2 `status: "done"` and
+  trainer-edited snapshot copy verified.
 
 ### 2026-09-13 — Workout schedule import-then-edit snapshot (detour)
 

@@ -473,7 +473,7 @@ C5, T5, T7, T8 (grant), A4 coupling · ADR-0006 (unified diary) · ADR-0008 (gym
 
 Same pattern as diet for **structure**: search catalog `ExerciseItem` (not typed names); days → prescribed sets/reps/notes; per-day `PlanCompletion`; `WORKOUT_PLANS` grant for adherence. Not a Hevy session log (ADR-0007).
 
-**API status:** Catalog seed **live** (30 movements, ADR-0007). Gym templates, date schedule, completion window + adherence, and streaks **shipped** (ADR-0009–0012). Legacy dayLabel `WorkoutPlan` HTTP retired.
+**API status:** Catalog seed **live** (324 movements, ADR-0007). Gym templates, date-schedule snapshot, completion window + adherence, and streaks **shipped** (ADR-0009–0014). Legacy dayLabel `WorkoutPlan` HTTP retired.
 
 ### Screens & flows
 
