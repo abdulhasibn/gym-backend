@@ -53,7 +53,7 @@ export class UncompleteScheduleExerciseUseCase {
     }
 
     await this.completions.uncomplete({
-      exerciseId: found.exercise.id,
+      exerciseId: found.id,
       clientUserId: actor.userId,
       completedOn: day.scheduleDate,
     });

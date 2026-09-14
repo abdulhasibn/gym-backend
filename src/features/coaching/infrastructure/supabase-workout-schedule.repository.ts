@@ -9,6 +9,7 @@ import type { WorkoutScheduleDay } from '../domain/workout-schedule-day.entity';
 import type { WorkoutScheduleExerciseId } from '../domain/workout-schedule-exercise-id';
 import type { WorkoutScheduleRepository } from '../domain/workout-schedule.repository';
 import {
+  PERSISTED_SCHEDULE_SESSION_SLOT,
   toWorkoutScheduleDay,
   toWorkoutScheduleDayInsert,
   type ScheduleDayWithSessions,
@@ -132,18 +133,23 @@ export class SupabaseWorkoutScheduleRepository implements WorkoutScheduleReposit
       });
     }
 
-    const sessions = days.flatMap((day) =>
-      day.sessions.map((session) => ({
-        id: session.id,
-        schedule_day_id: day.id,
-        slot: session.slot,
-        title: session.title,
-        cloned_from_template_id: session.clonedFromTemplateId,
-        deleted_at: null,
-        created_at: day.createdAt.toISOString(),
-        updated_at: day.updatedAt.toISOString(),
-      })),
-    );
+    const sessions = days.flatMap((day) => {
+      if (day.sessionId === null) {
+        return [];
+      }
+      return [
+        {
+          id: day.sessionId,
+          schedule_day_id: day.id,
+          slot: PERSISTED_SCHEDULE_SESSION_SLOT,
+          title: day.title?.value ?? null,
+          cloned_from_template_id: day.clonedFromTemplateId,
+          deleted_at: null,
+          created_at: day.createdAt.toISOString(),
+          updated_at: day.updatedAt.toISOString(),
+        },
+      ];
+    });
     if (sessions.length > 0) {
       const { error: sessionError } = await this.client
         .from('workout_schedule_sessions')
@@ -155,22 +161,23 @@ export class SupabaseWorkoutScheduleRepository implements WorkoutScheduleReposit
       }
     }
 
-    const exercises = days.flatMap((day) =>
-      day.sessions.flatMap((session) =>
-        session.exercises.map((exercise) => ({
-          id: exercise.id,
-          session_id: session.id,
-          exercise_item_id: exercise.exerciseItemId,
-          sets: exercise.sets,
-          reps: exercise.reps,
-          notes: exercise.notes,
-          sort_order: exercise.sortOrder,
-          deleted_at: null,
-          created_at: day.createdAt.toISOString(),
-          updated_at: day.updatedAt.toISOString(),
-        })),
-      ),
-    );
+    const exercises = days.flatMap((day) => {
+      if (day.sessionId === null) {
+        return [];
+      }
+      return day.exercises.map((exercise) => ({
+        id: exercise.id,
+        session_id: day.sessionId,
+        exercise_item_id: exercise.exerciseItemId,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        notes: exercise.notes,
+        sort_order: exercise.sortOrder,
+        deleted_at: null,
+        created_at: day.createdAt.toISOString(),
+        updated_at: day.updatedAt.toISOString(),
+      }));
+    });
     if (exercises.length === 0) {
       return;
     }

@@ -5,11 +5,11 @@ import type { ExerciseItemId } from './exercise-item-id';
 import { InvalidWorkoutScheduleError } from './invalid-workout-schedule.error';
 import type { TrainerProfileId } from './trainer-profile-id';
 import type { WorkoutPlanTemplateId } from './workout-plan-template-id';
+import { WorkoutPlanTitle } from './workout-plan-title.value-object';
 import type { WorkoutScheduleDayId } from './workout-schedule-day-id';
 import type { WorkoutScheduleDayKind } from './workout-schedule-day-kind';
 import type { WorkoutScheduleExerciseId } from './workout-schedule-exercise-id';
 import type { WorkoutScheduleSessionId } from './workout-schedule-session-id';
-import type { WorkoutSessionSlot } from './workout-session-slot';
 
 const MAX_SETS = 99;
 const MAX_REPS_LENGTH = 40;
@@ -23,14 +23,6 @@ export interface WorkoutScheduleExerciseData {
   readonly sortOrder: number;
 }
 
-export interface WorkoutScheduleSessionData {
-  readonly id: WorkoutScheduleSessionId;
-  readonly slot: WorkoutSessionSlot;
-  readonly title: string;
-  readonly clonedFromTemplateId: WorkoutPlanTemplateId;
-  readonly exercises: readonly WorkoutScheduleExerciseData[];
-}
-
 export interface WorkoutScheduleDayData {
   readonly id: WorkoutScheduleDayId;
   readonly clientUserId: UserId;
@@ -38,7 +30,10 @@ export interface WorkoutScheduleDayData {
   readonly trainerId: TrainerProfileId;
   readonly scheduleDate: CalendarDate;
   readonly kind: WorkoutScheduleDayKind;
-  readonly sessions: readonly WorkoutScheduleSessionData[];
+  readonly title: WorkoutPlanTitle | null;
+  readonly clonedFromTemplateId: WorkoutPlanTemplateId | null;
+  readonly sessionId: WorkoutScheduleSessionId | null;
+  readonly exercises: readonly WorkoutScheduleExerciseData[];
   readonly deletedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -51,7 +46,10 @@ export interface CreateWorkoutScheduleDayProps {
   readonly trainerId: TrainerProfileId;
   readonly scheduleDate: CalendarDate;
   readonly kind: WorkoutScheduleDayKind;
-  readonly sessions: readonly WorkoutScheduleSessionData[];
+  readonly title: string | null;
+  readonly clonedFromTemplateId: WorkoutPlanTemplateId | null;
+  readonly sessionId: WorkoutScheduleSessionId | null;
+  readonly exercises: readonly WorkoutScheduleExerciseData[];
   readonly now: Date;
 }
 
@@ -59,10 +57,10 @@ export class WorkoutScheduleDay {
   private constructor(private data: WorkoutScheduleDayData) {}
 
   static create(props: CreateWorkoutScheduleDayProps): WorkoutScheduleDay {
-    const sessions = normalizeSessions(props.kind, props.sessions);
+    const snapshot = normalizeSnapshot(props);
     return new WorkoutScheduleDay({
       ...props,
-      sessions,
+      ...snapshot,
       deletedAt: null,
       createdAt: props.now,
       updatedAt: props.now,
@@ -97,8 +95,20 @@ export class WorkoutScheduleDay {
     return this.data.kind;
   }
 
-  get sessions(): readonly WorkoutScheduleSessionData[] {
-    return this.data.sessions;
+  get title(): WorkoutPlanTitle | null {
+    return this.data.title;
+  }
+
+  get clonedFromTemplateId(): WorkoutPlanTemplateId | null {
+    return this.data.clonedFromTemplateId;
+  }
+
+  get sessionId(): WorkoutScheduleSessionId | null {
+    return this.data.sessionId;
+  }
+
+  get exercises(): readonly WorkoutScheduleExerciseData[] {
+    return this.data.exercises;
   }
 
   get deletedAt(): Date | null {
@@ -117,17 +127,8 @@ export class WorkoutScheduleDay {
     return this.data.deletedAt === null;
   }
 
-  findExercise(exerciseId: WorkoutScheduleExerciseId): {
-    session: WorkoutScheduleSessionData;
-    exercise: WorkoutScheduleExerciseData;
-  } | null {
-    for (const session of this.data.sessions) {
-      const exercise = session.exercises.find((row) => row.id === exerciseId);
-      if (exercise !== undefined) {
-        return { session, exercise };
-      }
-    }
-    return null;
+  findExercise(exerciseId: WorkoutScheduleExerciseId): WorkoutScheduleExerciseData | null {
+    return this.data.exercises.find((row) => row.id === exerciseId) ?? null;
   }
 
   softDelete(now: Date): void {
@@ -142,46 +143,56 @@ export class WorkoutScheduleDay {
   }
 }
 
-function normalizeSessions(
-  kind: WorkoutScheduleDayKind,
-  sessions: readonly WorkoutScheduleSessionData[],
-): WorkoutScheduleSessionData[] {
-  if (kind === 'REST') {
-    if (sessions.length > 0) {
-      throw new InvalidWorkoutScheduleError('REST days cannot include sessions');
-    }
-    return [];
-  }
-
-  if (sessions.length < 1 || sessions.length > 2) {
-    throw new InvalidWorkoutScheduleError('TRAINING days must include 1 or 2 sessions');
-  }
-
-  const slots = new Set<WorkoutSessionSlot>();
-  return sessions.map((session) => {
-    if (slots.has(session.slot)) {
-      throw new InvalidWorkoutScheduleError('Session slots must be unique on a day');
-    }
-    slots.add(session.slot);
-    if (session.exercises.length === 0) {
-      throw new InvalidWorkoutScheduleError('Each session must include at least one exercise');
-    }
-    const title = session.title.trim();
-    if (!title) {
-      throw new InvalidWorkoutScheduleError('Session title is required');
+function normalizeSnapshot(props: CreateWorkoutScheduleDayProps): {
+  title: WorkoutPlanTitle | null;
+  clonedFromTemplateId: WorkoutPlanTemplateId | null;
+  sessionId: WorkoutScheduleSessionId | null;
+  exercises: WorkoutScheduleExerciseData[];
+} {
+  if (props.kind === 'REST') {
+    if (props.exercises.length > 0 || props.sessionId !== null || props.title !== null) {
+      throw new InvalidWorkoutScheduleError('REST days cannot include a workout list');
     }
     return {
-      ...session,
-      title,
-      exercises: session.exercises.map((exercise, index) => ({
-        ...exercise,
-        sets: normalizeSets(exercise.sets),
-        reps: normalizeReps(exercise.reps),
-        notes: normalizeNotes(exercise.notes),
-        sortOrder: index,
-      })),
+      title: null,
+      clonedFromTemplateId: null,
+      sessionId: null,
+      exercises: [],
     };
-  });
+  }
+
+  if (props.sessionId === null) {
+    throw new InvalidWorkoutScheduleError('TRAINING days require a session container');
+  }
+  if (props.exercises.length === 0) {
+    throw new InvalidWorkoutScheduleError('TRAINING days require at least one exercise');
+  }
+
+  return {
+    title: toOptionalTitle(props.title),
+    clonedFromTemplateId: props.clonedFromTemplateId,
+    sessionId: props.sessionId,
+    exercises: props.exercises.map((exercise, index) => ({
+      ...exercise,
+      sets: normalizeSets(exercise.sets),
+      reps: normalizeReps(exercise.reps),
+      notes: normalizeNotes(exercise.notes),
+      sortOrder: index,
+    })),
+  };
+}
+
+function toOptionalTitle(title: string | null): WorkoutPlanTitle | null {
+  if (title === null) {
+    return null;
+  }
+  try {
+    return WorkoutPlanTitle.create(title);
+  } catch (error) {
+    throw new InvalidWorkoutScheduleError(
+      error instanceof Error ? error.message : 'Session title is invalid',
+    );
+  }
 }
 
 function normalizeSets(sets: number | null): number | null {

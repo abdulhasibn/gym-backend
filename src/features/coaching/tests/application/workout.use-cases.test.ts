@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { NotFoundError } from '../../../../domain/errors/not-found.error';
 import type { AuthenticatedActor } from '../../../../domain/shared/authenticated-actor';
 import { CalendarDate } from '../../../../domain/shared/calendar-date.value-object';
 import { toGymOrgId } from '../../../../domain/shared/gym-org-id';
@@ -29,7 +28,8 @@ import { InvalidWorkoutScheduleError } from '../../domain/invalid-workout-schedu
 import { toTrainerProfileId } from '../../domain/trainer-profile-id';
 import type { WorkoutScheduleDayKind } from '../../domain/workout-schedule-day-kind';
 import { toWorkoutScheduleDayId } from '../../domain/workout-schedule-day-id';
-import { toWorkoutScheduleSessionId } from '../../domain/workout-schedule-session-id';
+import { toWorkoutScheduleExerciseId } from '../../domain/workout-schedule-exercise-id';
+import type { WorkoutScheduleDaySummary } from '../../domain/workout-schedule.queries';
 import { WorkoutPlanTemplate } from '../../domain/workout-plan-template.entity';
 import { toWorkoutPlanTemplateExerciseId } from '../../domain/workout-plan-template-exercise-id';
 import { toWorkoutPlanTemplateId } from '../../domain/workout-plan-template-id';
@@ -111,6 +111,26 @@ function seedCatalog() {
   return catalog;
 }
 
+const benchLine = {
+  exerciseItemId: exerciseId,
+  sets: 3,
+  reps: '8-12',
+  notes: null,
+};
+
+function trainingEntry(
+  date: string,
+  extra?: { title?: string; clonedFromTemplateId?: string | null },
+) {
+  return {
+    date,
+    kind: 'TRAINING' as const,
+    title: extra?.title ?? 'Push AM',
+    clonedFromTemplateId: extra?.clonedFromTemplateId,
+    exercises: [benchLine],
+  };
+}
+
 function seedTemplate(): WorkoutPlanTemplateRepository {
   const template = WorkoutPlanTemplate.create({
     id: templateId,
@@ -159,12 +179,13 @@ describe('SearchExercisesUseCase', () => {
 });
 
 describe('UpsertWorkoutScheduleUseCase', () => {
-  it('snapshots template exercises onto TRAINING slots and allows REST', async () => {
+  it('snapshots a trainer-edited list onto TRAINING and allows REST', async () => {
     const schedule = new InMemoryWorkoutScheduleRepository();
     const useCase = new UpsertWorkoutScheduleUseCase(
       policy,
       entitlement,
       seedTemplate(),
+      seedCatalog(),
       schedule,
       gymClock,
       clock,
@@ -175,22 +196,20 @@ describe('UpsertWorkoutScheduleUseCase', () => {
       gymOrgId,
       clientUserId: clientId,
       entries: [
-        { date: '2026-08-17', kind: 'TRAINING', morningTemplateId: templateId },
+        trainingEntry('2026-08-17', { clonedFromTemplateId: templateId }),
         { date: '2026-08-18', kind: 'REST' },
       ],
     });
 
     expect(days).toHaveLength(2);
     expect(days[0]?.kind).toBe('TRAINING');
-    expect(days[0]?.sessions[0]?.title).toBe('Push AM');
-    expect(days[0]?.sessions[0]?.exercises).toHaveLength(1);
-    // G2: day-level template ids echoed on PUT response
-    expect(days[0]?.morningTemplateId).toBe(templateId);
-    expect(days[0]?.eveningTemplateId).toBeNull();
+    expect(days[0]?.title).toBe('Push AM');
+    expect(days[0]?.exercises).toHaveLength(1);
+    expect(days[0]?.clonedFromTemplateId).toBe(templateId);
     expect(days[1]?.kind).toBe('REST');
-    expect(days[1]?.sessions).toHaveLength(0);
-    expect(days[1]?.morningTemplateId).toBeNull();
-    expect(days[1]?.eveningTemplateId).toBeNull();
+    expect(days[1]?.exercises).toHaveLength(0);
+    expect(days[1]?.title).toBeNull();
+    expect(days[1]?.clonedFromTemplateId).toBeNull();
   });
 
   it('overwrites a prior day when the same date is upserted again', async () => {
@@ -199,6 +218,7 @@ describe('UpsertWorkoutScheduleUseCase', () => {
       policy,
       entitlement,
       seedTemplate(),
+      seedCatalog(),
       schedule,
       gymClock,
       clock,
@@ -208,7 +228,7 @@ describe('UpsertWorkoutScheduleUseCase', () => {
     await useCase.execute(trainer, {
       gymOrgId,
       clientUserId: clientId,
-      entries: [{ date: '2026-08-17', kind: 'TRAINING', morningTemplateId: templateId }],
+      entries: [trainingEntry('2026-08-17')],
     });
     const replaced = await useCase.execute(trainer, {
       gymOrgId,
@@ -220,7 +240,8 @@ describe('UpsertWorkoutScheduleUseCase', () => {
     expect(schedule.days.filter((day) => day.isLive)).toHaveLength(1);
   });
 
-  it('rejects a soft-deleted / missing template', async () => {
+  it('nullifies unknown provenance and still saves the list', async () => {
+    let replaceCalled = false;
     const useCase = new UpsertWorkoutScheduleUseCase(
       policy,
       entitlement,
@@ -229,8 +250,34 @@ describe('UpsertWorkoutScheduleUseCase', () => {
           return null;
         },
         async save() {},
-        async replace() {},
+        async replace() {
+          replaceCalled = true;
+        },
       },
+      seedCatalog(),
+      new InMemoryWorkoutScheduleRepository(),
+      gymClock,
+      clock,
+      ids,
+    );
+
+    const days = await useCase.execute(trainer, {
+      gymOrgId,
+      clientUserId: clientId,
+      entries: [trainingEntry('2026-08-17', { clonedFromTemplateId: templateId })],
+    });
+
+    expect(days[0]?.clonedFromTemplateId).toBeNull();
+    expect(days[0]?.exercises).toHaveLength(1);
+    expect(replaceCalled).toBe(false);
+  });
+
+  it('rejects an unknown catalog exercise', async () => {
+    const useCase = new UpsertWorkoutScheduleUseCase(
+      policy,
+      entitlement,
+      seedTemplate(),
+      seedCatalog(),
       new InMemoryWorkoutScheduleRepository(),
       gymClock,
       clock,
@@ -241,9 +288,15 @@ describe('UpsertWorkoutScheduleUseCase', () => {
       useCase.execute(trainer, {
         gymOrgId,
         clientUserId: clientId,
-        entries: [{ date: '2026-08-17', kind: 'TRAINING', morningTemplateId: templateId }],
+        entries: [
+          {
+            date: '2026-08-17',
+            kind: 'TRAINING',
+            exercises: [{ exerciseItemId: 'e0e00000-0000-4000-8000-000000000099' }],
+          },
+        ],
       }),
-    ).rejects.toBeInstanceOf(NotFoundError);
+    ).rejects.toBeInstanceOf(InvalidWorkoutScheduleError);
   });
 
   it('forbids a trainer who is not assigned to the client', async () => {
@@ -259,6 +312,7 @@ describe('UpsertWorkoutScheduleUseCase', () => {
       policy,
       unassigned,
       seedTemplate(),
+      seedCatalog(),
       new InMemoryWorkoutScheduleRepository(),
       gymClock,
       clock,
@@ -279,6 +333,7 @@ describe('UpsertWorkoutScheduleUseCase', () => {
       policy,
       frozenEntitlement,
       seedTemplate(),
+      seedCatalog(),
       new InMemoryWorkoutScheduleRepository(),
       gymClock,
       clock,
@@ -302,6 +357,7 @@ describe('schedule complete overlay', () => {
       policy,
       entitlement,
       seedTemplate(),
+      seedCatalog(),
       schedule,
       gymClock,
       clock,
@@ -310,11 +366,11 @@ describe('schedule complete overlay', () => {
     const days = await upsert.execute(trainer, {
       gymOrgId,
       clientUserId: clientId,
-      entries: [{ date: '2026-08-17', kind: 'TRAINING', morningTemplateId: templateId }],
+      entries: [trainingEntry('2026-08-17')],
     });
     return {
       schedule,
-      itemId: days[0]?.sessions[0]?.exercises[0]?.id ?? '',
+      itemId: days[0]?.exercises[0]?.id ?? '',
     };
   }
 
@@ -339,7 +395,7 @@ describe('schedule complete overlay', () => {
       clock,
     ).execute(client, gymOrgId, '2026-08-17', '2026-08-17');
 
-    expect(mine.days[0]?.sessions[0]?.exercises[0]?.completed).toBe(true);
+    expect(mine.days[0]?.exercises[0]?.completed).toBe(true);
     expect(mine.days[0]?.dayDone).toBe(true);
     expect(mine.days[0]?.adherencePercent).toBe(100);
     expect(mine.writable).toBe(true);
@@ -352,6 +408,7 @@ describe('schedule complete overlay', () => {
       policy,
       entitlement,
       seedTemplate(),
+      seedCatalog(),
       schedule,
       gymClock,
       clock,
@@ -359,9 +416,9 @@ describe('schedule complete overlay', () => {
     ).execute(trainer, {
       gymOrgId,
       clientUserId: clientId,
-      entries: [{ date: '2026-08-15', kind: 'TRAINING', morningTemplateId: templateId }],
+      entries: [trainingEntry('2026-08-15')],
     });
-    const itemId = days[0]?.sessions[0]?.exercises[0]?.id ?? '';
+    const itemId = days[0]?.exercises[0]?.id ?? '';
     const completions = new InMemoryWorkoutScheduleCompletions();
 
     await new CompleteScheduleExerciseUseCase(
@@ -382,7 +439,7 @@ describe('schedule complete overlay', () => {
       clock,
     ).execute(client, gymOrgId, '2026-08-15', '2026-08-17');
 
-    expect(mine.days[0]?.sessions[0]?.exercises[0]?.completed).toBe(true);
+    expect(mine.days[0]?.exercises[0]?.completed).toBe(true);
     expect(mine.days[0]?.dayDone).toBe(true);
   });
 
@@ -392,6 +449,7 @@ describe('schedule complete overlay', () => {
       policy,
       entitlement,
       seedTemplate(),
+      seedCatalog(),
       schedule,
       gymClock,
       clock,
@@ -399,9 +457,9 @@ describe('schedule complete overlay', () => {
     ).execute(trainer, {
       gymOrgId,
       clientUserId: clientId,
-      entries: [{ date: '2026-08-18', kind: 'TRAINING', morningTemplateId: templateId }],
+      entries: [trainingEntry('2026-08-18')],
     });
-    const itemId = days[0]?.sessions[0]?.exercises[0]?.id ?? '';
+    const itemId = days[0]?.exercises[0]?.id ?? '';
 
     await expect(
       new CompleteScheduleExerciseUseCase(
@@ -421,6 +479,7 @@ describe('schedule complete overlay', () => {
       policy,
       entitlement,
       seedTemplate(),
+      seedCatalog(),
       schedule,
       gymClock,
       clock,
@@ -428,9 +487,9 @@ describe('schedule complete overlay', () => {
     ).execute(trainer, {
       gymOrgId,
       clientUserId: clientId,
-      entries: [{ date: '2026-08-14', kind: 'TRAINING', morningTemplateId: templateId }],
+      entries: [trainingEntry('2026-08-14')],
     });
-    const itemId = days[0]?.sessions[0]?.exercises[0]?.id ?? '';
+    const itemId = days[0]?.exercises[0]?.id ?? '';
 
     await expect(
       new CompleteScheduleExerciseUseCase(
@@ -517,7 +576,7 @@ describe('schedule complete overlay', () => {
       },
     ).execute(trainer, gymOrgId, clientId, '2026-08-17', '2026-08-17');
 
-    expect(withoutGrant[0]?.sessions[0]?.exercises[0]?.completed).toBeUndefined();
+    expect(withoutGrant[0]?.exercises[0]?.completed).toBeUndefined();
     expect(withoutGrant[0]?.dayDone).toBeUndefined();
 
     const withGrant = await new GetStaffWorkoutScheduleUseCase(
@@ -532,7 +591,7 @@ describe('schedule complete overlay', () => {
       },
     ).execute(trainer, gymOrgId, clientId, '2026-08-17', '2026-08-17');
 
-    expect(withGrant[0]?.sessions[0]?.exercises[0]?.completed).toBe(true);
+    expect(withGrant[0]?.exercises[0]?.completed).toBe(true);
     expect(withGrant[0]?.dayDone).toBe(true);
     expect(withGrant[0]?.adherencePercent).toBe(100);
   });
@@ -545,6 +604,7 @@ describe('workout streak', () => {
       policy,
       entitlement,
       seedTemplate(),
+      seedCatalog(),
       schedule,
       gymClock,
       clock,
@@ -554,9 +614,9 @@ describe('workout streak', () => {
       gymOrgId,
       clientUserId: clientId,
       entries: [
-        { date: '2026-08-15', kind: 'TRAINING', morningTemplateId: templateId },
+        trainingEntry('2026-08-15'),
         { date: '2026-08-16', kind: 'REST' },
-        { date: '2026-08-17', kind: 'TRAINING', morningTemplateId: templateId },
+        trainingEntry('2026-08-17'),
       ],
     });
     const completions = new InMemoryWorkoutScheduleCompletions();
@@ -569,10 +629,8 @@ describe('workout streak', () => {
       clock,
     );
     for (const day of days) {
-      for (const session of day.sessions) {
-        for (const exercise of session.exercises) {
-          await complete.execute(client, gymOrgId, exercise.id);
-        }
+      for (const exercise of day.exercises) {
+        await complete.execute(client, gymOrgId, exercise.id);
       }
     }
 
@@ -597,6 +655,7 @@ describe('workout streak', () => {
       policy,
       entitlement,
       seedTemplate(),
+      seedCatalog(),
       schedule,
       gymClock,
       clock,
@@ -717,82 +776,69 @@ describe('toWorkoutPlanTemplateDtoFromSummary', () => {
   });
 });
 
-// ─── G2 + G10: Schedule day DTO template ids and date normalization ───────────
+// ─── Schedule day DTO (ADR-0014) + G10 date normalization ────────────────────
 
 function makeScheduleSummary(opts: {
-  morningTemplateId?: string;
-  eveningTemplateId?: string;
+  title?: string | null;
+  clonedFromTemplateId?: string | null;
   kind?: WorkoutScheduleDayKind;
   scheduleDate?: string;
-}) {
-  const sessions: {
-    id: ReturnType<typeof toWorkoutScheduleSessionId>;
-    slot: 'MORNING' | 'EVENING';
-    title: string;
-    clonedFromTemplateId: ReturnType<typeof toWorkoutPlanTemplateId>;
-    exercises: never[];
-  }[] = [];
-  if (opts.morningTemplateId) {
-    sessions.push({
-      id: toWorkoutScheduleSessionId('s1000000-0000-4000-8000-000000000001'),
-      slot: 'MORNING' as const,
-      title: 'Push AM',
-      clonedFromTemplateId: toWorkoutPlanTemplateId(opts.morningTemplateId),
-      exercises: [],
-    });
-  }
-  if (opts.eveningTemplateId) {
-    sessions.push({
-      id: toWorkoutScheduleSessionId('s2000000-0000-4000-8000-000000000002'),
-      slot: 'EVENING' as const,
-      title: 'Pull PM',
-      clonedFromTemplateId: toWorkoutPlanTemplateId(opts.eveningTemplateId),
-      exercises: [],
-    });
-  }
+}): WorkoutScheduleDaySummary {
+  const kind = (opts.kind ?? 'TRAINING') as WorkoutScheduleDayKind;
   return {
     id: toWorkoutScheduleDayId('d0000000-0000-4000-8000-000000000001'),
     clientUserId: clientId,
     gymOrgId,
-    trainerId: trainerProfileId as unknown as string,
+    trainerId: trainerProfileId,
     scheduleDate: opts.scheduleDate ?? '2026-08-17',
-    kind: (opts.kind ?? 'TRAINING') as WorkoutScheduleDayKind,
-    sessions,
+    kind,
+    title: kind === 'REST' ? null : (opts.title ?? 'Push AM'),
+    clonedFromTemplateId:
+      kind === 'REST' || opts.clonedFromTemplateId === undefined
+        ? null
+        : opts.clonedFromTemplateId === null
+          ? null
+          : toWorkoutPlanTemplateId(opts.clonedFromTemplateId),
+    exercises:
+      kind === 'REST'
+        ? []
+        : [
+            {
+              id: toWorkoutScheduleExerciseId('e1000000-0000-4000-8000-000000000001'),
+              exerciseItemId: exerciseId,
+              name: 'Barbell Bench Press',
+              sets: 3,
+              reps: '8-12',
+              notes: null,
+              sortOrder: 0,
+            },
+          ],
     createdAt: '2026-08-17T00:00:00.000Z',
     updatedAt: '2026-08-17T00:00:00.000Z',
   };
 }
 
 describe('toWorkoutScheduleDayDtoFromSummary', () => {
-  it('echoes morningTemplateId and eveningTemplateId from sessions (G2)', () => {
-    const eveningId = 't1111111-1111-4111-8111-111111111111';
-    const summary = makeScheduleSummary({
-      morningTemplateId: templateId,
-      eveningTemplateId: eveningId,
-    });
+  it('returns one exercise list and optional provenance', () => {
+    const summary = makeScheduleSummary({ clonedFromTemplateId: templateId });
 
     const dto = toWorkoutScheduleDayDtoFromSummary(summary);
-    expect(dto.morningTemplateId).toBe(templateId);
-    expect(dto.eveningTemplateId).toBe(eveningId);
-    expect(dto.sessions).toHaveLength(2);
-    expect(dto.sessions[0]?.clonedFromTemplateId).toBe(templateId);
+    expect(dto.title).toBe('Push AM');
+    expect(dto.clonedFromTemplateId).toBe(templateId);
+    expect(dto.exercises).toHaveLength(1);
+    expect(dto.exercises[0]?.name).toBe('Barbell Bench Press');
+    expect(dto).not.toHaveProperty('sessions');
+    expect(dto).not.toHaveProperty('morningTemplateId');
   });
 
-  it('sets both template ids to null for a REST day (G2)', () => {
+  it('sets title and provenance to null for a REST day', () => {
     const summary = makeScheduleSummary({ kind: 'REST' });
 
     const dto = toWorkoutScheduleDayDtoFromSummary(summary);
-    expect(dto.morningTemplateId).toBeNull();
-    expect(dto.eveningTemplateId).toBeNull();
+    expect(dto.title).toBeNull();
+    expect(dto.clonedFromTemplateId).toBeNull();
+    expect(dto.exercises).toHaveLength(0);
     expect(dto.kind).toBe('REST');
-  });
-
-  it('leaves eveningTemplateId null when only morning is scheduled (G2)', () => {
-    const summary = makeScheduleSummary({ morningTemplateId: templateId });
-
-    const dto = toWorkoutScheduleDayDtoFromSummary(summary);
-    expect(dto.morningTemplateId).toBe(templateId);
-    expect(dto.eveningTemplateId).toBeNull();
   });
 
   it('passes scheduleDate through unchanged when already YYYY-MM-DD (G10)', () => {

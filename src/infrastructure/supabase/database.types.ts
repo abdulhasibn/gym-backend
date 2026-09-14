@@ -2210,33 +2210,33 @@ export type Database = {
       };
       workout_schedule_sessions: {
         Row: {
-          cloned_from_template_id: string;
+          cloned_from_template_id: string | null;
           created_at: string;
           deleted_at: string | null;
           id: string;
           schedule_day_id: string;
           slot: Database['public']['Enums']['workout_session_slot'];
-          title: string;
+          title: string | null;
           updated_at: string;
         };
         Insert: {
-          cloned_from_template_id: string;
+          cloned_from_template_id?: string | null;
           created_at?: string;
           deleted_at?: string | null;
           id?: string;
           schedule_day_id: string;
           slot: Database['public']['Enums']['workout_session_slot'];
-          title: string;
+          title?: string | null;
           updated_at?: string;
         };
         Update: {
-          cloned_from_template_id?: string;
+          cloned_from_template_id?: string | null;
           created_at?: string;
           deleted_at?: string | null;
           id?: string;
           schedule_day_id?: string;
           slot?: Database['public']['Enums']['workout_session_slot'];
-          title?: string;
+          title?: string | null;
           updated_at?: string;
         };
         Relationships: [

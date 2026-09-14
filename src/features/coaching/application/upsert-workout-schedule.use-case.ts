@@ -6,6 +6,8 @@ import { toUserId } from '../../../domain/shared/user-id';
 import type { Clock } from '../../../shared/clock/clock';
 import type { IdGenerator } from '../../../shared/ids/id-generator';
 import type { CoachingEntitlementPort } from '../domain/coaching-entitlement.port';
+import type { ExerciseCatalogRepository } from '../domain/exercise-catalog.repository';
+import { toExerciseItemId } from '../domain/exercise-item-id';
 import type { GymLocalClock } from '../domain/gym-local-clock.port';
 import { InvalidWorkoutScheduleError } from '../domain/invalid-workout-schedule.error';
 import { toWorkoutPlanTemplateId } from '../domain/workout-plan-template-id';
@@ -16,7 +18,6 @@ import { toWorkoutScheduleDayId } from '../domain/workout-schedule-day-id';
 import { toWorkoutScheduleExerciseId } from '../domain/workout-schedule-exercise-id';
 import { toWorkoutScheduleSessionId } from '../domain/workout-schedule-session-id';
 import type { WorkoutScheduleRepository } from '../domain/workout-schedule.repository';
-import type { WorkoutSessionSlot } from '../domain/workout-session-slot';
 import { CoachingAddonRequiredError } from './coaching-addon-required.error';
 import { CoachingForbiddenError } from './coaching-forbidden.error';
 import { toWorkoutScheduleDayDtoFromEntity, type WorkoutScheduleDayDto } from './coaching.dto';
@@ -27,15 +28,24 @@ export interface UpsertWorkoutScheduleRestEntry {
   readonly kind: 'REST';
 }
 
+export interface UpsertWorkoutScheduleTrainingExercise {
+  readonly exerciseItemId: string;
+  readonly sets?: number | null;
+  readonly reps?: string | null;
+  readonly notes?: string | null;
+}
+
 export interface UpsertWorkoutScheduleTrainingEntry {
   readonly date: string;
   readonly kind: 'TRAINING';
-  readonly morningTemplateId?: string;
-  readonly eveningTemplateId?: string;
+  readonly title?: string;
+  readonly clonedFromTemplateId?: string | null;
+  readonly exercises: readonly UpsertWorkoutScheduleTrainingExercise[];
 }
 
 export type UpsertWorkoutScheduleEntry =
-  UpsertWorkoutScheduleRestEntry | UpsertWorkoutScheduleTrainingEntry;
+  | UpsertWorkoutScheduleRestEntry
+  | UpsertWorkoutScheduleTrainingEntry;
 
 export interface UpsertWorkoutScheduleCommand {
   readonly gymOrgId: GymOrgId;
@@ -48,6 +58,7 @@ export class UpsertWorkoutScheduleUseCase {
     private readonly policy: DietAssignPolicy,
     private readonly entitlement: CoachingEntitlementPort,
     private readonly templates: WorkoutPlanTemplateRepository,
+    private readonly catalog: ExerciseCatalogRepository,
     private readonly schedule: WorkoutScheduleRepository,
     private readonly gymClock: GymLocalClock,
     private readonly clock: Clock,
@@ -98,50 +109,21 @@ export class UpsertWorkoutScheduleUseCase {
             trainerId,
             scheduleDate,
             kind: 'REST',
-            sessions: [],
+            title: null,
+            clonedFromTemplateId: null,
+            sessionId: null,
+            exercises: [],
             now,
           }),
         );
         continue;
       }
 
-      const slots: { slot: WorkoutSessionSlot; templateId: string }[] = [];
-      if (entry.morningTemplateId !== undefined) {
-        slots.push({ slot: 'MORNING', templateId: entry.morningTemplateId });
-      }
-      if (entry.eveningTemplateId !== undefined) {
-        slots.push({ slot: 'EVENING', templateId: entry.eveningTemplateId });
-      }
-      if (slots.length === 0) {
-        throw new InvalidWorkoutScheduleError(
-          'TRAINING days require morningTemplateId and/or eveningTemplateId',
-        );
-      }
-
-      const sessions = [];
-      for (const { slot, templateId } of slots) {
-        const template = await this.templates.findById(
-          toWorkoutPlanTemplateId(templateId),
-          command.gymOrgId,
-        );
-        if (template === null || !template.isLive) {
-          throw new NotFoundError('Workout plan template not found');
-        }
-        sessions.push({
-          id: toWorkoutScheduleSessionId(this.ids.generate()),
-          slot,
-          title: template.title.value,
-          clonedFromTemplateId: template.id,
-          exercises: template.exercises.map((exercise, index) => ({
-            id: toWorkoutScheduleExerciseId(this.ids.generate()),
-            exerciseItemId: exercise.exerciseItemId,
-            sets: exercise.sets,
-            reps: exercise.reps,
-            notes: exercise.notes,
-            sortOrder: index,
-          })),
-        });
-      }
+      await this.assertLiveExercises(entry.exercises);
+      const clonedFromTemplateId = await this.resolveProvenance(
+        entry.clonedFromTemplateId,
+        command.gymOrgId,
+      );
 
       days.push(
         WorkoutScheduleDay.create({
@@ -151,7 +133,17 @@ export class UpsertWorkoutScheduleUseCase {
           trainerId,
           scheduleDate,
           kind: 'TRAINING' satisfies WorkoutScheduleDayKind,
-          sessions,
+          title: entry.title ?? null,
+          clonedFromTemplateId,
+          sessionId: toWorkoutScheduleSessionId(this.ids.generate()),
+          exercises: entry.exercises.map((exercise, index) => ({
+            id: toWorkoutScheduleExerciseId(this.ids.generate()),
+            exerciseItemId: toExerciseItemId(exercise.exerciseItemId),
+            sets: exercise.sets ?? null,
+            reps: exercise.reps ?? null,
+            notes: exercise.notes ?? null,
+            sortOrder: index,
+          })),
           now,
         }),
       );
@@ -159,5 +151,30 @@ export class UpsertWorkoutScheduleUseCase {
 
     await this.schedule.upsertDays(days);
     return days.map((day) => toWorkoutScheduleDayDtoFromEntity(day));
+  }
+
+  private async assertLiveExercises(
+    exercises: readonly UpsertWorkoutScheduleTrainingExercise[],
+  ): Promise<void> {
+    for (const exercise of exercises) {
+      const exists = await this.catalog.hasLiveSeed(toExerciseItemId(exercise.exerciseItemId));
+      if (!exists) {
+        throw new InvalidWorkoutScheduleError('Seed catalog exercise not found');
+      }
+    }
+  }
+
+  private async resolveProvenance(
+    templateId: string | null | undefined,
+    gymOrgId: GymOrgId,
+  ): Promise<ReturnType<typeof toWorkoutPlanTemplateId> | null> {
+    if (templateId === undefined || templateId === null) {
+      return null;
+    }
+    const template = await this.templates.findById(toWorkoutPlanTemplateId(templateId), gymOrgId);
+    if (template === null || !template.isLive) {
+      return null;
+    }
+    return template.id;
   }
 }

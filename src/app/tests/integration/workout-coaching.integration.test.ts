@@ -77,20 +77,34 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
       .set(admin)
       .send({
         entries: [
-          { date: yesterday, kind: 'TRAINING', morningTemplateId: templateId },
-          { date: today, kind: 'TRAINING', morningTemplateId: templateId },
+          {
+            date: yesterday,
+            kind: 'TRAINING',
+            title: 'Push AM',
+            clonedFromTemplateId: templateId,
+            exercises: [{ exerciseItemId: SEED_EXERCISE_BENCH_ID, sets: 3, reps: '8-10' }],
+          },
+          {
+            date: today,
+            kind: 'TRAINING',
+            title: 'Push AM',
+            clonedFromTemplateId: templateId,
+            exercises: [{ exerciseItemId: SEED_EXERCISE_BENCH_ID, sets: 3, reps: '8-10' }],
+          },
           { date: CalendarDate.create(today).addDays(1).value, kind: 'REST' },
         ],
       });
     expect(upserted.status).toBe(200);
     expect(upserted.body.days).toHaveLength(3);
-    // G2: PUT response echoes morningTemplateId on TRAINING days
-    expect(upserted.body.days[0].morningTemplateId).toBe(templateId);
-    expect(upserted.body.days[0].eveningTemplateId).toBeNull();
-    // REST day: both null
-    expect(upserted.body.days[2].morningTemplateId).toBeNull();
-    expect(upserted.body.days[2].eveningTemplateId).toBeNull();
-    // G10: scheduleDate is always YYYY-MM-DD, not an ISO datetime
+    expect(upserted.body.days[0].title).toBe('Push AM');
+    expect(upserted.body.days[0].clonedFromTemplateId).toBe(templateId);
+    expect(upserted.body.days[0].exercises).toHaveLength(1);
+    expect(upserted.body.days[0]).not.toHaveProperty('sessions');
+    expect(upserted.body.days[0]).not.toHaveProperty('morningTemplateId');
+    expect(upserted.body.days[2].kind).toBe('REST');
+    expect(upserted.body.days[2].title).toBeNull();
+    expect(upserted.body.days[2].clonedFromTemplateId).toBeNull();
+    expect(upserted.body.days[2].exercises).toEqual([]);
     expect(upserted.body.days[0].scheduleDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
     const staffGet = await supertest(app)
@@ -99,13 +113,12 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
       .set(admin);
     expect(staffGet.status).toBe(200);
     expect(staffGet.body.days).toHaveLength(2);
-    // G2: GET also echoes morningTemplateId
-    expect(staffGet.body.days[0].morningTemplateId).toBe(templateId);
-    expect(staffGet.body.days[0].eveningTemplateId).toBeNull();
-    // G10: scheduleDate from GET matches YYYY-MM-DD and equals the PUT date
+    expect(staffGet.body.days[0].title).toBe('Push AM');
+    expect(staffGet.body.days[0].clonedFromTemplateId).toBe(templateId);
+    expect(staffGet.body.days[0].exercises[0].name).toBe('Bench Press (Barbell)');
+    expect(staffGet.body.days[0]).not.toHaveProperty('sessions');
     expect(staffGet.body.days[0].scheduleDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(staffGet.body.days[0].scheduleDate).toBe(upserted.body.days[0].scheduleDate);
-    // No WORKOUT_PLANS grant by default → no adherence fields
     expect(staffGet.body.days[0].dayDone).toBeUndefined();
 
     const mineYesterday = await supertest(app)
@@ -113,7 +126,7 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
       .query({ date: yesterday })
       .set(clientAuth);
     expect(mineYesterday.status).toBe(200);
-    const yesterdayItemId = mineYesterday.body.days[0].sessions[0].exercises[0].id as string;
+    const yesterdayItemId = mineYesterday.body.days[0].exercises[0].id as string;
 
     const catchUp = await supertest(app)
       .post(`/gym-orgs/${gymOrgId}/my-workout-schedule/items/${yesterdayItemId}/complete`)
@@ -124,7 +137,7 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
       .get(`/gym-orgs/${gymOrgId}/my-workout-schedule`)
       .query({ date: yesterday })
       .set(clientAuth);
-    expect(afterCatchUp.body.days[0].sessions[0].exercises[0].completed).toBe(true);
+    expect(afterCatchUp.body.days[0].exercises[0].completed).toBe(true);
     expect(afterCatchUp.body.days[0].dayDone).toBe(true);
     expect(afterCatchUp.body.days[0].adherencePercent).toBe(100);
 
@@ -133,7 +146,7 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
       .query({ date: today })
       .set(clientAuth);
     expect(mine.status).toBe(200);
-    const itemId = mine.body.days[0].sessions[0].exercises[0].id as string;
+    const itemId = mine.body.days[0].exercises[0].id as string;
 
     const completed = await supertest(app)
       .post(`/gym-orgs/${gymOrgId}/my-workout-schedule/items/${itemId}/complete`)
@@ -144,7 +157,7 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
       .get(`/gym-orgs/${gymOrgId}/my-workout-schedule`)
       .query({ date: today })
       .set(clientAuth);
-    expect(afterComplete.body.days[0].sessions[0].exercises[0].completed).toBe(true);
+    expect(afterComplete.body.days[0].exercises[0].completed).toBe(true);
     expect(afterComplete.body.days[0].dayDone).toBe(true);
 
     const uncompleted = await supertest(app)

@@ -2,7 +2,7 @@
 
 **Status:** accepted
 
-Assigned workouts are no longer a single day-labeled `WorkoutPlan` (Push/Pull). Trainers upsert **calendar dates** for a client at a gym: an explicit **REST** day, or a **TRAINING** day with one or two sessions (`MORNING` / `EVENING`). Each session is a **snapshot** of a gym `WorkoutPlanTemplate` (ADR-0009). Later template edits do not rewrite snapshotted sessions.
+Assigned workouts are no longer a single day-labeled `WorkoutPlan` (Push/Pull). Trainers upsert **calendar dates** for a client at a gym: an explicit **REST** day, or a **TRAINING** day with one snapshotted exercise list. Morning/evening template pointers are superseded by **ADR-0014**. Later template edits do not rewrite snapshotted dates.
 
 Diet assign and diet templates (ADR-0008) stay unchanged.
 
@@ -13,9 +13,9 @@ Desk PT assigns work by calendar (including rest and optional twice-daily sessio
 ## Rules
 
 - **`WorkoutScheduleDay`**: Client-owned instance with assigning-gym provenance (`gym_org_id`, `trainer_id`). Unique live `(client_user_id, gym_org_id, schedule_date)`.
-- **`kind`**: `REST` (no sessions) **or** `TRAINING` (1–2 sessions).
-- **`WorkoutScheduleSession`**: `slot` = `MORNING` | `EVENING`; unique per day; `title` + `cloned_from_template_id` snapshotted from a live template at upsert; nested exercises copied with new ids.
-- **Upsert**: staff replaces only the dates listed in the request body. Assign body carries `templateId`s only — never an exercise list.
+- **`kind`**: `REST` (no exercises) **or** `TRAINING` (one exercise list). Slot rules superseded by ADR-0014.
+- **`WorkoutScheduleSession`**: persistence 1:1 container for a TRAINING day (ADR-0014). HTTP no longer exposes `slot`.
+- **Upsert**: staff replaces only the dates listed in the request body. TRAINING body carries the exercise snapshot (ADR-0014).
 - **Gates**: assigned Trainer or Admin-as-Trainer; in-date `TRAINER_COACHING` on the target client; active membership.
 - **Completions:** `workout_schedule_exercise_completions` on schedule exercise ids. Completion window, `completed_on = schedule_date`, day-done, and staff `WORKOUT_PLANS` adherence overlay are defined in **ADR-0011** (supersedes the Phase-2 `today === schedule_date` rule).
 - **Product cutover**: HTTP for dayLabel `workout_plans` assign/GET/complete is retired. Legacy tables may remain in the DB unused.

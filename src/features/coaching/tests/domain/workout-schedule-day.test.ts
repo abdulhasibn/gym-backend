@@ -31,55 +31,69 @@ const exercise = {
   sortOrder: 0,
 };
 
-const morning = {
-  id: toWorkoutScheduleSessionId('s0000000-0000-4000-8000-000000000001'),
-  slot: 'MORNING' as const,
-  title: 'Push',
-  clonedFromTemplateId: toWorkoutPlanTemplateId('t0000000-0000-4000-8000-000000000001'),
-  exercises: [exercise],
-};
+const sessionId = toWorkoutScheduleSessionId('s0000000-0000-4000-8000-000000000001');
 
 describe('WorkoutScheduleDay', () => {
-  it('allows REST with no sessions', () => {
-    const day = WorkoutScheduleDay.create({ ...base, kind: 'REST', sessions: [] });
+  it('allows REST with no workout list', () => {
+    const day = WorkoutScheduleDay.create({
+      ...base,
+      kind: 'REST',
+      title: null,
+      clonedFromTemplateId: null,
+      sessionId: null,
+      exercises: [],
+    });
     expect(day.kind).toBe('REST');
-    expect(day.sessions).toHaveLength(0);
+    expect(day.exercises).toHaveLength(0);
+    expect(day.title).toBeNull();
   });
 
-  it('rejects REST with sessions', () => {
-    expect(() => WorkoutScheduleDay.create({ ...base, kind: 'REST', sessions: [morning] })).toThrow(
-      InvalidWorkoutScheduleError,
-    );
+  it('rejects REST with exercises', () => {
+    expect(() =>
+      WorkoutScheduleDay.create({
+        ...base,
+        kind: 'REST',
+        title: null,
+        clonedFromTemplateId: null,
+        sessionId: null,
+        exercises: [exercise],
+      }),
+    ).toThrow(InvalidWorkoutScheduleError);
   });
 
-  it('requires 1–2 TRAINING sessions with unique slots', () => {
-    expect(() => WorkoutScheduleDay.create({ ...base, kind: 'TRAINING', sessions: [] })).toThrow(
-      InvalidWorkoutScheduleError,
-    );
+  it('requires TRAINING exercises and a session container', () => {
+    expect(() =>
+      WorkoutScheduleDay.create({
+        ...base,
+        kind: 'TRAINING',
+        title: 'Push',
+        clonedFromTemplateId: null,
+        sessionId,
+        exercises: [],
+      }),
+    ).toThrow(InvalidWorkoutScheduleError);
 
     const day = WorkoutScheduleDay.create({
       ...base,
       kind: 'TRAINING',
-      sessions: [morning],
+      title: 'Push',
+      clonedFromTemplateId: toWorkoutPlanTemplateId('t0000000-0000-4000-8000-000000000001'),
+      sessionId,
+      exercises: [exercise],
     });
-    expect(day.sessions).toHaveLength(1);
-
-    expect(() =>
-      WorkoutScheduleDay.create({
-        ...base,
-        kind: 'TRAINING',
-        sessions: [morning, { ...morning, id: toWorkoutScheduleSessionId(crypto.randomUUID()) }],
-      }),
-    ).toThrow(InvalidWorkoutScheduleError);
+    expect(day.exercises).toHaveLength(1);
+    expect(day.title?.value).toBe('Push');
   });
 
-  it('rejects empty exercise lists on a session', () => {
-    expect(() =>
-      WorkoutScheduleDay.create({
-        ...base,
-        kind: 'TRAINING',
-        sessions: [{ ...morning, exercises: [] }],
-      }),
-    ).toThrow(InvalidWorkoutScheduleError);
+  it('allows TRAINING without a title', () => {
+    const day = WorkoutScheduleDay.create({
+      ...base,
+      kind: 'TRAINING',
+      title: null,
+      clonedFromTemplateId: null,
+      sessionId,
+      exercises: [exercise],
+    });
+    expect(day.title).toBeNull();
   });
 });

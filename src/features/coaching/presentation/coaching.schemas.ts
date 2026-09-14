@@ -181,6 +181,13 @@ export const workoutTemplateIdParamSchema = gymOrgIdParamSchema.extend({
 
 const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD');
 
+const scheduleExerciseLineSchema = z.object({
+  exerciseItemId: z.string().uuid(),
+  sets: z.number().int().min(1).max(99).nullable().optional(),
+  reps: z.string().max(40).nullable().optional(),
+  notes: notesSchema,
+});
+
 export const upsertWorkoutScheduleSchema = z
   .object({
     entries: z
@@ -196,15 +203,11 @@ export const upsertWorkoutScheduleSchema = z
             .object({
               date: isoDateSchema,
               kind: z.literal('TRAINING'),
-              morningTemplateId: z.string().uuid().optional(),
-              eveningTemplateId: z.string().uuid().optional(),
+              title: workoutTitleSchema.optional(),
+              clonedFromTemplateId: z.string().uuid().nullable().optional(),
+              exercises: z.array(scheduleExerciseLineSchema).min(1),
             })
-            .strict()
-            .refine(
-              (entry) =>
-                entry.morningTemplateId !== undefined || entry.eveningTemplateId !== undefined,
-              { message: 'TRAINING days require morningTemplateId and/or eveningTemplateId' },
-            ),
+            .strict(),
         ]),
       )
       .min(1),

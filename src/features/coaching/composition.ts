@@ -158,6 +158,7 @@ export function composeCoachingFeature(
       assignPolicy,
       ports.entitlement,
       workoutTemplates,
+      exerciseCatalog,
       workoutSchedule,
       ports.gymLocalClock,
       clock,

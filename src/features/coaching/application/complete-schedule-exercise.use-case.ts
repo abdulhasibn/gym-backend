@@ -53,7 +53,7 @@ export class CompleteScheduleExerciseUseCase {
     }
 
     await this.completions.complete({
-      exerciseId: found.exercise.id,
+      exerciseId: found.id,
       clientUserId: actor.userId,
       completedOn: day.scheduleDate,
     });

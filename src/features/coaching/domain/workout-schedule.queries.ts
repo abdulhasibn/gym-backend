@@ -4,8 +4,6 @@ import type { WorkoutPlanTemplateId } from './workout-plan-template-id';
 import type { WorkoutScheduleDayId } from './workout-schedule-day-id';
 import type { WorkoutScheduleDayKind } from './workout-schedule-day-kind';
 import type { WorkoutScheduleExerciseId } from './workout-schedule-exercise-id';
-import type { WorkoutScheduleSessionId } from './workout-schedule-session-id';
-import type { WorkoutSessionSlot } from './workout-session-slot';
 
 export interface WorkoutScheduleExerciseSummary {
   readonly id: WorkoutScheduleExerciseId;
@@ -17,14 +15,6 @@ export interface WorkoutScheduleExerciseSummary {
   readonly sortOrder: number;
 }
 
-export interface WorkoutScheduleSessionSummary {
-  readonly id: WorkoutScheduleSessionId;
-  readonly slot: WorkoutSessionSlot;
-  readonly title: string;
-  readonly clonedFromTemplateId: WorkoutPlanTemplateId;
-  readonly exercises: readonly WorkoutScheduleExerciseSummary[];
-}
-
 export interface WorkoutScheduleDaySummary {
   readonly id: WorkoutScheduleDayId;
   readonly clientUserId: UserId;
@@ -32,7 +22,9 @@ export interface WorkoutScheduleDaySummary {
   readonly trainerId: string;
   readonly scheduleDate: string;
   readonly kind: WorkoutScheduleDayKind;
-  readonly sessions: readonly WorkoutScheduleSessionSummary[];
+  readonly title: string | null;
+  readonly clonedFromTemplateId: WorkoutPlanTemplateId | null;
+  readonly exercises: readonly WorkoutScheduleExerciseSummary[];
   readonly createdAt: string;
   readonly updatedAt: string;
 }

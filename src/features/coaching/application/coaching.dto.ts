@@ -436,14 +436,6 @@ export interface WorkoutScheduleExerciseDto {
   readonly completed?: boolean;
 }
 
-export interface WorkoutScheduleSessionDto {
-  readonly id: string;
-  readonly slot: string;
-  readonly title: string;
-  readonly clonedFromTemplateId: string;
-  readonly exercises: readonly WorkoutScheduleExerciseDto[];
-}
-
 export interface WorkoutScheduleDayDto {
   readonly id: string;
   readonly clientUserId: string;
@@ -451,11 +443,9 @@ export interface WorkoutScheduleDayDto {
   readonly trainerId: string;
   readonly scheduleDate: string;
   readonly kind: string;
-  /** Template id used for the MORNING session — mirrors the PUT body field. null when no morning session. */
-  readonly morningTemplateId: string | null;
-  /** Template id used for the EVENING session — mirrors the PUT body field. null when no evening session. */
-  readonly eveningTemplateId: string | null;
-  readonly sessions: readonly WorkoutScheduleSessionDto[];
+  readonly title: string | null;
+  readonly clonedFromTemplateId: string | null;
+  readonly exercises: readonly WorkoutScheduleExerciseDto[];
   readonly writable?: boolean;
   readonly dayDone?: boolean;
   readonly adherencePercent?: number | null;
@@ -470,20 +460,13 @@ export interface WorkoutScheduleAdherenceExtras {
   readonly includeAdherence?: boolean;
 }
 
-function templateIdBySlot(
-  sessions: readonly { slot: string; clonedFromTemplateId: string }[],
-  slot: 'MORNING' | 'EVENING',
-): string | null {
-  return sessions.find((s) => s.slot === slot)?.clonedFromTemplateId ?? null;
-}
-
 export function toWorkoutScheduleDayDtoFromEntity(
   day: WorkoutScheduleDay,
   extras?: WorkoutScheduleAdherenceExtras,
 ): WorkoutScheduleDayDto {
   const includeAdherence = extras?.includeAdherence === true;
   const completedIds = extras?.completedExerciseIds;
-  const exerciseIds = day.sessions.flatMap((session) => session.exercises.map((ex) => ex.id));
+  const exerciseIds = day.exercises.map((ex) => ex.id);
   const completedCount =
     completedIds === undefined ? 0 : exerciseIds.filter((id) => completedIds.has(id)).length;
 
@@ -494,22 +477,16 @@ export function toWorkoutScheduleDayDtoFromEntity(
     trainerId: day.trainerId,
     scheduleDate: day.scheduleDate.value,
     kind: day.kind,
-    morningTemplateId: templateIdBySlot(day.sessions, 'MORNING'),
-    eveningTemplateId: templateIdBySlot(day.sessions, 'EVENING'),
-    sessions: day.sessions.map((session) => ({
-      id: session.id,
-      slot: session.slot,
-      title: session.title,
-      clonedFromTemplateId: session.clonedFromTemplateId,
-      exercises: session.exercises.map((exercise) => ({
-        id: exercise.id,
-        exerciseItemId: exercise.exerciseItemId,
-        sets: exercise.sets,
-        reps: exercise.reps,
-        notes: exercise.notes,
-        sortOrder: exercise.sortOrder,
-        completed: includeAdherence ? (completedIds?.has(exercise.id) ?? false) : undefined,
-      })),
+    title: day.title?.value ?? null,
+    clonedFromTemplateId: day.clonedFromTemplateId,
+    exercises: day.exercises.map((exercise) => ({
+      id: exercise.id,
+      exerciseItemId: exercise.exerciseItemId,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      notes: exercise.notes,
+      sortOrder: exercise.sortOrder,
+      completed: includeAdherence ? (completedIds?.has(exercise.id) ?? false) : undefined,
     })),
     writable: extras?.writable,
     ...(includeAdherence ? adherenceFields(day.kind, exerciseIds.length, completedCount) : {}),
@@ -524,7 +501,7 @@ export function toWorkoutScheduleDayDtoFromSummary(
 ): WorkoutScheduleDayDto {
   const includeAdherence = extras?.includeAdherence === true;
   const completedIds = extras?.completedExerciseIds;
-  const exerciseIds = summary.sessions.flatMap((session) => session.exercises.map((ex) => ex.id));
+  const exerciseIds = summary.exercises.map((ex) => ex.id);
   const completedCount =
     completedIds === undefined ? 0 : exerciseIds.filter((id) => completedIds.has(id)).length;
 
@@ -535,23 +512,17 @@ export function toWorkoutScheduleDayDtoFromSummary(
     trainerId: summary.trainerId,
     scheduleDate: summary.scheduleDate,
     kind: summary.kind,
-    morningTemplateId: templateIdBySlot(summary.sessions, 'MORNING'),
-    eveningTemplateId: templateIdBySlot(summary.sessions, 'EVENING'),
-    sessions: summary.sessions.map((session) => ({
-      id: session.id,
-      slot: session.slot,
-      title: session.title,
-      clonedFromTemplateId: session.clonedFromTemplateId,
-      exercises: session.exercises.map((exercise) => ({
-        id: exercise.id,
-        exerciseItemId: exercise.exerciseItemId,
-        name: exercise.name,
-        sets: exercise.sets,
-        reps: exercise.reps,
-        notes: exercise.notes,
-        sortOrder: exercise.sortOrder,
-        completed: includeAdherence ? (completedIds?.has(exercise.id) ?? false) : undefined,
-      })),
+    title: summary.title,
+    clonedFromTemplateId: summary.clonedFromTemplateId,
+    exercises: summary.exercises.map((exercise) => ({
+      id: exercise.id,
+      exerciseItemId: exercise.exerciseItemId,
+      name: exercise.name,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      notes: exercise.notes,
+      sortOrder: exercise.sortOrder,
+      completed: includeAdherence ? (completedIds?.has(exercise.id) ?? false) : undefined,
     })),
     writable: extras?.writable,
     ...(includeAdherence ? adherenceFields(summary.kind, exerciseIds.length, completedCount) : {}),
@@ -577,15 +548,13 @@ function adherenceFields(
 export function collectScheduleExerciseIds(
   summaries: readonly WorkoutScheduleDaySummary[],
 ): WorkoutScheduleExerciseId[] {
-  return summaries.flatMap((day) =>
-    day.sessions.flatMap((session) => session.exercises.map((ex) => ex.id)),
-  );
+  return summaries.flatMap((day) => day.exercises.map((ex) => ex.id));
 }
 
 export function collectScheduleExerciseIdsFromSummary(
   summary: WorkoutScheduleDaySummary,
 ): WorkoutScheduleExerciseId[] {
-  return summary.sessions.flatMap((session) => session.exercises.map((ex) => ex.id));
+  return summary.exercises.map((ex) => ex.id);
 }
 
 export interface WorkoutStreakDto {

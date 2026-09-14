@@ -732,21 +732,21 @@ Table workout_schedule_days {
     schedule_date
   }
 
-  Note: 'ClientOwned schedule day (ADR-0010). REST has no sessions; TRAINING has 1–2 slots.'
+  Note: 'ClientOwned schedule day (ADR-0010/0014). REST has no session; TRAINING has one list.'
 }
 
 Table workout_schedule_sessions {
   id                        uuid                   [pk, default: `gen_random_uuid()`]
   schedule_day_id           uuid                   [not null, ref: > workout_schedule_days.id]
-  slot                      workout_session_slot   [not null]
-  title                     varchar                [not null, note: 'Snapshotted from template at upsert.']
-  cloned_from_template_id   uuid                   [not null, ref: > workout_plan_templates.id]
+  slot                      workout_session_slot   [not null, note: 'Persistence constant only. Domain/HTTP drop slot (ADR-0014).']
+  title                     varchar                [note: 'Optional display name snapshotted on upsert.']
+  cloned_from_template_id   uuid                   [ref: > workout_plan_templates.id, note: 'Optional import provenance. Not a live pointer.']
   deleted_at                timestamptz
   created_at                timestamptz            [not null, default: `now()`]
   updated_at                timestamptz            [not null, default: `now()`]
 
   indexes {
-    (schedule_day_id, slot) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL.']
+    (schedule_day_id) [unique, note: 'Partial unique in SQL: WHERE deleted_at IS NULL. One live session per TRAINING day.']
     cloned_from_template_id
   }
 }

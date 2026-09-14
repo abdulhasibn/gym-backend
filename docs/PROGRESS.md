@@ -11,7 +11,7 @@ A8b still deferred within 1.5.
 | Area | Status |
 |------|--------|
 | Repo scaffold (Express / TS / Vitest) | Done |
-| Domain glossary / PRD / architecture docs | Done — ADR-0006–0013 (food diary through attendance visit) |
+| Domain glossary / PRD / architecture docs | Done — ADR-0006–0014 (food diary through workout snapshot) |
 | DBML source of truth (`docs/schema.dbml`) | Done — `leads.email` optional (A14); workout schedule tables |
 | Supabase project + SQL migrations applied | Done — local + remote; through workout schedule when applied |
 | Generated `database.types.ts` | Done — schedule tables + enums |
@@ -34,13 +34,13 @@ A8b still deferred within 1.5.
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
-| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule (ADR-0010), completion window + adherence (ADR-0011), streaks (ADR-0012); legacy dayLabel HTTP retired; not set logs; not CustomExercise; G1/G2/G10 contract fixes shipped |
+| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule snapshot (ADR-0010 + 0014), completion window + adherence (ADR-0011), streaks (ADR-0012); one exercise list per date; no morning/evening template ids; legacy dayLabel HTTP retired; not set logs; not CustomExercise |
 | Health sync (`src/features/health-sync`) | Done — connect/disconnect, batch metrics sync (device-push), client list, staff WEARABLES grant read; weight → ProgressLog via users port |
 | Other feature modules under `src/features/*` | Next **3.5** notifications; then audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted) |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; Attendance visit check-out/present (8 requests); Coaching includes workout templates/schedule/streak |
+| Postman collection shared via git | Done — `../gym-backend-postman` `2b310b6` + cloud `Gym Backend API`; Coaching schedule Docs/Examples use flattened snapshot (PUT + staff/client GET) |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai) |
 
 **Supabase project**
@@ -52,7 +52,7 @@ A8b still deferred within 1.5.
 | Region | `ap-south-1` |
 | URL | `https://igcmptpjmagzwoccxcnw.supabase.co` |
 | Tables | schedule + template tables in `public` after migrations; RLS enabled (no policies) |
-| Migrations applied | Through `attendance_visit_checkout` on remote (`igcmptpjmagzwoccxcnw`) via Supabase MCP; apply the same file locally before `pnpm test:integration` |
+| Migrations applied | Through `workout_schedule_exercise_snapshot` on remote (`igcmptpjmagzwoccxcnw`) via Supabase MCP; apply the same file locally before `pnpm test:integration` |
 | Live rows (spot check) | `roles` 4 · `role_permissions` 29 · `food_items` 20 · `food_item_servings` 160 · `exercise_items` 324 (all with `illustration_slug`) |
 
 ## Next up
@@ -71,6 +71,25 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-13 — Workout schedule import-then-edit snapshot (detour)
+
+- Detour from Next up (3.5): mobile will not start until schedule save
+  accepts an edited exercise list. ADR-0014 supersedes morning/evening
+  template pointers in ADR-0010. Completions/streaks (ADR-0011/0012) unchanged.
+- Contract: `PUT .../workout-schedule` TRAINING takes `title?`,
+  `clonedFromTemplateId?` (provenance; miss → null), and `exercises[]`
+  (min 1). REST is `{ date, kind }` only. Slot ids rejected. GET is one
+  list per date — no `sessions[]` / `slot`. Replacing a date drops prior
+  ticks (new exercise ids).
+- Schema: flatten live dual-slot days; nullable title + provenance; one
+  live session per day. SQL `slot` kept as constant `'MORNING'`. Applied
+  remote on `igcmptpjmagzwoccxcnw`. Apply locally before
+  `pnpm test:integration`.
+- Docs: `docs/coaching.md`, Orbit M7 / 3.2 how-it-works (title unchanged),
+  Postman Upsert + staff/client GET (`gym-backend-postman` `2b310b6`,
+  cloud task `6c898972-f09a-4a1e-8897-e360e4a3bc45`).
+- Next up still **3.5** notifications.
 
 ### 2026-09-10 — Sync Postman + Orbit for attendance visit
 

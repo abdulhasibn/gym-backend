@@ -38,7 +38,7 @@ import { toWorkoutScheduleDayId } from '../domain/workout-schedule-day-id';
 import { toWorkoutScheduleExerciseId } from '../domain/workout-schedule-exercise-id';
 import { toWorkoutScheduleSessionId } from '../domain/workout-schedule-session-id';
 import type { WorkoutScheduleDaySummary } from '../domain/workout-schedule.queries';
-import { parseWorkoutSessionSlot } from '../domain/workout-session-slot';
+export const PERSISTED_SCHEDULE_SESSION_SLOT = 'MORNING' as const;
 
 type PlanRow = Database['public']['Tables']['diet_plans']['Row'];
 type MealRow = Database['public']['Tables']['diet_plan_meals']['Row'];
@@ -509,6 +509,7 @@ export type ScheduleDayWithSessions = ScheduleDayRow & {
 
 export function toWorkoutScheduleDay(row: ScheduleDayWithSessions): WorkoutScheduleDay {
   try {
+    const snapshot = flattenLiveSessions(row);
     return WorkoutScheduleDay.reconstitute({
       id: toWorkoutScheduleDayId(row.id),
       clientUserId: toUserId(row.client_user_id),
@@ -516,7 +517,10 @@ export function toWorkoutScheduleDay(row: ScheduleDayWithSessions): WorkoutSched
       trainerId: toTrainerProfileId(row.trainer_id),
       scheduleDate: CalendarDate.create(row.schedule_date),
       kind: parseWorkoutScheduleDayKind(row.kind),
-      sessions: toScheduleSessions(row),
+      title: snapshot.title === null ? null : WorkoutPlanTitle.create(snapshot.title),
+      clonedFromTemplateId: snapshot.clonedFromTemplateId,
+      sessionId: snapshot.sessionId,
+      exercises: snapshot.exercises,
       deletedAt: row.deleted_at === null ? null : toValidDate(row.deleted_at),
       createdAt: toValidDate(row.created_at),
       updatedAt: toValidDate(row.updated_at),
@@ -532,6 +536,7 @@ export function toWorkoutScheduleDaySummary(
   // Normalize schedule_date to YYYY-MM-DD regardless of whether the driver
   // returns a plain date string or an ISO datetime (e.g. '2026-09-07T00:00:00Z').
   const scheduleDate = CalendarDate.create(row.schedule_date.slice(0, 10)).value;
+  const snapshot = flattenLiveSessions(row);
   return {
     id: toWorkoutScheduleDayId(row.id),
     clientUserId: toUserId(row.client_user_id),
@@ -539,20 +544,16 @@ export function toWorkoutScheduleDaySummary(
     trainerId: row.trainer_id,
     scheduleDate,
     kind: parseWorkoutScheduleDayKind(row.kind),
-    sessions: toScheduleSessions(row).map((session) => ({
-      id: session.id,
-      slot: session.slot,
-      title: session.title,
-      clonedFromTemplateId: session.clonedFromTemplateId,
-      exercises: session.exercises.map((exercise) => ({
-        id: exercise.id,
-        exerciseItemId: exercise.exerciseItemId,
-        name: scheduleExerciseName(row, exercise.id) ?? exercise.exerciseItemId,
-        sets: exercise.sets,
-        reps: exercise.reps,
-        notes: exercise.notes,
-        sortOrder: exercise.sortOrder,
-      })),
+    title: snapshot.title,
+    clonedFromTemplateId: snapshot.clonedFromTemplateId,
+    exercises: snapshot.exercises.map((exercise) => ({
+      id: exercise.id,
+      exerciseItemId: exercise.exerciseItemId,
+      name: scheduleExerciseName(row, exercise.id) ?? exercise.exerciseItemId,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      notes: exercise.notes,
+      sortOrder: exercise.sortOrder,
     })),
     createdAt: toValidDate(row.created_at).toISOString(),
     updatedAt: toValidDate(row.updated_at).toISOString(),
@@ -575,27 +576,52 @@ export function toWorkoutScheduleDayInsert(
   };
 }
 
-function toScheduleSessions(row: ScheduleDayWithSessions) {
-  return (row.workout_schedule_sessions ?? [])
+function flattenLiveSessions(row: ScheduleDayWithSessions) {
+  const live = (row.workout_schedule_sessions ?? [])
     .filter((session) => session.deleted_at === null)
-    .sort((a, b) => a.slot.localeCompare(b.slot))
-    .map((session) => ({
-      id: toWorkoutScheduleSessionId(session.id),
-      slot: parseWorkoutSessionSlot(session.slot),
-      title: session.title,
-      clonedFromTemplateId: toWorkoutPlanTemplateId(session.cloned_from_template_id),
-      exercises: (session.workout_schedule_exercises ?? [])
-        .filter((exercise) => exercise.deleted_at === null)
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((exercise) => ({
-          id: toWorkoutScheduleExerciseId(exercise.id),
-          exerciseItemId: toExerciseItemId(exercise.exercise_item_id),
-          sets: exercise.sets,
-          reps: exercise.reps,
-          notes: exercise.notes,
-          sortOrder: exercise.sort_order,
-        })),
-    }));
+    .sort((a, b) => a.slot.localeCompare(b.slot));
+  if (live.length === 0) {
+    return {
+      title: null,
+      clonedFromTemplateId: null,
+      sessionId: null,
+      exercises: [],
+    };
+  }
+
+  const first = live[0];
+  if (first === undefined) {
+    return {
+      title: null,
+      clonedFromTemplateId: null,
+      sessionId: null,
+      exercises: [],
+    };
+  }
+
+  return {
+    title: live.length > 1 ? 'Morning / Evening' : first.title,
+    clonedFromTemplateId:
+      first.cloned_from_template_id === null
+        ? null
+        : toWorkoutPlanTemplateId(first.cloned_from_template_id),
+    sessionId: toWorkoutScheduleSessionId(first.id),
+    exercises: live
+      .flatMap((session) =>
+        (session.workout_schedule_exercises ?? [])
+          .filter((exercise) => exercise.deleted_at === null)
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((exercise) => ({
+            id: toWorkoutScheduleExerciseId(exercise.id),
+            exerciseItemId: toExerciseItemId(exercise.exercise_item_id),
+            sets: exercise.sets,
+            reps: exercise.reps,
+            notes: exercise.notes,
+            sortOrder: exercise.sort_order,
+          })),
+      )
+      .map((exercise, index) => ({ ...exercise, sortOrder: index })),
+  };
 }
 
 function scheduleExerciseName(row: ScheduleDayWithSessions, exerciseId: string): string | null {

@@ -54,9 +54,7 @@ export function toStreakDayStatuses(
 ): Map<string, WorkoutStreakDayStatus> {
   const map = new Map<string, WorkoutStreakDayStatus>();
   for (const summary of summaries) {
-    const exerciseIds = summary.sessions.flatMap((session) =>
-      session.exercises.map((exercise) => exercise.id),
-    );
+    const exerciseIds = summary.exercises.map((exercise) => exercise.id);
     const completed = completedByDate.get(summary.scheduleDate) ?? new Set();
     if (summary.kind === 'REST') {
       map.set(summary.scheduleDate, { kind: 'REST', dayDone: true });

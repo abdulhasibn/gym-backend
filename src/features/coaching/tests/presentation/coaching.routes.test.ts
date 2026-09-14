@@ -360,6 +360,7 @@ function createApp(
       assignPolicy,
       entitlement,
       workoutTemplates,
+      exerciseCatalog,
       workoutSchedule,
       gymClock,
       clock,
@@ -561,7 +562,7 @@ describe('PUT workout-schedule', () => {
     expect(response.status).toBe(422);
   });
 
-  it('upserts REST and TRAINING from templates', async () => {
+  it('upserts REST and TRAINING from an exercise snapshot', async () => {
     const { app } = createApp(trainer);
     const created = await request(app)
       .post(`/gym-orgs/${gymOrgId}/workout-plan-templates`)
@@ -582,14 +583,61 @@ describe('PUT workout-schedule', () => {
       .put(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-schedule`)
       .send({
         entries: [
-          { date: '2026-08-17', kind: 'TRAINING', morningTemplateId: templateId },
+          {
+            date: '2026-08-17',
+            kind: 'TRAINING',
+            title: 'Circuit',
+            clonedFromTemplateId: templateId,
+            exercises: [
+              {
+                exerciseItemId: 'e0e00000-0000-4000-8000-000000000001',
+                sets: 3,
+                reps: '8-12',
+              },
+            ],
+          },
           { date: '2026-08-18', kind: 'REST' },
         ],
       });
     expect(response.status).toBe(200);
     expect(response.body.days).toHaveLength(2);
-    expect(response.body.days[0].sessions[0].title).toBe('Circuit');
+    expect(response.body.days[0].title).toBe('Circuit');
+    expect(response.body.days[0].clonedFromTemplateId).toBe(templateId);
+    expect(response.body.days[0].exercises).toHaveLength(1);
+    expect(response.body.days[0]).not.toHaveProperty('sessions');
     expect(response.body.days[1].kind).toBe('REST');
+  });
+
+  it('rejects morningTemplateId and REST extras', async () => {
+    const { app } = createApp(trainer);
+    const slotIds = await request(app)
+      .put(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-schedule`)
+      .send({
+        entries: [
+          {
+            date: '2026-08-17',
+            kind: 'TRAINING',
+            morningTemplateId: 't0000000-0000-4000-8000-000000000001',
+            exercises: [
+              { exerciseItemId: 'e0e00000-0000-4000-8000-000000000001', sets: 3, reps: '8-12' },
+            ],
+          },
+        ],
+      });
+    expect(slotIds.status).toBe(422);
+
+    const restExtras = await request(app)
+      .put(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-schedule`)
+      .send({
+        entries: [
+          {
+            date: '2026-08-18',
+            kind: 'REST',
+            exercises: [{ exerciseItemId: 'e0e00000-0000-4000-8000-000000000001' }],
+          },
+        ],
+      });
+    expect(restExtras.status).toBe(422);
   });
 });
 

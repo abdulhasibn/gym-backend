@@ -231,24 +231,24 @@ window.MODULES_DATA = [
     tags: ["trainer", "client"],
     personas: "Same entitlement model as diet coaching.",
     summary:
-      "Gym template library → date schedule (MORNING/EVENING/REST) → client complete in [D, D+2] → streaks. WORKOUT_PLANS gates staff adherence/streak. ADR-0007–0012.",
+      "Gym template library → import on the client → PUT one exercise snapshot per date (or REST) → client complete in [D, D+2] → streaks. WORKOUT_PLANS gates staff adherence/streak. ADR-0007–0014.",
     howItWorks: [
       "Build gym-owned templates from the seed catalog (no typed names).",
-      "Assign days by templateId snapshot only; REST or TRAINING slots.",
+      "Import is client-side prefill; save an edited catalog list (or REST) onto the date.",
       "Client completes schedule lines while gym-local today ∈ [D, D+2].",
       "Staff adherence + streak need WORKOUT_PLANS; definition is grant-free for assigning trainer.",
     ],
     items: [
       "Catalog search (movement × equipment) — API live (3.2); 30 seed rows",
       "Gym workout templates CRUD/duplicate — API live (ADR-0009)",
-      "Date schedule upsert/read (MORNING/EVENING/REST) — API live (ADR-0010)",
+      "Date schedule upsert/read (one snapshot per date) — API live (ADR-0010 + 0014)",
       "Complete window [D, D+2] + adherence — API live (ADR-0011)",
       "Current/longest streak (compute-on-read) — API live (ADR-0012)",
     ],
     detail: {
       purpose: "Pair workout programming with diet under the same TRAINER_COACHING entitlement.",
       howItWorks: [
-        "Catalog identity is ExerciseItem (ADR-0007). Templates are gym library; schedule snaps templateId.",
+        "Catalog identity is ExerciseItem (ADR-0007). Templates are gym library; schedule stores a trainer-edited snapshot (ADR-0014).",
         "Completions hang on schedule exercise ids; streaks are read-time over 366 gym-local days.",
       ],
       acceptance: ["Template → schedule → complete window + streak APIs work with active addon."],

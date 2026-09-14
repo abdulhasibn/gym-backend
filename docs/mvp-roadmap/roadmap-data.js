@@ -419,7 +419,7 @@ export const ROADMAP = {
           detail: {
             purpose: "ExerciseItem identity under TRAINER_COACHING; schedule completions + streaks (ADR-0007–0012). Not Hevy set logs.",
             howItWorks: [
-              "Search seed catalog; gym templates; assign days via morning/evening templateId or REST.",
+              "Search seed catalog; gym templates; PUT a trainer-edited exercise snapshot per date or REST.",
               "Client completes in [D, D+2]; staff adherence/streak need WORKOUT_PLANS.",
             ],
             acceptance: ["Template → schedule → complete + streak APIs work with active addon."],

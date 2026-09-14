@@ -79,9 +79,7 @@ export async function loadCompletionsByScheduleDate(
 ): Promise<Map<string, Set<WorkoutScheduleExerciseId>>> {
   const result = new Map<string, Set<WorkoutScheduleExerciseId>>();
   for (const day of summaries) {
-    const exerciseIds = day.sessions.flatMap((session) =>
-      session.exercises.map((exercise) => exercise.id),
-    );
+    const exerciseIds = day.exercises.map((exercise) => exercise.id);
     if (exerciseIds.length === 0) {
       result.set(day.scheduleDate, new Set());
       continue;

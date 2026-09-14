@@ -480,7 +480,7 @@ Same pattern as diet for **structure**: search catalog `ExerciseItem` (not typed
 Mirror M6 with workout vocabulary:
 
 - Template library: search exercise catalog, sets, reps, notes.
-- Schedule calendar: REST or TRAINING with MORNING/EVENING template snaps.
+- Schedule calendar: REST or TRAINING with one trainer-edited exercise snapshot per date.
 - Client: complete schedule lines while today ∈ `[D, D+2]`; streak read.
 - Staff adherence/streak needs `WORKOUT_PLANS`; freeze writes on addon expiry.
 

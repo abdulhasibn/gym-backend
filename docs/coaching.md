@@ -4,7 +4,7 @@ Search the platform exercise catalog, manage gym **workout plan templates**, ass
 
 **Base URL:** `https://gym-backend-lovat-mu.vercel.app` (prod) or `http://localhost:3000` (local)  
 **API index:** [`api.md`](api.md)  
-**ADR:** [`adr/0007-catalog-exercise.md`](adr/0007-catalog-exercise.md) · [`adr/0009-gym-workout-plan-templates.md`](adr/0009-gym-workout-plan-templates.md) · [`adr/0010-workout-schedule.md`](adr/0010-workout-schedule.md) · [`adr/0011-workout-completion-window.md`](adr/0011-workout-completion-window.md) · [`adr/0012-workout-streak.md`](adr/0012-workout-streak.md)
+**ADR:** [`adr/0007-catalog-exercise.md`](adr/0007-catalog-exercise.md) · [`adr/0009-gym-workout-plan-templates.md`](adr/0009-gym-workout-plan-templates.md) · [`adr/0010-workout-schedule.md`](adr/0010-workout-schedule.md) · [`adr/0014-workout-schedule-exercise-snapshot.md`](adr/0014-workout-schedule-exercise-snapshot.md) · [`adr/0011-workout-completion-window.md`](adr/0011-workout-completion-window.md) · [`adr/0012-workout-streak.md`](adr/0012-workout-streak.md)
 
 Diet plans and gym diet templates remain in [`nutrition.md`](nutrition.md) (unchanged).
 
@@ -36,7 +36,9 @@ Any authenticated user. Seed catalog only. Empty `q` returns the bootstrap list 
 
 `PUT /gym-orgs/:gymOrgId/clients/:clientUserId/workout-schedule`
 
-Idempotent replace of the **listed dates only**. Each TRAINING slot snapshots title + exercises from a live gym template (`templateId` only — no exercise body on assign). Soft-deleted templates cannot be assigned; already-snapshotted sessions stay.
+Idempotent replace of the **listed dates only**. Import is **client-side**: `GET` a gym template, edit the draft, then `PUT` the exercise list. The server does **not** copy a template on assign. `clonedFromTemplateId` is provenance only — missing, other-gym, or deleted templates still save the list with `null`. Later template PATCH does not rewrite the date.
+
+Replacing a date allocates **new** exercise row ids (same as today’s replace). Completions hang off those ids, so a replace **drops** prior ticks on that date.
 
 ```json
 {
@@ -45,30 +47,35 @@ Idempotent replace of the **listed dates only**. Each TRAINING slot snapshots ti
     {
       "date": "2026-09-03",
       "kind": "TRAINING",
-      "morningTemplateId": "<uuid>",
-      "eveningTemplateId": "<uuid>"
-    },
-    {
-      "date": "2026-09-04",
-      "kind": "TRAINING",
-      "morningTemplateId": "<uuid>"
+      "title": "Push A",
+      "clonedFromTemplateId": "<uuid>",
+      "exercises": [
+        {
+          "exerciseItemId": "e0e00000-0000-4000-8000-000000000001",
+          "sets": 4,
+          "reps": "6-8",
+          "notes": null
+        }
+      ]
     }
   ]
 }
 ```
 
-- `TRAINING` — at least one of `morningTemplateId` / `eveningTemplateId`
-- `REST` — whole day; no template ids; no sessions
-- Slots — `MORNING` | `EVENING` only (same or different templates allowed)
+- `REST` — `{ date, kind: "REST" }` only. Extra fields → `422`.
+- `TRAINING` — `{ date, kind, title?, clonedFromTemplateId?, exercises }` with **min 1** catalog line (`exerciseItemId`, optional `sets` 1–99, `reps` max 40, `notes`). Order = `sortOrder`.
+- `title` optional, 1–120 if present.
+- `morningTemplateId` / `eveningTemplateId` are **rejected** (no compatibility window).
+- Unknown `exerciseItemId` → `422` `INVALID_WORKOUT_SCHEDULE`.
 
-**200:** `{ "days": [ … ] }` · **409** `COACHING_ADDON_REQUIRED` · **404** missing membership or template · **422** `INVALID_WORKOUT_SCHEDULE`
+**200:** `{ "days": [ … ] }` · **409** `COACHING_ADDON_REQUIRED` · **404** missing membership · **403** `COACHING_FORBIDDEN` · **422** `INVALID_WORKOUT_SCHEDULE` / `VALIDATION_ERROR`
 
-Each day in `days` carries:
+Each day in `days` is **one workout per date** (no `sessions[]` / `slot`):
 
 - `scheduleDate` — always `YYYY-MM-DD` (not an ISO datetime)
-- `morningTemplateId` — uuid of the MORNING session's source template, or `null`
-- `eveningTemplateId` — uuid of the EVENING session's source template, or `null`
-- `sessions[].clonedFromTemplateId` — same template uuid per session (redundant but preserved)
+- `title` — string or `null` (REST is always `null`)
+- `clonedFromTemplateId` — provenance uuid or `null`
+- `exercises[]` — `id`, `exerciseItemId`, `sets`, `reps`, `notes`, `sortOrder` (PUT is entity-mapped: no `name` until re-GET)
 
 ---
 
@@ -82,7 +89,7 @@ Optional sugar: `?date=` (single day). Max range **62** days. Trainer must be th
 
 Unscheduled calendar dates are **omitted** from `days` (sparse); only dates with live rows are returned.
 
-**200:** `{ "days": [ … ] }` — same day shape as PUT response above (with exercise `name` added from catalog join)
+**200:** `{ "days": [ … ] }` — same flattened day as PUT, plus catalog `name` / `illustration` on each exercise. REST: `title` and `clonedFromTemplateId` null, `exercises: []`. A Train day is done when every line on **that date’s list** is completed.
 
 ---
 
