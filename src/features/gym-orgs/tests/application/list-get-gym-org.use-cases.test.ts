@@ -117,7 +117,9 @@ describe('GetMyGymUseCase', () => {
     const gymOrgs = new InMemoryGymOrgRepository();
     await seedGym(gymOrgs);
 
-    await expect(new GetMyGymUseCase(gymOrgs).execute(client)).rejects.toBeInstanceOf(NotFoundError);
+    await expect(new GetMyGymUseCase(gymOrgs).execute(client)).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
   });
 
   it('forbids staff actors', async () => {

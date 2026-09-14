@@ -44,8 +44,7 @@ export interface UpsertWorkoutScheduleTrainingEntry {
 }
 
 export type UpsertWorkoutScheduleEntry =
-  | UpsertWorkoutScheduleRestEntry
-  | UpsertWorkoutScheduleTrainingEntry;
+  UpsertWorkoutScheduleRestEntry | UpsertWorkoutScheduleTrainingEntry;
 
 export interface UpsertWorkoutScheduleCommand {
   readonly gymOrgId: GymOrgId;
