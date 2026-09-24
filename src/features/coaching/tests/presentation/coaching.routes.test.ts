@@ -309,15 +309,22 @@ function createApp(
   const workoutTemplates = new MemoryWorkoutTemplates();
   const workoutTemplateQueries = new MemoryWorkoutTemplateQueries(workoutTemplates);
   const exerciseCatalog = new InMemoryExerciseCatalog();
-  exerciseCatalog.seedExercise({
-    id: toExerciseItemId('e0e00000-0000-4000-8000-000000000001'),
-    name: 'Barbell Bench Press',
-    aliases: ['bench'],
-    primaryMuscle: 'CHEST',
-    equipment: 'BARBELL',
-    measurement: 'WEIGHT_REPS',
-    illustrationSlug: null,
-  });
+  for (const [id, name] of [
+    ['e0e00000-0000-4000-8000-000000000001', 'Barbell Bench Press'],
+    ['f7699411-fc8c-4917-a179-055c268319ba', 'Push Up'],
+    ['7162de75-31aa-484e-bdac-96174a95a019', 'Incline Dumbbell Press'],
+    ['e0e00000-0000-4000-8000-000000000004', 'Cable Fly'],
+  ] as const) {
+    exerciseCatalog.seedExercise({
+      id: toExerciseItemId(id),
+      name,
+      aliases: [],
+      primaryMuscle: 'CHEST',
+      equipment: 'BARBELL',
+      measurement: 'WEIGHT_REPS',
+      illustrationSlug: null,
+    });
+  }
   const controller = new CoachingController(
     new AssignDietPlanUseCase(assignPolicy, entitlement, catalog, plans, gymClock, clock, ids),
     new AssignDietPlanFromTemplateUseCase(
@@ -606,6 +613,53 @@ describe('PUT workout-schedule', () => {
     expect(response.body.days[0].exercises).toHaveLength(1);
     expect(response.body.days[0]).not.toHaveProperty('sessions');
     expect(response.body.days[1].kind).toBe('REST');
+  });
+
+  it('accepts a mobile snapshot body with null notes', async () => {
+    const { app } = createApp(trainer);
+    const response = await request(app)
+      .put(`/gym-orgs/${gymOrgId}/clients/${clientUserId}/workout-schedule`)
+      .send({
+        entries: [
+          {
+            date: '2026-09-16',
+            kind: 'TRAINING',
+            title: 'Beginner Chest',
+            clonedFromTemplateId: '4c3b5dce-ca3c-414f-bf49-872199f68d68',
+            exercises: [
+              {
+                exerciseItemId: 'f7699411-fc8c-4917-a179-055c268319ba',
+                sets: 3,
+                reps: '8-10',
+                notes: null,
+              },
+              {
+                exerciseItemId: '7162de75-31aa-484e-bdac-96174a95a019',
+                sets: 2,
+                reps: '8-10',
+                notes: null,
+              },
+              {
+                exerciseItemId: 'e0e00000-0000-4000-8000-000000000004',
+                sets: 4,
+                reps: '8-10',
+                notes: null,
+              },
+            ],
+          },
+        ],
+      });
+    expect(response.status).toBe(200);
+    expect(response.body.days).toHaveLength(1);
+    expect(response.body.days[0].title).toBe('Beginner Chest');
+    expect(response.body.days[0].clonedFromTemplateId).toBeNull();
+    expect(response.body.days[0].exercises).toHaveLength(3);
+    expect(response.body.days[0].exercises[0]).toMatchObject({
+      exerciseItemId: 'f7699411-fc8c-4917-a179-055c268319ba',
+      sets: 3,
+      reps: '8-10',
+      notes: null,
+    });
   });
 
   it('rejects morningTemplateId and REST extras', async () => {

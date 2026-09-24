@@ -34,7 +34,7 @@ A8b still deferred within 1.5.
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
-| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule snapshot (ADR-0010 + 0014), completion window + adherence (ADR-0011), streaks (ADR-0012); one exercise list per date; no morning/evening template ids; legacy dayLabel HTTP retired; not set logs; not CustomExercise |
+| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule snapshot (ADR-0010 + 0014), completion window + adherence (ADR-0011), streaks (ADR-0012); one exercise list per date; no morning/evening template ids; legacy dayLabel HTTP retired; not set logs; not CustomExercise. **G11:** snapshot PUT was written but prod still ran the slot-id schema until the `session_id` tsc fix shipped |
 | Health sync (`src/features/health-sync`) | Done — connect/disconnect, batch metrics sync (device-push), client list, staff WEARABLES grant read; weight → ProgressLog via users port |
 | Other feature modules under `src/features/*` | Next **3.5** notifications; then audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
@@ -71,6 +71,21 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-24 — Ship snapshot PUT (G11)
+
+- Detour from Next up (3.5): mobile Save week / template import
+  sent a valid ADR-0014 body and prod returned generic
+  `422 VALIDATION_ERROR`.
+- Cause: last READY Vercel deploy was `94c3977` (old
+  morning/evening `upsertWorkoutScheduleSchema`). Snapshot
+  commits `7887b44` / `fca7d87` failed `tsc` on
+  `session_id: WorkoutScheduleSessionId | null` in
+  `supabase-workout-schedule.repository.ts`.
+- Fix already on this branch (`7b31edb` local-const
+  narrowing). Route test now covers the mobile body
+  including `notes: null`. No schema or contract change.
+- Next up still **3.5** notifications.
 
 ### 2026-09-14 — Sync Postman + Orbit for schedule snapshot
 
