@@ -41,7 +41,7 @@ A8b still deferred within 1.5.
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted); 3.2 body + M7 snapshot copy live |
 | Postman collection shared via git | Done — `../gym-backend-postman` `2b310b6` + cloud `Gym Backend API`; Coaching schedule Docs/Examples use flattened snapshot (PUT + staff/client GET) |
-| Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai) |
+| Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai); snapshot PUT live on `deeac18` (`dpl_4e4NYLzCeA9Q2WVgBhPc6Gkqdezm`) |
 
 **Supabase project**
 
@@ -85,6 +85,8 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 - Fix already on this branch (`7b31edb` local-const
   narrowing). Route test now covers the mobile body
   including `notes: null`. No schema or contract change.
+- Prod READY: `deeac18` → `dpl_4e4NYLzCeA9Q2WVgBhPc6Gkqdezm`,
+  aliased to `gym-backend-lovat-mu.vercel.app` (`/health` 200).
 - Next up still **3.5** notifications.
 
 ### 2026-09-14 — Sync Postman + Orbit for schedule snapshot
