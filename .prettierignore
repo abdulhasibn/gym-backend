@@ -11,3 +11,8 @@ CONTEXT.md
 # Agent / editor tooling (not application source)
 .agents/
 .cursor/
+
+# Local Vercel/showcase deploy dumps (not application source)
+.deploy-prd-files/
+.tmp-vercel-prd-deploy.json
+.vercel-prd-deploy.json
