@@ -39,8 +39,8 @@ A8b still deferred within 1.5.
 | Other feature modules under `src/features/*` | Next **3.5** notifications; then audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
-| PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted); 3.2 body + M7 snapshot copy live |
-| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; Coaching schedule Docs/Examples include template→PUT mapping + GET catalog embed |
+| PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted); 3.2 / M7 schedule GET catalog embed copy live (`dpl_8v692e7HzT61CpMvDritA2URhYtQ`) |
+| Postman collection shared via git | Done — `../gym-backend-postman` `34bb05f` + cloud `Gym Backend API`; Coaching schedule Docs/Examples include template→PUT mapping + GET catalog embed |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai); snapshot PUT live on `deeac18` (`dpl_4e4NYLzCeA9Q2WVgBhPc6Gkqdezm`) |
 
 **Supabase project**
@@ -71,6 +71,19 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-24 — Sync docs + Postman (schedule GET catalog embed)
+
+- Aligned Orbit 3.2 / M7 and `product-flows.md` M7 with schedule GET
+  catalog embed (template → edit → PUT snapshot unchanged).
+- Mirrored `roadmap-data.js` → `docs/mvp-roadmap/`.
+- Redeployed `gym-prd-visual` — alias
+  https://gym-prd-visual.vercel.app
+  (`dpl_8v692e7HzT61CpMvDritA2URhYtQ`).
+- Postman git `34bb05f` + cloud `Gym Backend API` (async PUT 202;
+  Coaching folder still has Upsert / staff GET / my GET schedule).
+  Audit: 0 Docs/Examples gaps.
+- Next up unchanged: 3.5 notifications.
 
 ### 2026-09-24 — Schedule GET catalog embed (template-assign parity)
 

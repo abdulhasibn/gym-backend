@@ -241,7 +241,7 @@ window.MODULES_DATA = [
     items: [
       "Catalog search (movement × equipment) — API live (3.2); 324 seed rows",
       "Gym workout templates CRUD/duplicate — API live (ADR-0009)",
-      "Date schedule upsert/read (one snapshot per date) — API live (ADR-0010 + 0014)",
+      "Date schedule upsert/read (one snapshot per date; GET embeds catalog) — API live (ADR-0010 + 0014)",
       "Complete window [D, D+2] + adherence — API live (ADR-0011)",
       "Current/longest streak (compute-on-read) — API live (ADR-0012)",
     ],

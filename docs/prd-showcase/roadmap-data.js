@@ -411,7 +411,7 @@ export const ROADMAP = {
           id: "3.2",
           num: "3.2",
           title: "Workout catalog + schedule + streaks",
-          body: "324-exercise seed + gym templates + date schedule (trainer-edited snapshot) + [D, D+2] complete/adherence + compute-on-read streaks. Not set logs. Addon-gated.",
+          body: "324-exercise seed + gym templates + date schedule (trainer-edited snapshot) + GET catalog embed + [D, D+2] complete/adherence + compute-on-read streaks. Not set logs. Addon-gated.",
           paths: "src/features/coaching/",
           prd: "C6, T6",
           ownership: "client",
@@ -419,7 +419,7 @@ export const ROADMAP = {
           detail: {
             purpose: "ExerciseItem identity under TRAINER_COACHING; schedule snapshot + completions + streaks (ADR-0007–0014). Not Hevy set logs.",
             howItWorks: [
-              "Search seed catalog; gym templates; PUT a trainer-edited exercise snapshot per date or REST.",
+              "Search seed catalog; gym templates; GET template → edit → PUT snapshot per date or REST. Schedule GET embeds name/muscle/equipment/illustration.",
               "Client completes in [D, D+2]; staff adherence/streak need WORKOUT_PLANS.",
             ],
             acceptance: ["Template → schedule → complete + streak APIs work with active addon."],

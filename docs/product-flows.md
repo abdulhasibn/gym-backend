@@ -473,7 +473,7 @@ C5, T5, T7, T8 (grant), A4 coupling · ADR-0006 (unified diary) · ADR-0008 (gym
 
 Same pattern as diet for **structure**: search catalog `ExerciseItem` (not typed names); days → prescribed sets/reps/notes; per-day `PlanCompletion`; `WORKOUT_PLANS` grant for adherence. Not a Hevy session log (ADR-0007).
 
-**API status:** Catalog seed **live** (324 movements, ADR-0007). Gym templates, date-schedule snapshot, completion window + adherence, and streaks **shipped** (ADR-0009–0014). Legacy dayLabel `WorkoutPlan` HTTP retired.
+**API status:** Catalog seed **live** (324 movements, ADR-0007). Gym templates, date-schedule snapshot (GET embeds catalog like template GET), completion window + adherence, and streaks **shipped** (ADR-0009–0014). Legacy dayLabel `WorkoutPlan` HTTP retired.
 
 ### Screens & flows
 
@@ -785,7 +785,7 @@ Not a user-facing “module,” but UI must respect:
 
 **P0 — ship first:** Auth, create gym, plans catalog, membership invite/accept + grants checklist, roster, check-in/out + desk mark/out, subscriptions/renewals/unpaid badges, trainer assign, catalog foods + diet assign + diary (complete + extras), workout templates/schedule/complete/streak, progress/profile/BMI, health connect, notifications for invites/renewals/assign, offboard, block check-in, privacy management.
 
-**P1 — next:** Dashboard widgets, workout clone/template, adherence % for staff, account erasure UX, richer unpaid digest layout.
+**P1 — next:** Dashboard widgets, account erasure UX, richer unpaid digest layout.
 
 ---
 
