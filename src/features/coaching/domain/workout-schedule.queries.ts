@@ -9,6 +9,10 @@ export interface WorkoutScheduleExerciseSummary {
   readonly id: WorkoutScheduleExerciseId;
   readonly exerciseItemId: string;
   readonly name?: string;
+  readonly primaryMuscle?: string;
+  readonly equipment?: string;
+  /** null when no illustration is mapped for this exercise. */
+  readonly illustrationSlug?: string | null;
   readonly sets: number | null;
   readonly reps: string | null;
   readonly notes: string | null;

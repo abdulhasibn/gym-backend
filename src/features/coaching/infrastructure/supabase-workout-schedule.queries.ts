@@ -10,7 +10,7 @@ import type {
 import { toWorkoutScheduleDaySummary, type ScheduleDayWithSessions } from './coaching.mapper';
 
 const SCHEDULE_DAY_SELECT =
-  '*, workout_schedule_sessions(*, workout_schedule_exercises(*, exercise_items(name)))';
+  '*, workout_schedule_sessions(*, workout_schedule_exercises(*, exercise_items(name, primary_muscle, equipment, illustration_slug)))';
 
 export class SupabaseWorkoutScheduleQueries implements WorkoutScheduleQueries {
   constructor(private readonly client: SupabaseClient<Database>) {}

@@ -496,7 +496,7 @@ type ScheduleSessionRow = Database['public']['Tables']['workout_schedule_session
 type ScheduleExerciseRow = Database['public']['Tables']['workout_schedule_exercises']['Row'];
 
 export type ScheduleExerciseWithItem = ScheduleExerciseRow & {
-  exercise_items: { name: string } | { name: string }[] | null;
+  exercise_items: TemplateExerciseItem | TemplateExerciseItem[] | null;
 };
 
 export type ScheduleSessionWithExercises = ScheduleSessionRow & {
@@ -546,15 +546,21 @@ export function toWorkoutScheduleDaySummary(
     kind: parseWorkoutScheduleDayKind(row.kind),
     title: snapshot.title,
     clonedFromTemplateId: snapshot.clonedFromTemplateId,
-    exercises: snapshot.exercises.map((exercise) => ({
-      id: exercise.id,
-      exerciseItemId: exercise.exerciseItemId,
-      name: scheduleExerciseName(row, exercise.id) ?? exercise.exerciseItemId,
-      sets: exercise.sets,
-      reps: exercise.reps,
-      notes: exercise.notes,
-      sortOrder: exercise.sortOrder,
-    })),
+    exercises: snapshot.exercises.map((exercise) => {
+      const item = scheduleExerciseCatalogItem(row, exercise.id);
+      return {
+        id: exercise.id,
+        exerciseItemId: exercise.exerciseItemId,
+        name: item?.name ?? exercise.exerciseItemId,
+        primaryMuscle: item?.primary_muscle,
+        equipment: item?.equipment,
+        illustrationSlug: item?.illustration_slug ?? null,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        notes: exercise.notes,
+        sortOrder: exercise.sortOrder,
+      };
+    }),
     createdAt: toValidDate(row.created_at).toISOString(),
     updatedAt: toValidDate(row.updated_at).toISOString(),
   };
@@ -624,7 +630,10 @@ function flattenLiveSessions(row: ScheduleDayWithSessions) {
   };
 }
 
-function scheduleExerciseName(row: ScheduleDayWithSessions, exerciseId: string): string | null {
+function scheduleExerciseCatalogItem(
+  row: ScheduleDayWithSessions,
+  exerciseId: string,
+): TemplateExerciseItem | null {
   for (const session of row.workout_schedule_sessions ?? []) {
     const exercise = (session.workout_schedule_exercises ?? []).find(
       (candidate) => candidate.id === exerciseId,
@@ -634,9 +643,9 @@ function scheduleExerciseName(row: ScheduleDayWithSessions, exerciseId: string):
     }
     const nested = exercise.exercise_items;
     if (Array.isArray(nested)) {
-      return nested[0]?.name ?? null;
+      return nested[0] ?? null;
     }
-    return nested?.name ?? null;
+    return nested ?? null;
   }
   return null;
 }

@@ -36,9 +36,52 @@ Any authenticated user. Seed catalog only. Empty `q` returns the bootstrap list 
 
 `PUT /gym-orgs/:gymOrgId/clients/:clientUserId/workout-schedule`
 
-Idempotent replace of the **listed dates only**. Import is **client-side**: `GET` a gym template, edit the draft, then `PUT` the exercise list. The server does **not** copy a template on assign. `clonedFromTemplateId` is provenance only — missing, other-gym, or deleted templates still save the list with `null`. Later template PATCH does not rewrite the date.
+Idempotent replace of the **listed dates only**. Import is **client-side**: `GET` a gym template, edit the draft, then `PUT` the exercise list. The server does **not** copy a template on assign (no diet-style `{ templateId }` XOR). `clonedFromTemplateId` is provenance only — missing, other-gym, or deleted templates still save the list with `null`. Later template PATCH does not rewrite the date.
 
 Replacing a date allocates **new** exercise row ids (same as today’s replace). Completions hang off those ids, so a replace **drops** prior ticks on that date.
+
+### Import from template
+
+`GET /gym-orgs/:gymOrgId/workout-plan-templates/:templateId` returns catalog-rich exercise lines. Map those into a TRAINING entry — do **not** send the template object as-is. Extra keys on exercise lines (`id`, `name`, `primaryMuscle`, `equipment`, `illustration`, `sortOrder`) are ignored.
+
+| Keep / send | Strip |
+|-------------|-------|
+| `title` (from template, or edited) | template `id` as a write id — use it only as `clonedFromTemplateId` |
+| `exercises[].exerciseItemId`, `sets`, `reps`, `notes` | `exercises[].id` (schedule allocates new ids) |
+| array order → `sortOrder` | `name`, `primaryMuscle`, `equipment`, `illustration` (catalog read-only) |
+
+Trainer may add / remove / reorder lines and change sets/reps/notes/`title` before PUT. The gym template is **not** mutated. Add catalog movements via `GET /exercises/search`.
+
+Example from GET `workoutPlanTemplate` → PUT (Shoulder Day):
+
+```json
+{
+  "entries": [
+    {
+      "date": "2026-09-02",
+      "kind": "TRAINING",
+      "title": "Shoulder Day",
+      "clonedFromTemplateId": "0329ef17-e792-4af5-9d95-5ff3fafefb51",
+      "exercises": [
+        {
+          "exerciseItemId": "e0e00000-0000-4000-8000-000000000014",
+          "sets": 3,
+          "reps": "8-10",
+          "notes": null
+        },
+        {
+          "exerciseItemId": "5d25cc4c-20de-49fe-b515-fae13cb9fb21",
+          "sets": 3,
+          "reps": "8-10",
+          "notes": null
+        }
+      ]
+    }
+  ]
+}
+```
+
+Re-GET the schedule for catalog fields (`name`, `primaryMuscle`, `equipment`, `illustration`) after save.
 
 ```json
 {
@@ -75,7 +118,7 @@ Each day in `days` is **one workout per date** (no `sessions[]` / `slot`):
 - `scheduleDate` — always `YYYY-MM-DD` (not an ISO datetime)
 - `title` — string or `null` (REST is always `null`)
 - `clonedFromTemplateId` — provenance uuid or `null`
-- `exercises[]` — `id`, `exerciseItemId`, `sets`, `reps`, `notes`, `sortOrder` (PUT is entity-mapped: no `name` until re-GET)
+- `exercises[]` — `id`, `exerciseItemId`, `sets`, `reps`, `notes`, `sortOrder` (PUT is entity-mapped: no catalog fields until re-GET)
 
 ---
 
@@ -89,7 +132,7 @@ Optional sugar: `?date=` (single day). Max range **62** days. Trainer must be th
 
 Unscheduled calendar dates are **omitted** from `days` (sparse); only dates with live rows are returned.
 
-**200:** `{ "days": [ … ] }` — same flattened day as PUT, plus catalog `name` / `illustration` on each exercise. REST: `title` and `clonedFromTemplateId` null, `exercises: []`. A Train day is done when every line on **that date’s list** is completed.
+**200:** `{ "days": [ … ] }` — same flattened day as PUT, plus catalog `name` / `primaryMuscle` / `equipment` / `illustration` on each exercise. REST: `title` and `clonedFromTemplateId` null, `exercises: []`. A Train day is done when every line on **that date’s list** is completed.
 
 ---
 
@@ -98,7 +141,7 @@ Unscheduled calendar dates are **omitted** from `days` (sparse); only dates with
 `GET /gym-orgs/:gymOrgId/my-workout-schedule?from=&to=`  
 `GET /gym-orgs/:gymOrgId/my-workout-schedule?date=`
 
-`writable` is false after addon expiry (history still returned). Exercises include `completed` for **every** day in range; each day includes `dayDone` and TRAINING `adherencePercent`. REST days have `dayDone: true` and `adherencePercent: null`. Response includes `today` (`YYYY-MM-DD`).
+`writable` is false after addon expiry (history still returned). Exercises include `completed` for **every** day in range plus catalog `name` / `primaryMuscle` / `equipment` / `illustration`; each day includes `dayDone` and TRAINING `adherencePercent`. REST days have `dayDone: true` and `adherencePercent: null`. Response includes `today` (`YYYY-MM-DD`).
 
 ---
 

@@ -116,6 +116,10 @@ describe('workout schedule coaching HTTP (local Supabase)', () => {
     expect(staffGet.body.days[0].title).toBe('Push AM');
     expect(staffGet.body.days[0].clonedFromTemplateId).toBe(templateId);
     expect(staffGet.body.days[0].exercises[0].name).toBe('Bench Press (Barbell)');
+    expect(staffGet.body.days[0].exercises[0].primaryMuscle).toBeTruthy();
+    expect(staffGet.body.days[0].exercises[0].equipment).toBeTruthy();
+    expect(staffGet.body.days[0].exercises[0].illustration).not.toBeNull();
+    expect(staffGet.body.days[0].exercises[0].illustration?.frames).toHaveLength(3);
     expect(staffGet.body.days[0]).not.toHaveProperty('sessions');
     expect(staffGet.body.days[0].scheduleDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(staffGet.body.days[0].scheduleDate).toBe(upserted.body.days[0].scheduleDate);

@@ -429,10 +429,14 @@ export interface WorkoutScheduleExerciseDto {
   readonly id: string;
   readonly exerciseItemId: string;
   readonly name?: string;
+  readonly primaryMuscle?: string;
+  readonly equipment?: string;
   readonly sets: number | null;
   readonly reps: string | null;
   readonly notes: string | null;
   readonly sortOrder: number;
+  /** Present on GET (query path). PUT is entity-mapped: omitted until re-GET. */
+  readonly illustration?: ExerciseIllustrationDto | null;
   readonly completed?: boolean;
 }
 
@@ -514,16 +518,27 @@ export function toWorkoutScheduleDayDtoFromSummary(
     kind: summary.kind,
     title: summary.title,
     clonedFromTemplateId: summary.clonedFromTemplateId,
-    exercises: summary.exercises.map((exercise) => ({
-      id: exercise.id,
-      exerciseItemId: exercise.exerciseItemId,
-      name: exercise.name,
-      sets: exercise.sets,
-      reps: exercise.reps,
-      notes: exercise.notes,
-      sortOrder: exercise.sortOrder,
-      completed: includeAdherence ? (completedIds?.has(exercise.id) ?? false) : undefined,
-    })),
+    exercises: summary.exercises.map((exercise) => {
+      const illustration: ExerciseIllustrationDto | null = exercise.illustrationSlug
+        ? {
+            frames: toIllustrationFrames(exercise.illustrationSlug),
+            attribution: WORKOUT_GUIDE_ATTRIBUTION,
+          }
+        : null;
+      return {
+        id: exercise.id,
+        exerciseItemId: exercise.exerciseItemId,
+        name: exercise.name,
+        primaryMuscle: exercise.primaryMuscle,
+        equipment: exercise.equipment,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        notes: exercise.notes,
+        sortOrder: exercise.sortOrder,
+        illustration,
+        completed: includeAdherence ? (completedIds?.has(exercise.id) ?? false) : undefined,
+      };
+    }),
     writable: extras?.writable,
     ...(includeAdherence ? adherenceFields(summary.kind, exerciseIds.length, completedCount) : {}),
     createdAt: summary.createdAt,

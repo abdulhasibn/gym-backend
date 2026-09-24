@@ -34,13 +34,13 @@ A8b still deferred within 1.5.
 | Users / progress (`src/features/users`) | Done — `/me/profile` + progress logs (BMI); staff grant-gated profile/progress reads |
 | Nutrition (`src/features/nutrition`) | Done — seed search, extras diary, staff CALORIES read, `LogPrescribedFood` port. No CustomFood |
 | Coaching diet (`src/features/coaching`) | Done — assign XOR meals/`templateId`, gym templates CRUD/duplicate, complete into diary |
-| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule snapshot (ADR-0010 + 0014), completion window + adherence (ADR-0011), streaks (ADR-0012); one exercise list per date; no morning/evening template ids; legacy dayLabel HTTP retired; not set logs; not CustomExercise. **G11:** snapshot PUT was written but prod still ran the slot-id schema until the `session_id` tsc fix shipped |
+| Coaching workout (`src/features/coaching`) | Done — catalog search, templates (ADR-0009), schedule snapshot (ADR-0010 + 0014), completion window + adherence (ADR-0011), streaks (ADR-0012); one exercise list per date; no morning/evening template ids; legacy dayLabel HTTP retired; not set logs; not CustomExercise. **G11:** snapshot PUT live. Schedule GET now embeds the same catalog fields as template GET (`primaryMuscle`, `equipment`, `illustration`); assign remains client-side snapshot (no `{ templateId }` XOR) |
 | Health sync (`src/features/health-sync`) | Done — connect/disconnect, batch metrics sync (device-push), client list, staff WEARABLES grant read; weight → ProgressLog via users port |
 | Other feature modules under `src/features/*` | Next **3.5** notifications; then audit |
 | MVP execution roadmap + Capability Orbit | Done — `docs/MVP_ROADMAP.md`; visual in `prd-showcase` **Orbit** tab (+ 3D); 3.1/3.2 retitled (ADR-0006) |
 | Roles & permissions visual docs | Done — `prd-showcase` **Roles** tab |
 | PRD showcase host | Done — `https://gym-prd-visual.vercel.app` (old `prd-showcase` project deleted); 3.2 body + M7 snapshot copy live |
-| Postman collection shared via git | Done — `../gym-backend-postman` `2b310b6` + cloud `Gym Backend API`; Coaching schedule Docs/Examples use flattened snapshot (PUT + staff/client GET) |
+| Postman collection shared via git | Done — `../gym-backend-postman` + cloud `Gym Backend API`; Coaching schedule Docs/Examples include template→PUT mapping + GET catalog embed |
 | Vercel production host | Done — `https://gym-backend-lovat-mu.vercel.app` (`/health` 200); function region `bom1` (Mumbai); snapshot PUT live on `deeac18` (`dpl_4e4NYLzCeA9Q2WVgBhPc6Gkqdezm`) |
 
 **Supabase project**
@@ -71,6 +71,23 @@ notifications for staff invites (M12). Full deferred list in MVP_ROADMAP
 “Out of orbit.” (Includes barcode / Snap / NL-as-store.)
 
 ## Log
+
+### 2026-09-24 — Schedule GET catalog embed (template-assign parity)
+
+- Detour from Next up (3.5): frontend needed diet-like assign
+  flexibility — populate from GET template, edit, assign without
+  mutating the gym library.
+- Assign contract unchanged (ADR-0014): client maps template lines
+  → `PUT …/workout-schedule` `exercises[]`. No `{ templateId }` XOR.
+- Schedule GET now joins `exercise_items` the same way templates do
+  (`name`, `primary_muscle`, `equipment`, `illustration_slug`) so
+  assigned days return `primaryMuscle` / `equipment` / `illustration`.
+- Documented the strip/keep map in `docs/coaching.md` (Import from
+  template) and sibling Postman (Assign week from template example).
+- Paths: `supabase-workout-schedule.queries.ts`, `coaching.mapper.ts`,
+  `workout-schedule.queries.ts`, `coaching.dto.ts`.
+- Deferred: server-side assign-by-templateId; persisting catalog
+  fields on schedule rows.
 
 ### 2026-09-24 — Ship snapshot PUT (G11)
 

@@ -18,6 +18,52 @@ function makeScheduleDayRow(scheduleDate: string): ScheduleDayWithSessions {
   } as ScheduleDayWithSessions;
 }
 
+function makeTrainingDayRow(): ScheduleDayWithSessions {
+  return {
+    id: 'd0000000-0000-4000-8000-000000000002',
+    client_user_id: '11111111-1111-4111-8111-111111111111',
+    gym_org_id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+    trainer_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    schedule_date: '2026-09-07',
+    kind: 'TRAINING',
+    deleted_at: null,
+    created_at: '2026-09-07T10:00:00.000Z',
+    updated_at: '2026-09-07T10:00:00.000Z',
+    workout_schedule_sessions: [
+      {
+        id: 's0000000-0000-4000-8000-000000000001',
+        schedule_day_id: 'd0000000-0000-4000-8000-000000000002',
+        slot: 'MORNING',
+        title: 'Push AM',
+        cloned_from_template_id: null,
+        deleted_at: null,
+        created_at: '2026-09-07T10:00:00.000Z',
+        updated_at: '2026-09-07T10:00:00.000Z',
+        workout_schedule_exercises: [
+          {
+            id: 'e0000000-0000-4000-8000-000000000001',
+            workout_schedule_session_id: 's0000000-0000-4000-8000-000000000001',
+            exercise_item_id: 'e0e00000-0000-4000-8000-000000000001',
+            sets: 3,
+            reps: '8-12',
+            notes: null,
+            sort_order: 0,
+            deleted_at: null,
+            created_at: '2026-09-07T10:00:00.000Z',
+            updated_at: '2026-09-07T10:00:00.000Z',
+            exercise_items: {
+              name: 'Barbell Bench Press',
+              primary_muscle: 'CHEST',
+              equipment: 'BARBELL',
+              illustration_slug: 'bench-press',
+            },
+          },
+        ],
+      },
+    ],
+  } as ScheduleDayWithSessions;
+}
+
 // ─── G10: scheduleDate normalization ─────────────────────────────────────────
 
 describe('toWorkoutScheduleDaySummary — scheduleDate normalization (G10)', () => {
@@ -35,5 +81,21 @@ describe('toWorkoutScheduleDaySummary — scheduleDate normalization (G10)', () 
   it('handles UTC midnight without shifting the date', () => {
     const summary = toWorkoutScheduleDaySummary(makeScheduleDayRow('2026-01-01T00:00:00Z'));
     expect(summary.scheduleDate).toBe('2026-01-01');
+  });
+});
+
+describe('toWorkoutScheduleDaySummary — catalog embed', () => {
+  it('maps primaryMuscle, equipment, and illustrationSlug from exercise_items', () => {
+    const summary = toWorkoutScheduleDaySummary(makeTrainingDayRow());
+    expect(summary.exercises).toHaveLength(1);
+    expect(summary.exercises[0]).toMatchObject({
+      name: 'Barbell Bench Press',
+      primaryMuscle: 'CHEST',
+      equipment: 'BARBELL',
+      illustrationSlug: 'bench-press',
+      sets: 3,
+      reps: '8-12',
+      sortOrder: 0,
+    });
   });
 });

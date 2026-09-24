@@ -807,6 +807,9 @@ function makeScheduleSummary(opts: {
               id: toWorkoutScheduleExerciseId('e1000000-0000-4000-8000-000000000001'),
               exerciseItemId: exerciseId,
               name: 'Barbell Bench Press',
+              primaryMuscle: 'CHEST',
+              equipment: 'BARBELL',
+              illustrationSlug: 'bench-press',
               sets: 3,
               reps: '8-12',
               notes: null,
@@ -829,6 +832,29 @@ describe('toWorkoutScheduleDayDtoFromSummary', () => {
     expect(dto.exercises[0]?.name).toBe('Barbell Bench Press');
     expect(dto).not.toHaveProperty('sessions');
     expect(dto).not.toHaveProperty('morningTemplateId');
+  });
+
+  it('embeds primaryMuscle, equipment, and illustration on exercise lines', () => {
+    const dto = toWorkoutScheduleDayDtoFromSummary(makeScheduleSummary({}));
+    const ex = dto.exercises[0];
+    expect(ex?.primaryMuscle).toBe('CHEST');
+    expect(ex?.equipment).toBe('BARBELL');
+    expect(ex?.illustration).not.toBeNull();
+    expect(ex?.illustration?.frames).toHaveLength(3);
+    expect(ex?.illustration?.frames[0]).toMatch(/bench-press\/frame-1\.png$/);
+    expect(ex?.illustration?.attribution).toContain('CC BY-SA');
+  });
+
+  it('sets illustration to null when no slug is mapped', () => {
+    const summary = makeScheduleSummary({});
+    const dto = toWorkoutScheduleDayDtoFromSummary({
+      ...summary,
+      exercises: summary.exercises.map((exercise) => ({
+        ...exercise,
+        illustrationSlug: null,
+      })),
+    });
+    expect(dto.exercises[0]?.illustration).toBeNull();
   });
 
   it('sets title and provenance to null for a REST day', () => {
